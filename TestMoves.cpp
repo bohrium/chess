@@ -9,6 +9,7 @@ int main(int argc, char** argv)
     init_board(&B);
     MoveList ML;
 
+    /* Print whites's opening choices */
     print_board(&B);    
     generate_moves(&B, &ML);
     std::cout << ML.length << " moves" << std::endl;
@@ -23,6 +24,7 @@ int main(int argc, char** argv)
     apply_move(&B, {{1,0}, {2,0}, empty_piece}); // a6
     apply_move(&B, {{3,1}, {2,2}, {Color::black, Species::knight}}); // Bxc6
 
+    /* Print black's responses to RLEV */
     print_board(&B);
     generate_moves(&B, &ML);
     std::cout << ML.length << " moves" << std::endl;
