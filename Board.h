@@ -65,13 +65,18 @@ void print_board(Board const* B)
         std::cout << "\tBlack to move" << std::endl;
     }
      
-    std::cout << "\t _______________ " << std::endl;
+    std::cout << "\t\033[0;33m _______________ " << std::endl;
     for (int r=0; r!=8; ++r) {
         std::cout << "\t|";
         for (int c=0; c!=8; ++c) {
             char l = letters[B->grid[r][c].species];
-            l += B->grid[r][c].color==Color::white ? 'A'-'a' : 0; // capitalize if white
-            std::cout << l << "|"; 
+            if (B->grid[r][c].color==Color::white) {
+                l += 'A'-'a'; // capitalize
+                std::cout << "\033[35;1m";
+            } else {
+                std::cout << "\033[36;1m";
+            }
+            std::cout << l << "\033[0;33m|"; 
         }
         std::cout << std::endl;
     }
@@ -242,35 +247,24 @@ void generate_king__moves (Board const* B, MoveList* ML, Coordinate source)
     }
 }
 
-               /* p    n    b    r    q    k        */
-float points[] = {1.0, 2.75, 3.0, 5.0, 9.0, 1000.0};
-float evaluate(Board* B) /* TODO: make const */
+               /* p    n     b    r    q    k      */
+float points[] = {1.0, 2.75, 3.0, 5.0, 9.0, 100.0};
+float evaluate(Board const* B)
 {
     float material=0.0, centrality=0.0;
     for (int r=0; r!=8; ++r) {
         for (int c=0; c!=8; ++c) {
             Piece p = get_piece(B, {r,c});
             if (p.color == Color::empty_color) { continue; }
-            material += points[p.species] * (p.color==Color::white ? +1 : -1); 
+            int sign = (p.color==Color::white ? +1 : -1);
+
+            material += sign * points[p.species];
+            float dr=r-3.5, dc=c-3.5;
+            centrality += sign * (1.0 - (dr*dr + dc*dc)/(2*3.5*3.5)); 
         }
     }
 
-    MoveList MLs[2]; // = {ML_white, ML_black}
-    Color next_to_move = B->next_to_move; 
-    B->next_to_move = Color::white;  generate_moves(B, &MLs[0]);
-    B->next_to_move = Color::black;  generate_moves(B, &MLs[1]);
-    B->next_to_move = next_to_move; 
-     
-    for (int i=0; i!=2; ++i) {
-        int sign = i==0 ? +1 : -1;
-        for (int l=0; l!=MLs[i].length; ++l) {
-            Move m = MLs[i].moves[l];
-            float dr = m.dest.row-3.5, dc = m.dest.col-3.5; 
-            centrality += sign * (2*3.5*3.5 - dr*dr - dc*dc); 
-        }
-    } 
-
-    return material + 0.001 * centrality;
+    return material + 0.01 * centrality;
 }
 
 #endif//BOARD_H

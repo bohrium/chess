@@ -1,0 +1,92 @@
+Welcome!
+	Black to move
+	 _______________ 
+	|r|n|b|q|k|b|n|r|
+	|p|p|p|p|p|p|p|p|
+	| | | | | | | | |
+	| | | | | | | | |
+	| | | | |P| | | |
+	| | | | | | | | |
+	|P|P|P|P| |P|P|P|
+	|R|N|B|Q|K|B|N|R|
+	 ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾ 
+instantaneous score: 0.172
+3-ply score: -0.118
+	White to move
+	 _______________ 
+	|r|n|b|q|k|b|n|r|
+	|p|p|p|p| |p|p|p|
+	| | | | | | | | |
+	| | | | |p| | | |
+	| | | | |P| | | |
+	| | | | | | | | |
+	|P|P|P|P| |P|P|P|
+	|R|N|B|Q|K|B|N|R|
+	 ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾ 
+instantaneous score: 0
+3-ply score: 1.096
+	Black to move
+	 _______________ 
+	|r|n|b|q|k|b|n|r|
+	|p|p|p|p| |p|p|p|
+	| | | | | | | | |
+	| | | | |p| | | |
+	| | | | |P| | | |
+	| | | | | |N| | |
+	|P|P|P|P| |P|P|P|
+	|R|N|B|Q|K|B| |R|
+	 ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾ 
+instantaneous score: -0.05
+3-ply score: -1.242
+	White to move
+	 _______________ 
+	|r| |b|q|k|b|n|r|
+	|p|p|p|p| |p|p|p|
+	| | |n| | | | | |
+	| | | | |p| | | |
+	| | | | |P| | | |
+	| | | | | |N| | |
+	|P|P|P|P| |P|P|P|
+	|R|N|B|Q|K|B| |R|
+	 ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾ 
+instantaneous score: -0.062
+3-ply score: 1.126
+	Black to move
+	 _______________ 
+	|r| |b|q|k|b|n|r|
+	|p|p|p|p| |p|p|p|
+	| | |n| | | | | |
+	| |B| | |p| | | |
+	| | | | |P| | | |
+	| | | | | |N| | |
+	|P|P|P|P| |P|P|P|
+	|R|N|B|Q|K| | |R|
+	 ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾ 
+instantaneous score: 0
+3-ply score: -0.586
+	White to move
+	 _______________ 
+	|r| |b|q|k|b|n|r|
+	| |p|p|p| |p|p|p|
+	|p| |n| | | | | |
+	| |B| | |p| | | |
+	| | | | |P| | | |
+	| | | | | |N| | |
+	|P|P|P|P| |P|P|P|
+	|R|N|B|Q|K| | |R|
+	 ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾ 
+instantaneous score: -0.02
+3-ply score: 1.016
+	Black to move
+	 _______________ 
+	|r| |b|q|k|b|n|r|
+	| |p|p|p| |p|p|p|
+	|p| |B| | | | | |
+	| | | | |p| | | |
+	| | | | |P| | | |
+	| | | | | |N| | |
+	|P|P|P|P| |P|P|P|
+	|R|N|B|Q|K| | |R|
+	 ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾ 
+instantaneous score: 2.744
+3-ply score: -0.47
