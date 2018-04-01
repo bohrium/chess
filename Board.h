@@ -13,13 +13,13 @@ Color flip_color(Color c)
     return c==Color::white ? Color::black : Color::white; 
 }
 enum Species {
-    pawn,
-    knight,
-    bishop,
-    rook,
-    queen,
-    king,
-    empty_species
+    pawn=0,
+    knight=1,
+    bishop=2,
+    rook=3,
+    queen=4,
+    king=5,
+    empty_species=6
 };
 struct Piece {
     Color color;
@@ -48,7 +48,7 @@ void init_board(Board* B)
     for (int c=0; c!=8; ++c) {
         B->grid[0][c] = {Color::black, init_row[c]};
         B->grid[1][c] = {Color::black, Species::pawn};
-        for (int r=2; r!=7; ++r) {
+        for (int r=2; r!=6; ++r) {
             B->grid[r][c] = empty_piece;
         }
         B->grid[6][c] = {Color::white, Species::pawn};
@@ -108,7 +108,6 @@ void undo_move(Board* B, Move M)
     B->grid[M.dest.row][M.dest.col] = M.taken;
 };
 
-
 struct MoveList {
     int length;
     // A chess position can have at most 332 possible next moves:
@@ -150,7 +149,7 @@ void generate_moves(Board const* B, MoveList* ML)
             }     
         }
     }
-} 
+}  
 
 bool add_move(Board const* B, MoveList* ML, Coordinate source, Coordinate dest, Color needed_color)
 {
@@ -241,6 +240,37 @@ void generate_king__moves (Board const* B, MoveList* ML, Coordinate source)
             add_move(B, ML, source, {row+dr, col+dc}, flip_color(B->next_to_move));
         }
     }
+}
+
+               /* p    n    b    r    q    k        */
+float points[] = {1.0, 2.75, 3.0, 5.0, 9.0, 1000.0};
+float evaluate(Board* B) /* TODO: make const */
+{
+    float material=0.0, centrality=0.0;
+    for (int r=0; r!=8; ++r) {
+        for (int c=0; c!=8; ++c) {
+            Piece p = get_piece(B, {r,c});
+            if (p.color == Color::empty_color) { continue; }
+            material += points[p.species] * (p.color==Color::white ? +1 : -1); 
+        }
+    }
+
+    MoveList MLs[2]; // = {ML_white, ML_black}
+    Color next_to_move = B->next_to_move; 
+    B->next_to_move = Color::white;  generate_moves(B, &MLs[0]);
+    B->next_to_move = Color::black;  generate_moves(B, &MLs[1]);
+    B->next_to_move = next_to_move; 
+     
+    for (int i=0; i!=2; ++i) {
+        int sign = i==0 ? +1 : -1;
+        for (int l=0; l!=MLs[i].length; ++l) {
+            Move m = MLs[i].moves[l];
+            float dr = m.dest.row-3.5, dc = m.dest.col-3.5; 
+            centrality += sign * (2*3.5*3.5 - dr*dr - dc*dc); 
+        }
+    } 
+
+    return material + 0.001 * centrality;
 }
 
 #endif//BOARD_H
