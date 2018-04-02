@@ -1,5 +1,5 @@
 all:
-	g++ --std=c++11 Main.cpp -o main.o 
+	g++ --std=c++11 Main.cpp Board.cpp Search.cpp -o main.o 
 test:
 	g++ --std=c++11 TestBoard.cpp -o testboard.o 
 	./testboard.o > out  
