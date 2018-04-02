@@ -31,7 +31,7 @@ void init_board(Board* B)
     }
 }
 
-char letters[] = "pnbrqk ";
+char letters[] = "PNBRQK ";
 void print_board(Board const* B)
 {
     if (B->next_to_move == Color::white) {
@@ -41,12 +41,10 @@ void print_board(Board const* B)
     }
      
     std::cout << "\t   a b c d e f g h" << std::endl;
-    //std::cout << "\t\033[0;33m   _______________ " << std::endl;
     for (int r=0; r!=8; ++r) {
         std::cout << "\t" << 8-r << " |";
         for (int c=0; c!=8; ++c) {
             char l = letters[B->grid[r][c].species];
-            l += 'A'-'a'; // capitalize
             if (B->grid[r][c].color==Color::white) {
                 std::cout << "\033[35;1m";
             } else {
@@ -86,13 +84,14 @@ void undo_move(Board* B, Move M)
 void print_move(Board const* B, Move M)
 {
     char mover = letters[get_piece(B, M.source).species];
-    std::cout << (char)(mover+'A'-'a') << (char)(M.dest.col+'a') << 8-M.dest.row;
-    std::cout << "(" << letters[M.taken.species] << ")" << std::endl;
+    std::cout << mover << (char)(M.dest.col+'a') << 8-M.dest.row;
+    std::cout << "(" << letters[M.taken.species] << ")";
 }
 void print_movelist(Board const* B, MoveList* ML)
 {
     for (int i=0; i!=ML->length; ++i) {
         print_move(B, ML->moves[i]);
+        std::cout << std::endl;
     }
 }
 
@@ -208,7 +207,7 @@ void generate_king__moves (Board const* B, MoveList* ML, Coordinate source)
 
                /* p    n    b     r    q    k      */
 float points[] = {1.0, 3.0, 3.25, 5.0, 9.0, 1000.0};
-float evaluate(Board const* B)
+float evaluate(Board const* B) /* TODO: symmetrize aggression score */
 {
     float material=0.0, centrality=0.0, aggression=0.0;
     for (int r=0; r!=8; ++r) {

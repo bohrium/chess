@@ -26,7 +26,7 @@ int main(int argc, char** argv)
         apply_move(&B, Ruy[i]);
         print_board(&B);    
         std::cout << "instantaneous score: " << evaluate(&B) << std::endl;
-        std::cout << "3-ply score: " << evaluate_at_depth(&B, 3) << std::endl;
+        std::cout << "3-ply score: " << alpha_beta(&B, 3, -10000.0, +10000.0) << std::endl;
     }
 
     return 0;

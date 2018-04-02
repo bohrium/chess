@@ -75,7 +75,7 @@ Move get_best_move(Board* B, int nb_plies)
     for (int l=0; l!=ML.length; ++l) {
         Move m = ML.moves[l];
         print_move(B, m);
-        std::cout << "\033[1A" << std::flush;
+        std::cout << "\033[6D" << std::flush;
         if (m.taken.species == Species::king) { return m; }
         apply_move(B, m);
         float child = alpha_beta(B, nb_plies, -10000.0, +10000.0);

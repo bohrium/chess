@@ -16,7 +16,7 @@ int main(int argc, char** argv)
     for (int p=0; p!=200; ++p) {
         if (p%2==0) { print_board(&B); }
         Move m = get_best_move(&B, (rand()%5==0) ? 3 : 4);
-        std::cout << "play "; print_move(&B, m);
+        std::cout << "Played "; print_move(&B, m); std::cout << "  ";
         apply_move(&B, m);
         if (m.taken.species == Species::king) {
             std::cout << "CHECKMATE!" << std::endl;

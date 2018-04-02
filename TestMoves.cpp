@@ -13,7 +13,7 @@ int main(int argc, char** argv)
     print_board(&B);    
     generate_moves(&B, &ML);
     std::cout << ML.length << " moves" << std::endl;
-    print_movelist(&ML);
+    print_movelist(&B, &ML);
 
     /* Ruy Lopez, Exchange Variation */
     apply_move(&B, {{6,4}, {4,4}, empty_piece}); // e4
@@ -28,7 +28,7 @@ int main(int argc, char** argv)
     print_board(&B);
     generate_moves(&B, &ML);
     std::cout << ML.length << " moves" << std::endl;
-    print_movelist(&ML);
+    print_movelist(&B, &ML);
 
     return 0;
 }
