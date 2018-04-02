@@ -65,9 +65,10 @@ void print_board(Board const* B)
         std::cout << "\tBlack to move" << std::endl;
     }
      
-    std::cout << "\t\033[0;33m _______________ " << std::endl;
+    std::cout << "\t   0 1 2 3 4 5 6 7 " << std::endl;
+    //std::cout << "\t\033[0;33m   _______________ " << std::endl;
     for (int r=0; r!=8; ++r) {
-        std::cout << "\t|";
+        std::cout << "\t" << r << " |";
         for (int c=0; c!=8; ++c) {
             char l = letters[B->grid[r][c].species];
             if (B->grid[r][c].color==Color::white) {
@@ -80,7 +81,7 @@ void print_board(Board const* B)
         }
         std::cout << std::endl;
     }
-    std::cout << "\t ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾ " << std::endl;
+    std::cout << "\t   ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾ " << std::endl;
 } 
 
 struct Coordinate {
@@ -265,7 +266,7 @@ float evaluate(Board const* B)
         }
     }
 
-    return material + 0.1 * centrality;
+    return material + 1.0 * centrality;
 }
 
 #endif//BOARD_H
