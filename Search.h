@@ -8,13 +8,17 @@
 auto const max_accumulator = [](float a, float b) {return a<b ? b : a;};
 auto const min_accumulator = [](float a, float b) {return a>b ? b : a;};
 
-void order_moves(Board* B, MoveList* ML)
+
+float alpha_beta(Board* B, int nb_plies, float alpha, float beta);
+void order_moves(Board* B, MoveList* ML);
+
+void order_moves(Board* B, MoveList* ML, int nb_plies)
 {
     float shallow_scores[MAX_NB_MOVES]; 
     int sorted_indices[MAX_NB_MOVES];
     for (int m=0; m!=ML->length; ++m) {
         apply_move(B, ML->moves[m]);
-        shallow_scores[m] = evaluate(B);
+        shallow_scores[m] = alpha_beta(B, nb_plies, -10000.0, +10000.0);
         undo_move(B, ML->moves[m]);
         sorted_indices[m] = m;
     }
@@ -30,32 +34,14 @@ void order_moves(Board* B, MoveList* ML)
         ML->moves[m] = sorted_moves[m];
     }
 } 
-/*float evaluate_at_depth(Board* B, int nb_plies)
-{
-    if (nb_plies==0) { return evaluate(B); }
-    MoveList ML;  
-    generate_moves(B, &ML);
-
-    auto const accumulator = B->next_to_move==Color::white ? max_accumulator : min_accumulator; 
-    float score = B->next_to_move==Color::white ? -10000.0 : +10000.0; 
-    for (int l=0; l!=ML.length; ++l) {
-        Move m = ML.moves[l];
-        if (m.taken.species == Species::king) { return B->next_to_move==Color::white ? +10000.0 : -10000.0;}
-        apply_move(B, m);
-        float child = evaluate_at_depth(B, nb_plies-1);
-        score = accumulator(child, score);
-        undo_move(B, m);
-    }
-    return score;
-}*/
 
 float alpha_beta(Board* B, int nb_plies, float alpha, float beta)
 {
     if (nb_plies==0) { return evaluate(B); }
     MoveList ML;  
     generate_moves(B, &ML);
-    if (2<=nb_plies) {
-        order_moves(B, &ML);
+    if (3<=nb_plies) {
+        order_moves(B, &ML, nb_plies/3);
     }
 
     bool is_white = B->next_to_move==Color::white;
