@@ -12,7 +12,7 @@ int main(int argc, char** argv)
 
     for (int p=0; p!=100; ++p) {
         print_board(&B);    
-        Move m = get_best_move(&B, 3);
+        Move m = get_best_move(&B, 5);
         std::cout << "suggested move: "; 
         print_move(m);
         apply_move(&B, m);

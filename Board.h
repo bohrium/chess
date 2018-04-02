@@ -113,11 +113,12 @@ void undo_move(Board* B, Move M)
     B->grid[M.dest.row][M.dest.col] = M.taken;
 };
 
+// A chess position can have at most 332 possible next moves:
+// Consider a board with 9 queens, 2 rooks, 2 bishops, 2 knights, 1 king
+#define MAX_NB_MOVES (9*4*7 + 2*2*7 + 2*2*7 + 2*8 + 1*8) 
 struct MoveList {
     int length;
-    // A chess position can have at most 332 possible next moves:
-    // Consider a board with 9 queens, 2 rooks, 2 bishops, 2 knights, 1 king
-    Move moves[9*4*7 + 2*2*7 + 2*2*7 + 2*8 + 1*8];
+    Move moves[MAX_NB_MOVES];
 };
 void print_move(Move M)
 {
@@ -264,7 +265,7 @@ float evaluate(Board const* B)
         }
     }
 
-    return material + 0.01 * centrality;
+    return material + 0.1 * centrality;
 }
 
 #endif//BOARD_H
