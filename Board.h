@@ -69,6 +69,6 @@ void generate_king__moves (Board const* B, MoveList* ML, Coordinate source);
 void generate_moves(Board const* B, MoveList* ML);
 
 extern float points[];
-float evaluate(Board const* B);
+float evaluate(Board* B);
 
 #endif//BOARD_H

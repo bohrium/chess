@@ -63,9 +63,9 @@ int main(int argc, char** argv)
         {{7,1}, {5,2}, empty_piece}, // Nc3  (classic response)     --- should have high (white) score
         {{4,3}, {2,2}, black_knight},// Nxc6 (knight trade)         --- should have medium (white) score
         {{4,4}, {3,4}, empty_piece}, // e5   (hanging pawn)         --- should have low (white) score
+        {{7,1}, {6,3}, empty_piece}, // Nd2  (lose knight)          --- should have low (white) score
         {{7,3}, {5,5}, empty_piece}, // Qf3  (lose knight)          --- should have low (white) score
         {{7,2}, {2,7}, empty_piece}, // Bh6  (lose bishop)          --- should have low (white) score
-        {{7,1}, {6,3}, empty_piece}, // Nd2  (lose knight)          --- should have low (white) score
         {{7,3}, {4,6}, empty_piece}, // Qg4  (lose queen)           --- should have very low (white) score
     };
 

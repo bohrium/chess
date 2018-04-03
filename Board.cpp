@@ -259,7 +259,7 @@ void generate_king__moves (Board const* B, MoveList* ML, Coordinate source)
 
                /* p    n    b     r    q    k      */
 float points[] = {1.0, 3.0, 3.25, 5.0, 9.0, 1000.0};
-float evaluate(Board const* B) /* TODO: symmetrize aggression score */
+float evaluate(Board* B) /* TODO: symmetrize aggression score */
 {
     float material=0.0, centrality=0.0, aggression=0.0;
     for (int r=0; r!=8; ++r) {
@@ -275,15 +275,18 @@ float evaluate(Board const* B) /* TODO: symmetrize aggression score */
     }
 
     MoveList ML;
-    generate_moves(B, &ML);
-    for (int i=0; i!=ML.length; ++i) {
-        Move m = ML.moves[i];
-        Color s = m.taken.color;
-        if (s == Color::empty_color) { continue; }
-        int sign = (s == Color::white) ? -1.0 : +1.0;  
-        int is_threat = points[get_piece(B, m.dest).species] > points[get_piece(B, m.source).species] ? +1.0 : 0.0;
-        aggression += sign * is_threat; 
+    for (int j=0; j!=2; ++j) {
+        B->next_to_move = flip_color(B->next_to_move);
+        generate_moves(B, &ML);
+        for (int i=0; i!=ML.length; ++i) {
+            Move m = ML.moves[i];
+            Color s = m.taken.color;
+            if (s == Color::empty_color) { continue; }
+            int sign = (s == Color::white) ? -1.0 : +1.0;  
+            int is_threat = points[get_piece(B, m.dest).species] > points[get_piece(B, m.source).species] ? +1.0 : 0.0;
+            aggression += sign * is_threat; 
+        }
     }
 
-    return material + 1.5 * centrality + 1.0 * aggression;
+    return material + 1.5 * centrality + 0.5 * aggression;
 }
