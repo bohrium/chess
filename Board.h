@@ -32,6 +32,7 @@ void init_board(Board* B);
 
 extern char letters[];
 void print_board(Board const* B);
+bool read_board(Board* B, char const* string);
 
 struct Coordinate {
     int row, col; 

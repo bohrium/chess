@@ -7,27 +7,104 @@ int main(int argc, char** argv)
     std::cout << "Welcome!" << std::endl; 
 
     Board B;
-    init_board(&B);
-    MoveList ML;
+    /* TODO: test mating ability using following 8 examples */
 
-    /* Ruy Lopez, Exchange Variation */
-    Move Ruy[7] = {
-        {{6,4}, {4,4}, empty_piece}, // e4
-        {{1,4}, {3,4}, empty_piece}, // e5
-        {{7,6}, {5,5}, empty_piece}, // Nf3
-        {{0,1}, {2,2}, empty_piece}, // Nc6
-        {{7,5}, {3,1}, empty_piece}, // Bb5
-        {{1,0}, {2,0}, empty_piece}, // a6
-        {{3,1}, {2,2}, {Color::black, Species::knight}} // Bxc6
-    };
+    /* Checkmate in 1 (Rc8#) Back Rank Mate */
+    char backrank[] =
+        " White to move       \n"
+        "    a b c d e f g h  \n"
+        " 8 | | | | | | |k| | \n"
+        " 7 | | | | | |p|p|p| \n"
+        " 6 | | | | | | | | | \n"
+        " 5 | | | | | | | | | \n"
+        " 4 | | | | | | | | | \n"
+        " 3 | | | | | | | | | \n"
+        " 2 | | |R| |K| | | | \n"
+        " 1 | | | | | | | | | \n"
+        "    ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾  \n";
 
-    for (int i=0; i!=7; ++i) {
-        apply_move(&B, Ruy[i]);
-        print_board(&B);    
-        std::cout << "instantaneous score: " << evaluate(&B) << std::endl;
-        std::cout << "3-ply score: " << alpha_beta(&B, 3, -10000.0, +10000.0) << std::endl;
-    }
+    read_board(&B, backrank);
+    print_board(&B);
 
+    /* Checkmate in 1 (Qxf7#) --- Scholar's Mate */
+/*
+        White to move
+           a b c d e f g h
+        8 |r| |b|q|k|b|n|r|
+        7 |p|p|p|p| |p|p|p|
+        6 | | |n| | |n| | |
+        5 | | | | |p| | |Q|
+        4 | | |B| |P| | | |
+        3 | | | | | | | | |
+        2 |P|P|P|P| |P|P|P|
+        1 |R|N|B| |K| |N|R|
+           ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
+*/
+
+    /* Checkmate in 1 (Nf2#) --- Smothered Mate */
+/*
+        Black to move
+           a b c d e f g h
+        8 | | | | | | | |k|
+        7 |p|p|p| | | |p|p|
+        6 | | | |R| | | | |
+        5 | | | | | | | | |
+        4 | | | | |n| | | |
+        3 | | | | | | | | |
+        2 |P|P|P| | | |P|P|
+        1 | | | | | | |R|K|
+           ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
+*/
+
+    /* Checkmate in 2 (Bd7+) --- Evergreen Game */
+/*
+        White to move
+           a b c d e f g h
+        8 | |r| | |k| |r| |
+        7 |p|b|p| | |p| |p|
+        6 | |b| | | |P| | |
+        5 | | | | | |B| | |
+        4 | | | | | | | | |
+        3 |B| |p| | |Q| | |
+        2 |p| | | | |p|p|p|
+        1 | | | |R| | |K| |
+           ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
+*/
+
+    /* https://thechessworld.com/articles/problems/3-most-tricky-mate-in-1-positions-ever */
+
+    /* Checkmate in 2 (Qf6+) --- Immortal Game */
+/*
+        White to move
+           a b c d e f g h
+        8 |r| |b|k| | |n|r|
+        7 |p| | |p| |p|N|p|
+        6 |n| | |B| | | | |
+        5 | |p| |N|P| | |P|
+        4 | | | | | | |P| |
+        3 | | | |P| |Q| | |
+        2 |P| |P| |K| | | |
+        1 |q| | | | | | | |
+           ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
+*/
+
+    /* Checkmate in 2 (Nc3+) --- Game of the Century */
+/*
+        Black to move
+           a b c d e f g h
+        8 | |Q| | | | | | |
+        7 | | | | | |p|k| |
+        6 | | |p| | | |p| |
+        5 | |p| | | | | |p|
+        4 | |b| | | | | |P|
+        3 | |b| | | | | | |
+        2 |r| | | |n| |P| |
+        1 | |K| | | | | | |
+           ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
+*/
+
+    /* Checkmate in 2 (Nc3+) --- The Opera Game (black version) */
+   
     return 0;
 }
 

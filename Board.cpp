@@ -57,7 +57,58 @@ void print_board(Board const* B)
     }
     std::cout << "\t   ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾ " << std::endl;
 } 
-
+/*
+        White to move
+           a b c d e f g h
+        8 | | | | | | |k| |
+        7 | | | | | |p|p|p|
+        6 | | | | | | | | |
+        5 | | | | | | | | |
+        4 | | | | | | | | |
+        3 | | | | | | | | |
+        2 | | |R| |K| | | |
+        1 | | | | | | | | |
+           ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
+*/
+void skip_white(char const** string) {
+    while (**string==' ' || **string=='\t' || **string=='\n') { ++*string; } 
+}
+void to_next_line(char const** string) {
+    while (**string!='\n') { ++*string; }
+    ++*string;
+}
+bool read_board(Board* B, char const* string) /* returns TRUE if error */
+{
+    skip_white(&string);
+    if (*string=='W') { B->next_to_move = Color::white; }
+    else if (*string=='B') { B->next_to_move = Color::black; }
+    else { return true; /* ERROR */ }
+    to_next_line(&string); /* go to "   a b c" etc */
+    for (int r=0; r!=8; ++r) {
+        to_next_line(&string); /* go to "8 |r|n|b" etc */
+        skip_white(&string);
+        string += 1; /* skip "8" etc */ 
+        for (int c=0; c!=8; ++c) {
+            string += 2; /*skip " |" etc */ 
+            if (*string==' ') {
+                B->grid[r][c] = empty_piece;
+                continue;
+            }  
+            Color color = (*string<'a') ? Color::white : Color::black;
+            Species species;
+            switch ((char)(*string + ((*string<'a') ? 0 : 'A'-'a'))) {
+            case 'P': species = Species::pawn;   break;
+            case 'N': species = Species::knight; break;
+            case 'B': species = Species::bishop; break;
+            case 'R': species = Species::rook;   break;
+            case 'Q': species = Species::queen;  break;
+            case 'K': species = Species::king;   break;
+            }
+            B->grid[r][c] = {color, species}; 
+        }
+    } 
+    return false;
+}
 
 bool is_valid(Coordinate coor)
 {
