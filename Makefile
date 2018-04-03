@@ -17,9 +17,6 @@ test:
 	./testevalsicilian.o > out
 	diff out testevalsicilian_out
 	
-search:
-	g++ --std=c++11 TestSearch.cpp Board.cpp Search.cpp -o testsearch.o 
-
 preptest:
 	g++ --std=c++11 TestBoard.cpp Board.cpp -o testboard.o 
 	./testboard.o > testboard_out  
