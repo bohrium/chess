@@ -45,10 +45,11 @@ void print_board(Board const* B)
         std::cout << "\t" << 8-r << " |";
         for (int c=0; c!=8; ++c) {
             char l = letters[B->grid[r][c].species];
-            if (B->grid[r][c].color==Color::white) {
-                std::cout << "\033[35;1m";
+            if (B->grid[r][c].color==Color::black) {
+                l += 'a'-'A'; // lowercase
+                std::cout << "\033[36;1m"; /* black is cyan*/
             } else {
-                std::cout << "\033[36;1m";
+                std::cout << "\033[35;1m"; /* white is magenta */
             }
             std::cout << l << "\033[0;33m|"; 
         }
@@ -233,5 +234,5 @@ float evaluate(Board const* B) /* TODO: symmetrize aggression score */
         aggression += sign * is_threat; 
     }
 
-    return material + 1.0 * centrality + 0.5 * aggression;
+    return material + 1.5 * centrality + 1.0 * aggression;
 }

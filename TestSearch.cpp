@@ -13,7 +13,6 @@ int main(int argc, char** argv)
     /* Ruy Lopez, Exchange Variation */
     Move Ruy[7] = {
         {{6,4}, {4,4}, empty_piece}, // e4
-
         {{1,4}, {3,4}, empty_piece}, // e5
         {{7,6}, {5,5}, empty_piece}, // Nf3
         {{0,1}, {2,2}, empty_piece}, // Nc6
