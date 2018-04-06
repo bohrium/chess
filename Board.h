@@ -1,5 +1,6 @@
 #ifndef BOARD_H
 #define BOARD_H
+#include <vector>
 
 enum Color {
     black,
@@ -24,6 +25,7 @@ const Piece empty_piece = {Color::empty_color, Species::empty_species};
 struct Board {
     Color next_to_move;
     Piece grid[8][8];
+    std::vector<float> evaluation_stack;
 };
 
 extern Species init_row[];
@@ -65,10 +67,11 @@ void generate_knight_moves(Board const* B, MoveList* ML, Coordinate source);
 void generate_bishop_moves(Board const* B, MoveList* ML, Coordinate source);
 void generate_rook_moves  (Board const* B, MoveList* ML, Coordinate source);
 void generate_queen_moves (Board const* B, MoveList* ML, Coordinate source);
-void generate_king__moves (Board const* B, MoveList* ML, Coordinate source);
+void generate_king_moves  (Board const* B, MoveList* ML, Coordinate source);
 void generate_moves(Board const* B, MoveList* ML);
 
 extern float points[];
 float evaluate(Board* B);
+float evaluation_difference(Board* B, Move m);
 
 #endif//BOARD_H
