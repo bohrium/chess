@@ -1,5 +1,10 @@
 all:
 	g++ --std=c++11 Main.cpp Board.cpp Search.cpp -o main.o 
+
+profile:
+	g++ --std=c++11 TestSearch.cpp Board.cpp Search.cpp -o testsearch.o -pg 
+	./testsearch.o 
+
 test:
 	g++ --std=c++11 TestBoard.cpp Board.cpp -o testboard.o 
 	./testboard.o > out  
@@ -13,6 +18,8 @@ test:
 	g++ --std=c++11 TestEvalSicilian.cpp Board.cpp Search.cpp -o testevalsicilian.o 
 	./testevalsicilian.o > out
 	diff out testevalsicilian_out
+
+search:
 	g++ --std=c++11 TestSearch.cpp Board.cpp Search.cpp -o testsearch.o 
 	./testsearch.o > out  
 	diff out testsearch_out

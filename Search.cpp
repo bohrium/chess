@@ -12,7 +12,7 @@ void order_moves(Board* B, MoveList* ML, int nb_plies)
     int sorted_indices[MAX_NB_MOVES];
     for (int m=0; m!=ML->length; ++m) {
         apply_move(B, ML->moves[m]);
-        shallow_scores[m] = alpha_beta(B, nb_plies, -10000.0, +10000.0);
+        shallow_scores[m] = alpha_beta(B, nb_plies, -1000.0, +1000.0);
         undo_move(B, ML->moves[m]);
         sorted_indices[m] = m;
     }
@@ -42,10 +42,10 @@ float alpha_beta(Board* B, int nb_plies, float alpha, float beta)
     bool has_killer;
 
     auto const accumulator = is_white ? max_accumulator : min_accumulator; 
-    float score = is_white ? -10000.0 : +10000.0; 
+    float score = is_white ? -1000.0 : +1000.0; 
     for (int l=0; l!=ML.length; ++l) {
         Move m = ML.moves[l];
-        if (m.taken.species == Species::king) { return is_white ? +10000.0 : -10000.0;}
+        if (m.taken.species == Species::king) { return is_white ? +1000.0 : -1000.0;}
         apply_move(B, m);
         float child = alpha_beta(B, nb_plies-1, alpha, beta);
         score = accumulator(child, score);
@@ -70,7 +70,7 @@ Move get_best_move(Board* B, int nb_plies)
     generate_moves(B, &ML);
 
     auto const accumulator = B->next_to_move==Color::white ? max_accumulator : min_accumulator; 
-    float score = B->next_to_move==Color::white ? -10000.0 : +10000.0; 
+    float score = B->next_to_move==Color::white ? -1000.0 : +1000.0; 
     Move best_move;
     for (int l=0; l!=ML.length; ++l) {
         Move m = ML.moves[l];
@@ -78,7 +78,7 @@ Move get_best_move(Board* B, int nb_plies)
         std::cout << "\033[6D" << std::flush;
         if (m.taken.species == Species::king) { return m; }
         apply_move(B, m);
-        float child = alpha_beta(B, nb_plies, -10000.0, +10000.0);
+        float child = alpha_beta(B, nb_plies, -1000.0, +1000.0);
         if (score != accumulator(child, score)) {
             score = accumulator(child, score);
             best_move = m;

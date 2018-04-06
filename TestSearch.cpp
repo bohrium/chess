@@ -5,11 +5,11 @@
 void print_best_move_of(char const* board_string)
 {
     Board B;
+    init_board(&B);
     read_board(&B, board_string);
     Move m = get_best_move(&B, 4);
     print_move(&B, m); std::cout << std::endl;
 }
-
 int main(int argc, char** argv)
 {
     std::cout << "Welcome!" << std::endl; 
@@ -67,7 +67,7 @@ int main(int argc, char** argv)
      * CHECKMATES in 2 *
      *******************/
 
-    /* (Bd7+) --- Evergreen Game */
+    /* (Bf5+) --- Evergreen Game */
     char evergreen[] =
         " White to move       \n"
         "    a b c d e f g h  \n"
@@ -112,7 +112,7 @@ int main(int argc, char** argv)
     print_best_move_of(backrank);  // Rc8 
     print_best_move_of(scholars);  // Qxf7
     print_best_move_of(smothered); // Nf2
-    print_best_move_of(evergreen); // Bd7
+    print_best_move_of(evergreen); // Bf5
     print_best_move_of(immortal);  // Qf6
     print_best_move_of(century);   // Nc3
    
