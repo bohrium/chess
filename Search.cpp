@@ -12,7 +12,7 @@ void order_moves(Board* B, MoveList* ML, int nb_plies)
     int sorted_indices[MAX_NB_MOVES];
     for (int m=0; m!=ML->length; ++m) {
         apply_move(B, ML->moves[m]);
-        shallow_scores[m] = alpha_beta(B, nb_plies, -1000.0, +1000.0);
+        shallow_scores[m] = alpha_beta(B, nb_plies, -500.0, +500.0); /* less than king value to avoid king trade */
         undo_move(B, ML->moves[m]);
         sorted_indices[m] = m;
     }
