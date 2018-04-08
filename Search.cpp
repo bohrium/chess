@@ -39,7 +39,6 @@ float alpha_beta(Board* B, int nb_plies, float alpha, float beta)
     }
 
     bool is_white = B->next_to_move==Color::white;
-    bool has_killer; /* todo! */
 
     auto const accumulator = is_white ? max_accumulator : min_accumulator; 
     float score = is_white ? -1000.0 : +1000.0; 
@@ -99,4 +98,7 @@ Move get_best_move(Board* B, int nb_plies)
         /* cutoff will never happen at top level (except in king-taking case) */
     }
     return best_move;
-}  
+} 
+
+
+

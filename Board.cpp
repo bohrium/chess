@@ -281,7 +281,6 @@ int count_attacking_pawns (Board const* B, Coordinate dest, Color attacker_color
         Piece mover = get_piece(B, source);
         if (mover.species != Species::pawn) { continue; }
         if (mover.color != attacker_color) { continue; }
-        //ML->moves[ML->length++] = {source, dest, get_piece(B, dest)}; 
         ++nb_attackers;
     }
     return nb_attackers;
@@ -298,7 +297,6 @@ int count_attacking_knights(Board const* B, Coordinate dest, Color attacker_colo
             Piece mover = get_piece(B, source);
             if (mover.species != Species::knight) { continue; }
             if (mover.color != attacker_color) { continue; }
-            //ML->moves[ML->length++] = {source, dest, get_piece(B, dest)}; 
             nb_attackers += 1;
         }
     }
@@ -317,7 +315,6 @@ int count_attacking_bishops(Board const* B, Coordinate dest, Color attacker_colo
                 Piece mover = get_piece(B, source);
                 if (mover.species != Species::bishop) { continue; }
                 if (mover.color != attacker_color) { continue; }
-                //ML->moves[ML->length++] = {source, dest, get_piece(B, dest)}; 
                 nb_attackers += 1;
                 break;
             }
@@ -338,7 +335,6 @@ int count_attacking_rooks (Board const* B, Coordinate dest, Color attacker_color
                 Piece mover = get_piece(B, source);
                 if (mover.species != Species::rook) { continue; }
                 if (mover.color != attacker_color) { continue; }
-                //ML->moves[ML->length++] = {source, dest, get_piece(B, dest)}; 
                 nb_attackers += 1;
                 break;
             }
@@ -359,7 +355,6 @@ int count_attacking_queens(Board const* B, Coordinate dest, Color attacker_color
                 Piece mover = get_piece(B, source);
                 if (mover.species != Species::queen) { continue; }
                 if (mover.color != attacker_color) { continue; }
-                //ML->moves[ML->length++] = {source, dest, get_piece(B, dest)}; 
                 nb_attackers += 1;
                 break;
             }
@@ -379,7 +374,6 @@ int count_attacking_kings  (Board const* B, Coordinate dest, Color attacker_colo
             Piece mover = get_piece(B, source);
             if (mover.species != Species::king) { continue; }
             if (mover.color != attacker_color) { continue; }
-            //ML->moves[ML->length++] = {source, dest, get_piece(B, dest)}; 
             nb_attackers += 1;
         }
     }
@@ -421,11 +415,10 @@ int count_discovered_threats(Board const* B, Coordinate vanished)
         for (int dc=-1; dc!=2; ++dc) {
             int dd = dr*dr + dc*dr; 
             if (dd==0) { continue; }
-            //if (dr >= dc) { continue; } /* so dr < dc*/
+            if (dr >= dc) { continue; } /* so dr < dc*/
             Piece a = neighbors[dr+1][dc+1];
-            Piece b = neighbors[-dr+1][-dc+1];
             if (a.color == Color::empty_color) { continue; } 
-            //if (b.color == Color::empty_color) { continue; } 
+            Piece b = neighbors[-dr+1][-dc+1];
             if (b.color != flip_color(a.color)) { continue; } 
 
             if ((points[a.species] < points[b.species]) &&
@@ -434,12 +427,12 @@ int count_discovered_threats(Board const* B, Coordinate vanished)
                  (a.species==Species::queen))) {
                 net_threats += a.color==Color::white ? +1 : -1;    
             }
-            //else if ((points[b.species] < points[a.species]) &&
-            //    ((b.species==Species::bishop && dd==1*1+1*1) ||
-            //     (b.species==Species::rook   && dd==1*1) ||
-            //     (b.species==Species::queen))) {
-            //    net_threats += b.color==Color::white ? +1 : -1;    
-            //}
+            else if ((points[b.species] < points[a.species]) &&
+                ((b.species==Species::bishop && dd==1*1+1*1) ||
+                 (b.species==Species::rook   && dd==1*1) ||
+                 (b.species==Species::queen))) {
+                net_threats += b.color==Color::white ? +1 : -1;    
+            }
         }
     }
 
