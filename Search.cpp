@@ -34,12 +34,12 @@ float alpha_beta(Board* B, int nb_plies, float alpha, float beta)
     if (nb_plies==0) { return evaluate(B); }
     MoveList ML;  
     generate_moves(B, &ML);
-    if (2<=nb_plies) {
-        order_moves(B, &ML, nb_plies/3);
+    if (4<=nb_plies) {
+        order_moves(B, &ML, nb_plies/4);
     }
 
     bool is_white = B->next_to_move==Color::white;
-    bool has_killer;
+    bool has_killer; /* todo! */
 
     auto const accumulator = is_white ? max_accumulator : min_accumulator; 
     float score = is_white ? -1000.0 : +1000.0; 
@@ -68,9 +68,15 @@ Move get_best_move(Board* B, int nb_plies)
 {
     MoveList ML;  
     generate_moves(B, &ML);
+    if (4<=nb_plies) {
+        order_moves(B, &ML, nb_plies/4);
+    }
+    bool is_white = B->next_to_move==Color::white;
 
-    auto const accumulator = B->next_to_move==Color::white ? max_accumulator : min_accumulator; 
-    float score = B->next_to_move==Color::white ? -1000.0 : +1000.0; 
+    float alpha=-500.0, beta=+500.0;
+
+    auto const accumulator = is_white ? max_accumulator : min_accumulator; 
+    float score = is_white ? -1000.0 : +1000.0; 
     Move best_move;
     for (int l=0; l!=ML.length; ++l) {
         Move m = ML.moves[l];
@@ -78,12 +84,19 @@ Move get_best_move(Board* B, int nb_plies)
         std::cout << "\033[6D" << std::flush;
         if (m.taken.species == Species::king) { return m; }
         apply_move(B, m);
-        float child = alpha_beta(B, nb_plies, -1000.0, +1000.0);
+        float child = alpha_beta(B, nb_plies-1, alpha, beta);
         if (score != accumulator(child, score)) {
             score = accumulator(child, score);
             best_move = m;
         }
         undo_move(B, m);
+
+        if (is_white) {
+            alpha = accumulator(alpha, score); 
+        } else {
+            beta = accumulator(beta, score); 
+        } 
+        /* cutoff will never happen at top level (except in king-taking case) */
     }
     return best_move;
 }  

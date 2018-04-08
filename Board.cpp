@@ -554,5 +554,5 @@ float evaluation_difference(Board* B, Move m) /*TODO: constify*/ // assumes m ha
                   - new_threats_to_mover + old_threats_to_mover ) * sign
                  + discovered_threats - blocked_threats; 
 
-    return material + 1.5 * centrality + 0.5 * aggression;
+    return material + 1.5 * centrality + 2.0 * aggression;
 }
