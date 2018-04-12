@@ -6,13 +6,17 @@
 auto const max_accumulator = [](float a, float b) {return a<b ? b : a;};
 auto const min_accumulator = [](float a, float b) {return a>b ? b : a;};
 
+float alpha_beta_plain(Board* B, int nb_plies, float alpha, float beta);
+float alpha_beta_quiescent(Board* B, int nb_plies, float alpha, float beta);
+float alpha_beta(Board* B, int nb_plies, float alpha, float beta);
+
 void order_moves(Board* B, MoveList* ML, int nb_plies)
 {
     float shallow_scores[MAX_NB_MOVES]; 
     int sorted_indices[MAX_NB_MOVES];
     for (int m=0; m!=ML->length; ++m) {
         apply_move(B, ML->moves[m]);
-        shallow_scores[m] = alpha_beta(B, nb_plies, -500.0, +500.0); /* less than king value to avoid king trade */
+        shallow_scores[m] = alpha_beta_plain(B, nb_plies, -500.0, +500.0); /* less than king value to avoid king trade */
         undo_move(B, ML->moves[m]);
         sorted_indices[m] = m;
     }
@@ -27,6 +31,41 @@ void order_moves(Board* B, MoveList* ML, int nb_plies)
     for (int m=0; m!=ML->length; ++m) {
         ML->moves[m] = sorted_moves[m];
     }
+}
+
+float alpha_beta_plain(Board* B, int nb_plies, float alpha, float beta)
+{
+    if (nb_plies==0) { return evaluate(B); }
+    MoveList ML;  
+    generate_moves(B, &ML);
+
+    if (4<=nb_plies) {
+        order_moves(B, &ML, 0);//nb_plies/4);
+    }
+
+    bool is_white = B->next_to_move==Color::white;
+
+    auto const accumulator = is_white ? max_accumulator : min_accumulator; 
+    float score = is_white ? -1000.0 : +1000.0; 
+    for (int l=0; l!=ML.length; ++l) {
+        Move m = ML.moves[l];
+        if (m.taken.species == Species::king) { return is_white ? +1000.0 : -1000.0;}
+        apply_move(B, m);
+        float child = alpha_beta_plain(B, nb_plies-1, alpha, beta);
+        score = accumulator(child, score);
+        undo_move(B, m);
+
+        if (is_white) {
+            alpha = accumulator(alpha, score); 
+        } else {
+            beta = accumulator(beta, score); 
+        } 
+
+        if (! (alpha <= beta)) { /* cutoff! */
+            break;
+        }
+    }
+    return score;
 }
 
 float alpha_beta_quiescent(Board* B, int nb_plies, float alpha, float beta)
