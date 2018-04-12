@@ -413,9 +413,10 @@ int count_discovered_threats(Board const* B, Coordinate vanished)
 
     for (int dr=-1; dr!=2; ++dr) {
         for (int dc=-1; dc!=2; ++dc) {
+            if (dr >= dc) { continue; } /* so dr < dc*/
             int dd = dr*dr + dc*dr; 
             if (dd==0) { continue; }
-            if (dr >= dc) { continue; } /* so dr < dc*/
+
             Piece a = neighbors[dr+1][dc+1];
             if (a.color == Color::empty_color) { continue; } 
             Piece b = neighbors[-dr+1][-dc+1];
@@ -547,5 +548,5 @@ float evaluation_difference(Board* B, Move m) /*TODO: constify*/ // assumes m ha
                   - new_threats_to_mover + old_threats_to_mover ) * sign
                  + discovered_threats - blocked_threats; 
 
-    return material + 1.5 * centrality + 2.0 * aggression;
+    return material + 1.5 * centrality + 0.5 * aggression;
 }

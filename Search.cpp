@@ -27,13 +27,51 @@ void order_moves(Board* B, MoveList* ML, int nb_plies)
     for (int m=0; m!=ML->length; ++m) {
         ML->moves[m] = sorted_moves[m];
     }
-} 
+}
+
+float alpha_beta_quiescent(Board* B, int nb_plies, float alpha, float beta)
+{
+    if (nb_plies==0) { return evaluate(B); }
+
+    MoveList ML;  
+    generate_moves(B, &ML);
+
+    bool is_white = B->next_to_move==Color::white;
+
+    auto const accumulator = is_white ? max_accumulator : min_accumulator; 
+    float score = is_white ? -1000.0 : +1000.0; 
+    bool has_taking_move = false;
+    for (int l=0; l!=ML.length; ++l) {
+        Move m = ML.moves[l];
+        if (m.taken.species == Species::empty_species) { continue; }
+        has_taking_move = true;
+        if (m.taken.species == Species::king) { return is_white ? +1000.0 : -1000.0;}
+        apply_move(B, m);
+        float child = alpha_beta_quiescent(B, nb_plies-1, alpha, beta);
+        score = accumulator(child, score);
+        undo_move(B, m);
+
+        if (is_white) {
+            alpha = accumulator(alpha, score); 
+        } else {
+            beta = accumulator(beta, score); 
+        } 
+
+        if (! (alpha <= beta)) { /* cutoff! */
+            break;
+        }
+    }
+    
+    if (!has_taking_move) { return evaluate(B); }
+    return score;
+}
 
 float alpha_beta(Board* B, int nb_plies, float alpha, float beta)
 {
-    if (nb_plies==0) { return evaluate(B); }
+    if (nb_plies==0) { return alpha_beta_quiescent(B, 3, alpha, beta); }
     MoveList ML;  
     generate_moves(B, &ML);
+
     if (4<=nb_plies) {
         order_moves(B, &ML, nb_plies/4);
     }
@@ -61,7 +99,7 @@ float alpha_beta(Board* B, int nb_plies, float alpha, float beta)
         }
     }
     return score;
-}
+} 
 
 Move get_best_move(Board* B, int nb_plies)
 {
