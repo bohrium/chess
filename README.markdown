@@ -28,3 +28,5 @@ trouble profiling... try gprof on caen machines?
 
 want to tune heuristic... get Matthew S to look at TestEvalRuy and TestEvalSicilian (and make a middlegame and endgame
 testeval too)? 
+
+somehow, move ordering seems to affect opening used... this is bad (unless there are ties in evaluation?)!
