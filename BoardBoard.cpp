@@ -24,24 +24,24 @@ struct History {
     std::vector<std::pair<Coordinate, int>> attack_count_updates;
     int value;
 
-    // 1. filewise flags for special moves are kept compactly in 8-bit chars:
-    // 1.0. for castling, track whether back rank squares have ever been (moved or taken):
+    // 1. `attack_count` is redundant with `grid`; its maintenance speeds evaluation: 
+    int attack_count[8][8]; 
+
+    // 2. filewise flags for special moves are kept compactly in 8-bit chars:
+    // 2.0. for castling, track whether back rank squares have ever been (moved or taken):
     char back_changed[2]; // 0 is black, 1 is white 
-    // 1.1. for `king en passant`, flag squares just castled through:
+    // 2.1. for `king en passant`, flag squares just castled through:
     char castled_through; 
-    // 1.2. for en passant, track whether "virgin" pawns have just been moved:
+    // 2.2. for en passant, track whether "virgin" pawns have just been moved:
     char en_passantable; 
 }; 
 
 struct Board {
     // 0. basic board representation:
     Color next_to_move;
-    Piece grid[8][8]; 
+    Piece grid[8][8];
 
-    // 1. `attack_count` is redundant with `grid`; its maintenance speeds evaluation: 
-    int attack_count[8][8]; 
-
-    // 2. the following stack helps move unwinding:
+    // 1. the following stack helps move unwinding:
     std::vector<History> history;
 };
 
@@ -105,39 +105,124 @@ Piece get_piece(Board const* B, Coordinate coor)
 }
 void set_piece(Board* B, Coordinate coor, Piece piece)
 {
-    /*add_new_piece_attacks(B, coor, piece, +1); // new attacker
+    add_new_piece_attacks(B, coor, piece, +1); // new attacker
     if (get_piece(B, coor).species == Species::empty_species) {
         add_discovered_piece_attacks(B, coor, piece, -1); // blocked attacker
     } else {
         add_new_piece_attacks(B, coor, piece, -1); // taken piece 
-    }*/
+    }
 
     B->grid[coor.row][coor.col] = piece; 
 }
 
-/*void add_new_pawn_attacks(Board* B, Coordinate coor, Piece piece, int sign)
-{
+int const nb_knight_directions = 8; 
+int const knight_directions[8][2] = {{-2, -1}, {-1, -2}, {-2, +1}, {+1, -2}, {+2, -1}, {-1, +2}, {+2, +1}, {+1, +2}}; 
+int const nb_bishop_directions = 4; 
+int const bishop_directions[4][2] = {{-1, -1}, {-1, +1}, {+1, -1}, {+1, +1}}; 
+int const nb_rook_directions = 4; 
+int const rook_directions[4][2] = {{0, -1}, {0, +1}, {-1, 0}, {+1, 0}}; 
+
+void add_ray_attacks(Board const* B, History* hist, Coordinate source, int nb_directions, int directions[][2], int sign) {
+    Color player = get_piece(B, source).color;
+    Color opponent = flip_color(player);
+    for (int d=0; d!=nb_directions; ++d) {
+        int dr = directions[d][0];
+        int dc = directions[d][1];
+        int r = source->row;
+        int c = source->col;
+        do {
+            r += dr;
+            c += dc; 
+            if (!is_valid({r, c})) { break; }
+            hist->attack_counts[r][c] += sign;
+        } while (taken.color == Color::empty_color);
+    }
+}
+void add_point_attacks(Board const* B, History* hist, Coordinate source, int nb_directions, int directions[][2], int sign) {
+    for (int d=0; d!=nb_directions; ++d) {
+        int r = source->row + directions[d][0];
+        int c = source->col + directions[d][1];
+        if (!is_valid({r, c})) { continue; }
+        hist->attack_counts[r][c] += sign;
+    }
 }
 
-void add_new_piece_attacks(Board* B, coor, piece, int sign);
+void add_new_pawn_attacks(History* hist, Coordinate source, Color color, int sign)
+{
+    for (int dc=-1; dc!=3; dc+=2) {
+        Coor dst = {source.row + color, source.col+dc}; 
+        if (!is_valid(dst)) { continue; }
+        history->attack_counts[dst.row][dst.col] += color*sign; 
+    } 
+}
+void add_new_knight_attacks(History* hist, Coordinate source, int sign)
+{
+    add_point_attacks(hist, source, nb_knight_directions, knight_directions, sign);
+}
+void add_new_bishop_attacks(Board const* B, History* hist, Coordinate source, int sign)
+{
+    add_ray_attacks(B, hist, source, nb_bishop_directions, bishop_directions, sign);
+}
+void add_new_rook_attacks(Board const* B, History* hist, Coordinate source, int sign)
+{
+    add_ray_attacks(B, hist, source, nb_rook_directions, rook_directions, sign);
+}
+void add_new_queen_attacks(Board const* B, History* hist, Coordinate source, int sign)
+{
+    add_ray_attacks(B, hist, source, nb_bishop_directions, bishop_directions, sign);
+    add_ray_attacks(B, hist, source, nb_rook_directions, rook_directions, sign);
+}
+void add_new_king_attacks(History* hist, Coordinate source, int sign)
+{
+    add_point_attacks(hist, source, nb_bishop_directions, bishop_directions, sign);
+    add_point_attacks(hist, source, nb_rook_directions, rook_directions, sign);
+}
+
+void add_new_piece_attacks(Board const* B, History* hist, coor, piece, int sign);
 {
     switch (piece.species) {
     case Species::empty:  break; 
-    case Species::pawn:   add_new_pawn_attacks(B, coor, piece.color, sign); break; 
-    case Species::knight: add_new_knight_attacks(B, coor, piece.color * sign); break;
-    case Species::bishop: add_new_bishop_attacks(B, coor, piece.color * sign); break;
-    case Species::rook:   add_new_rook_attacks(B, coor, piece.color * sign); break;
-    case Species::queen:  add_new_queen_attacks(B, coor, piece.color * sign); break;
-    case Species::king:   add_new_king_attacks(B, coor, piece.color * sign); break;
+    case Species::pawn:   add_new_pawn_attacks(H, coor, piece.color, sign); break; 
+    case Species::knight: add_new_knight_attacks(H, coor, piece.color * sign); break;
+    case Species::bishop: add_new_bishop_attacks(B, H, coor, piece.color * sign); break;
+    case Species::rook:   add_new_rook_attacks(B, H, coor, piece.color * sign); break;
+    case Species::queen:  add_new_queen_attacks(B, H, coor, piece.color * sign); break;
+    case Species::king:   add_new_king_attacks(H, coor, piece.color * sign); break;
     }
 }
-void add_discovered_piece_attacks(B, coor, piece)
-    // note that only blockable pieces are bishop, rook, and queen
+void add_discovered_ray_attacks(Board const* B, Coordinate removed_coor, int nb_directions, int directions[][2], int sign)
 {
-    add_discovered_diagonal_attacks(B, coor, piece.color, sign);
-    add_discovered_orthogonal_attacks(B, coor, piece.color, sign);
+    for (int d=0; d!=nb_directions; ++d) {
+        int dr = directions[d][0];
+        int dc = directions[d][1];
+
+        int r = source->row;
+        int c = source->col;
+        do {
+            r += dr;
+            c += dc; 
+            if (!is_valid({r, c})) { break; }
+        } while (taken.color == Color::empty_color);
+
+        if (! is_valid({r, c})) { continue; }
+        // else, found piece whose attack is discovered...
+
+        int r = source->row;
+        int c = source->col;
+        do {
+            r -= dr;
+            c -= dc; 
+            if (!is_valid({r, c})) { break; }
+            hist->attack_counts[r][c] += sign;
+        } while (taken.color == Color::empty_color);
+    }
 }
-*/
+void add_discovered_piece_attacks(Board const* B, History* hist, Coordinate removed_coor, int sign)
+    // note that only discoverable (or blockable) attacks are from bishop, rook, and queen
+{
+    add_discovered_ray_attacks(B, removed_coor, nb_bishop_directions, bishop_directions, sign);
+    add_discovered_ray_attacks(B, removed_coor, nb_rook_directions, rook_directions, sign);
+}
 
 char letters = "PNBRQK ";
 

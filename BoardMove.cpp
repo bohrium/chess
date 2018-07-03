@@ -11,10 +11,13 @@
 
 enum MoveType {
     ordinary,
+
     pawn_double_jump,
     pawn_en_passant,
+
     castle,
     king_en_passant,
+
     promotion, // we only promote to queens
 };
 
@@ -78,6 +81,7 @@ void apply_move(Board* B, Move const* M) {
     B->next_to_move = flip_color(B->next_to_move);
     B->history.push_back(hist);
 }
+
 void undo_move(Board* B, Move const* M) {
     B->history.pop_back();
     B->next_to_move = flip_color(B->next_to_move);
@@ -87,6 +91,13 @@ void undo_move(Board* B, Move const* M) {
 
     switch (M->type) {
     case MoveType::ordinary:
+        break;
+
+    case MoveType::pawn_double_jump:
+        break;
+    case MoveType::pawn_en_passant:
+        set_piece(B, M->dst, empty_piece);
+        set_piece(B, {M->dst.row + M->taken.color, M->dst.col}, M->taken);
         break;
 
     case MoveType::king_en_passant:
@@ -100,13 +111,6 @@ void undo_move(Board* B, Move const* M) {
             set_piece(B, {4, row}, empty_piece); 
             set_piece(B, {7, row}, {B->next_to_move, Species::rook}); 
         }
-        break;
-
-    case MoveType::pawn_double_jump:
-        break;
-    case MoveType::pawn_en_passant:
-        set_piece(B, M->dst, empty_piece);
-        set_piece(B, {M->dst.row + M->taken.color, M->dst.col}, M->taken);
         break;
 
     case MoveType::promotion:
@@ -181,9 +185,11 @@ void generate_pawn_moves  (Board const* B, MoveList* ML, Coordinate source) {
 
     // taking moves:
     for (int dc=-1; dc!=+3; dc+=2) {
-        Piece taken = get_piece(B, {r+player, c+dc});
+        Coordinate dst = {r+player, c+dc}; 
+        if (!is_valid(dst)) { continue; }
+        Piece taken = get_piece(B, dst);
         if (taken.color == opponent) {
-            ML->moves.push_back({MoveType::single_jump, source, {r+player,c+dc}, taken, 0}); 
+            ML->moves.push_back({MoveType::single_jump, source, dst, taken, 0}); 
         }
     } 
 }
