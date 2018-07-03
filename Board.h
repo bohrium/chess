@@ -1,67 +1,57 @@
+/* author : samtenka
+ * changed: 2018-05-20
+ * created: 2018-03-??
+ * descrp : interface for chess board, including move and evaluation functionality
+ */
 #ifndef BOARD_H
 #define BOARD_H
-#include <vector>
+#include "Piece.h"
 
-enum Color {
-    black,
-    white,
-    empty_color
-};
-Color flip_color(Color c);
-enum Species {
-    pawn=0,
-    knight=1,
-    bishop=2,
-    rook=3,
-    queen=4,
-    king=5,
-    empty_species=6
-};
-struct Piece {
-    Color color;
-    Species species;
-};
-const Piece empty_piece = {Color::empty_color, Species::empty_species};
-struct Board {
-    Color next_to_move;
-    Piece grid[8][8];
-    std::vector<float> evaluation_stack;
-};
 
-extern Species init_row[];
 
-void init_board(Board* B);
-
-extern char letters[];
-void print_board(Board const* B);
-bool read_board(Board* B, char const* string);
+/************
+ * A. BOARD *
+ ************/
 
 struct Coordinate {
     int row, col; 
 };
-inline bool is_valid(Coordinate coor);
-
-inline Piece get_piece(Board const* B, Coordinate coor);
+bool is_valid(Coordinate coor);
  
-struct Move { // a standard move (no promotion, en passant, or castling)
-    Coordinate source, dest; 
-    Piece taken;
-};
+struct Board;
+void init_board(Board* B);
+Piece get_piece(Board const* B, Coordinate coor);
+void set_piece(Board const* B, Coordinate coor, Piece piece);
 
-void apply_move(Board* B, Move M);
-void undo_move(Board* B, Move M);
+void print_board(Board const* B);
+// input board needs to be initialized separately and *before* read_board is called:
+// returns TRUE if and only if it encountered a format error:
+bool read_board(Board* B, char const* string);
+/* EXAMPLE OF BOARD PRINTED FORMAT (FOR print_board AND read_board):
+	White to move
+	   a b c d e f g h
+	8 | | | | | | |k| |
+	7 | | | | | |p|p|p|
+	6 | | | | | | | | |
+	5 | | | | | | | | |
+	4 | | | | | | | | |
+	3 | | | | | | | | |
+	2 | | |R| |K| | | |
+	1 | | | | | | | | |
+	   ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
+*/
 
-// A chess position can have at most 332 possible next moves:
-// Consider a board with 9 queens, 2 rooks, 2 bishops, 2 knights, 1 king
-#define MAX_NB_MOVES (9*4*7 + 2*2*7 + 2*2*7 + 2*8 + 1*8) 
-struct MoveList {
-    int length;
-    Move moves[MAX_NB_MOVES];
-};
-void print_move(Board const* B, Move M);
 
+/***********
+ * B. MOVE *
+ ***********/
+
+struct Move;
+void apply_move(Board* B, Move const* M);
+void undo_move(Board* B, Move const* M);
+void print_move(Board const* B, Move const* M);
+struct MoveList;
 void print_movelist(Board const* B, MoveList* ML);
-
 void generate_pawn_moves  (Board const* B, MoveList* ML, Coordinate source);
 void generate_knight_moves(Board const* B, MoveList* ML, Coordinate source);
 void generate_bishop_moves(Board const* B, MoveList* ML, Coordinate source);
@@ -70,8 +60,13 @@ void generate_queen_moves (Board const* B, MoveList* ML, Coordinate source);
 void generate_king_moves  (Board const* B, MoveList* ML, Coordinate source);
 void generate_moves(Board const* B, MoveList* ML);
 
-extern float points[];
+
+
+/***************
+ * C. EVALUATE *
+ ***************/
+
 float evaluate(Board* B);
-float evaluation_difference(Board* B, Move m);
+float reevaluate(Board* B);
 
 #endif//BOARD_H
