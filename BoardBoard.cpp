@@ -26,11 +26,11 @@ struct History {
 
     // 1. filewise flags for special moves are kept compactly in 8-bit chars:
     // 1.0. for castling, track whether back rank squares have ever been (moved or taken):
-    char white_back_changed; 
-    char black_back_changed; 
-    // 1.1. for en passant, track whether "virgin" pawns have just been moved:
-    char white_en_passantable; 
-    char black_en_passantable; 
+    char back_changed[2]; // 0 is black, 1 is white 
+    // 1.1. for `king en passant`, flag squares just castled through:
+    char castled_through; 
+    // 1.2. for en passant, track whether "virgin" pawns have just been moved:
+    char en_passantable; 
 }; 
 
 struct Board {

@@ -15,6 +15,14 @@ Color flip_color(Color c)
 {
     return -c;
 }
+int index_from_color(Color c)
+{
+    return (c+1)/2; 
+}
+int row_from_color(Color c)
+{
+    return 7 * index_from_color(c);
+}
 enum Species {
     pawn=0,
     knight=1,
