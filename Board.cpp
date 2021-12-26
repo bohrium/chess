@@ -273,7 +273,8 @@ int KING_POINTS = 10000; /* should exceed twice the total remaining value */
               /* p    n    b     r    q    k      */
 int points[] = {100, 300, 325, 500, 900, KING_POINTS};
 /* note: pawn, bishop, rook placements are asymmetrical*/
-int _X=-25,_x=-10,_o=+10,_O=+25; 
+//int _X=-40,_x=-15,_o=+15,_O=+40; 
+int _X=-10,_x=-4,_o=+4,_O=+10; 
 
 int piece_placement[][8][8] = {
     /*pawn*/ {
@@ -338,15 +339,93 @@ int piece_placement[][8][8] = {
     },
 };
 
+int king_safety(Board* B) 
+{
+    int nb_attackers[2][8][8]; 
+    for (int r=0; r!=8; ++r) {
+        for (int c=0; c!=8; ++c) {
+            nb_attackers[Color::black][r][c] = 0; /* black */
+            nb_attackers[Color::white][r][c] = 0; /* white */
+        } 
+    }
+    Coordinate king_locations[2];
+    for (int r=0; r!=8; ++r) {
+        for (int c=0; c!=8; ++c) {
+            Piece p = get_piece(B, {r,c});
+            if (p.species == Species::empty_species) { continue; }
+            if (p.species == Species::king) { king_locations[p.color] = {r,c}; }
+            switch (p.species) {
+                case Species::knight:
+                    for (int dr=-2; dr!=3; ++dr) {
+                        for (int dc=-2; dc!=3; ++dc) {
+                            if (dr*dr + dc*dc != 2*2 + 1*1) { continue; }  
+                            if (! (0<=r+dr && r+dr<8 && 0<=c+dc && c+dc<8)) { continue; }  
+                            nb_attackers[p.color][r+dr][c+dc] += 1; 
+                        }
+                    }
+                    break;
+                case Species::bishop:
+                    for (int dr=-1; dr!=2; ++dr) {
+                        for (int dc=-1; dc!=2; ++dc) {
+                            if (dr*dr + dc*dc != 1*1 + 1*1) { continue; }
+                            for (int t=1; t!=8; ++t) {
+                                if (! (0<=r+t*dr && r+t*dr<8 && 0<=c+t*dc && c+t*dc<8)) { break; }  
+                                nb_attackers[p.color][r+t*dr][c+t*dc] += 1; 
+                            }
+                        }
+                    }
+                    break;
+                case Species::rook:
+                    for (int dr=-1; dr!=2; ++dr) {
+                        for (int dc=-1; dc!=2; ++dc) {
+                            if (dr*dr + dc*dc != 1*1) { continue; }
+                            for (int t=1; t!=8; ++t) {
+                                if (! (0<=r+t*dr && r+t*dr<8 && 0<=c+t*dc && c+t*dc<8)) { break; }  
+                                nb_attackers[p.color][r+t*dr][c+t*dc] += 1; 
+                            }
+                        }
+                    }
+                    break;
+                case Species::queen:
+                    for (int dr=-1; dr!=2; ++dr) {
+                        for (int dc=-1; dc!=2; ++dc) {
+                            if (dr*dr + dc*dc == 0) { continue; }
+                            for (int t=1; t!=8; ++t) {
+                                if (! (0<=r+t*dr && r+t*dr<8 && 0<=c+t*dc && c+t*dc<8)) { break; }  
+                                nb_attackers[p.color][r+t*dr][c+t*dc] += 1; 
+                            }
+                        }
+                    }
+                    break;
+                default: break;
+            }
+        }
+    }
+    int score = 0;
+    for (int color = 0; color != 2; ++color) {
+        int r = king_locations[color].row;
+        int c = king_locations[color].col;
+        for (int dr=-1; dr!=2; ++dr) {
+            for (int dc=-1; dc!=2; ++dc) {
+                //if (dr*dr + dc*dc == 0) { continue; }
+                if (! (0<=r+dr && r+dr<8 && 0<=c+dc && c+dc<8)) { continue; }  
+                score += (color==Color::black ? +1 : -1) * nb_attackers[1-color][r+dr][c+dc];
+            }
+        }
+    }
+    return 15 * score;
+}
+
 float evaluate(Board* B) /*TODO: constify*/
 {
-    return B->evaluation_stack.back();
+    return B->evaluation_stack.back() + king_safety(B);
 }
 
 float evaluation_difference(Board* B, Move m) /*TODO: constify*/ // assumes m has not yet been applied to B 
 {
     int material  = 0;
     int placement = 0;
+    //int safety = 0;
 
     Piece mover = get_piece(B, m.source);
     int sign = (mover.color==Color::white ? +1 : -1);

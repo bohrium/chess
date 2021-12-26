@@ -3,8 +3,8 @@
 #include <vector>
 
 enum Color {
-    black,
-    white,
+    black=0, /* 0 by fiat */
+    white=1, /* 1 by fiat */
     empty_color
 };
 Color flip_color(Color c);
