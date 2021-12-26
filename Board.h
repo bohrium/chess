@@ -70,7 +70,8 @@ void generate_queen_moves (Board const* B, MoveList* ML, Coordinate source);
 void generate_king_moves  (Board const* B, MoveList* ML, Coordinate source);
 void generate_moves(Board const* B, MoveList* ML);
 
-extern float points[];
+extern int points[];
+extern int KING_POINTS;
 float evaluate(Board* B);
 float evaluation_difference(Board* B, Move m);
 
