@@ -29,6 +29,7 @@ int main(int argc, char** argv)
             std::cout << "CHECKMATE!" << std::endl;
             break; 
         }
+        char c;  std::cin >> c;
     }
     print_board(&B);    
 

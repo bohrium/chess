@@ -1,5 +1,15 @@
 # chess
 
+
+     vvv
+
+
+TODO : make sure white moves does best for white, black best for black! 
+
+
+     ^^^
+
+
 ## overview 
 This project has two aims: to practice tree search and to use learning
 techniques to infer and visualize interpretable chess heuristics.

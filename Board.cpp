@@ -270,10 +270,10 @@ void generate_king_moves (Board const* B, MoveList* ML, Coordinate source)
 
 
 int KING_POINTS = 10000; /* should exceed twice the total remaining value */ 
-                 /* p    n    b     r    q    k      */
+              /* p    n    b     r    q    k      */
 int points[] = {100, 300, 325, 500, 900, KING_POINTS};
 /* note: pawn, bishop, rook placements are asymmetrical*/
-int _X=-40,_x=-15,_o=+15,_O=+40; 
+int _X=-25,_x=-10,_o=+10,_O=+25; 
 
 int piece_placement[][8][8] = {
     /*pawn*/ {
@@ -341,21 +341,8 @@ int piece_placement[][8][8] = {
 float evaluate(Board* B) /*TODO: constify*/
 {
     return B->evaluation_stack.back();
-    //float material=0.0, centrality=0.0, aggression=0.0;
-    //for (int r=0; r!=8; ++r) {
-    //    for (int c=0; c!=8; ++c) {
-    //        Piece p = get_piece(B, {r,c});
-    //        if (p.color == Color::empty_color) { continue; }
-    //        int sign = (p.color==Color::white ? +1 : -1);
-
-    //        material += sign * points[p.species];
-    //        //float dr=r-3.5, dc=c-3.5;
-    //        //centrality += sign * (1.0 - (dr*dr + dc*dc)/(2*3.5*3.5)); 
-    //    }
-    //}
-
-    //return material;  //+ 1.5 * centrality;
 }
+
 float evaluation_difference(Board* B, Move m) /*TODO: constify*/ // assumes m has not yet been applied to B 
 {
     int material  = 0;
@@ -366,7 +353,7 @@ float evaluation_difference(Board* B, Move m) /*TODO: constify*/ // assumes m ha
 
     /* material */ 
     if (m.taken.species != Species::empty_species) {
-        material += sign * points[m.taken.species];
+        material = sign * points[m.taken.species];
     }
 
     /* placement */ 
