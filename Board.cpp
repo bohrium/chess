@@ -30,6 +30,7 @@ void init_board(Board* B)
         B->grid[7][c] = {Color::white, init_row[c]};
     }
     B->evaluation_stack.push_back(0.0); /* initial evaluation */ 
+    B->hash = 0;
 }
 
 char letters[] = "PNBRQK ";
@@ -108,6 +109,7 @@ bool read_board(Board* B, char const* string) /* returns TRUE if error */
             B->grid[r][c] = {color, species}; 
         }
     } 
+    /* TODO: compute hash!! (and other associated precomputed vals!)  */
     return false;
 }
 
@@ -121,12 +123,45 @@ inline Piece get_piece(Board const* B, Coordinate coor)
     return B->grid[coor.row][coor.col]; 
 } 
 
+unsigned int hash_by_piece[3][7] = {
+  {1234567, 2345671, 3456712, 45767123, 5671234, 6712345, 7123456},
+  {3456701, 4567101, 5671201, 76712301, 7123401, 1234501, 2345601},
+};
+
+unsigned int hash_by_square[8][8] = {
+    {123*1301, 123*3501, 123*5701, 123*7901, 123*3101, 123*5301, 123*7501, 123*9701},
+    {345*1301, 345*3501, 345*5701, 345*7901, 345*3101, 345*5301, 345*7501, 345*9701},
+    {567*1301, 567*3501, 567*5701, 567*7901, 567*3101, 567*5301, 567*7501, 567*9701},
+    {789*1301, 789*3501, 789*5701, 789*7901, 789*3101, 789*5301, 789*7501, 789*9701},
+    {321*1301, 321*3501, 321*5701, 321*7901, 321*3101, 321*5301, 321*7501, 321*9701},
+    {543*1301, 543*3501, 543*5701, 543*7901, 543*3101, 543*5301, 543*7501, 543*9701},
+    {765*1301, 765*3501, 765*5701, 765*7901, 765*3101, 765*5301, 765*7501, 765*9701},
+    {987*1301, 987*3501, 987*5701, 987*7901, 987*3101, 987*5301, 987*7501, 987*9701},
+};
+
+unsigned int hash_of(Board* B, Move m)
+{
+    int sr = m.source.row;
+    int sc = m.source.col;
+    Piece mover = get_piece(B, m.source);
+    int dr = m.dest.row;
+    int dc = m.dest.col;
+    Piece taken = m.taken;
+    return (
+         (hash_by_piece[mover.color][mover.species] * hash_by_square[sr][sc]) ^
+         (hash_by_piece[mover.color][mover.species] * hash_by_square[dr][dc]) ^
+        (taken.species==Species::empty_species ? 0 :
+         (hash_by_piece[taken.color][taken.species] * hash_by_square[dr][dc]))
+    );
+} 
+
 void apply_move(Board* B, Move M)
 {
     B->next_to_move = flip_color(B->next_to_move);
     B->evaluation_stack.push_back(B->evaluation_stack.back() + evaluation_difference(B, M));
     B->grid[M.dest.row][M.dest.col] = B->grid[M.source.row][M.source.col];
     B->grid[M.source.row][M.source.col] = empty_piece;
+    B->hash ^= hash_of(B, M); 
 }
 void undo_move(Board* B, Move M)
 {
@@ -134,6 +169,7 @@ void undo_move(Board* B, Move M)
     B->evaluation_stack.pop_back();
     B->grid[M.source.row][M.source.col] = B->grid[M.dest.row][M.dest.col];
     B->grid[M.dest.row][M.dest.col] = M.taken;
+    B->hash ^= hash_of(B, M); 
 }
 
 void print_move(Board const* B, Move M)
@@ -418,7 +454,8 @@ int king_safety(Board* B)
 
 float evaluate(Board* B) /*TODO: constify*/
 {
-    return B->evaluation_stack.back() + king_safety(B);
+    //return B->evaluation_stack.back() + king_safety(B);
+    return B->evaluation_stack.back();//+ king_safety(B);
 }
 
 float evaluation_difference(Board* B, Move m) /*TODO: constify*/ // assumes m has not yet been applied to B 

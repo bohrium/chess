@@ -18,9 +18,11 @@ void order_moves(Board* B, MoveList* ML, int nb_plies)
         undo_move(B, ML->moves[m]);
         sorted_indices[m] = m;
     }
-    auto scorer = B->next_to_move==Color::white
-        ? [](int a, int b) { return a>b; } /* white wants bigger scores on left */
-        : [](int a, int b) { return a<b; };/* black wants smaller scores on left */
+    auto scorer = [shallow_scores, B](int a, int b) {
+        return B->next_to_move==Color::white ?
+            (shallow_scores[a]) > (shallow_scores[b]) :/* white wants bigger scores on left */
+            (shallow_scores[a]) < (shallow_scores[b]); /* black wants smaller scores on left */
+    };
     std::sort(sorted_indices, sorted_indices+ML->length, scorer); 
     Move sorted_moves[MAX_NB_MOVES]; 
     for (int m=0; m!=ML->length; ++m) {
@@ -31,17 +33,37 @@ void order_moves(Board* B, MoveList* ML, int nb_plies)
     }
 } 
 
+typedef struct ABRecord {
+    unsigned int hash;
+    int alpha;
+    int beta;
+    int score;
+} ABRecord;
+#define AB_TABLE_SIZE 1000
+#define AB_TABLE_DEPTH 3
+ABRecord ab_table[AB_TABLE_SIZE]; /* todo: zero out */
+
 int alpha_beta(Board* B, int nb_plies, int alpha, int beta)
 {
     if (nb_plies==0) { return evaluate(B); }
+
+    if (nb_plies == AB_TABLE_DEPTH) {
+      ABRecord rec = ab_table[B->hash % AB_TABLE_SIZE];
+      if (rec.hash == B->hash) {
+        std::cout << "moo!" << std::endl;
+        if ((rec.score > rec.alpha || rec.alpha <= alpha) &&
+            (rec.score < rec.beta  || beta <= rec.beta)) {
+          std::cout << "hit!" << std::endl;
+          return rec.score; 
+        }
+      };
+    }
+
     MoveList ML;  
     generate_moves(B, &ML);
     if (2<=nb_plies) {
         order_moves(B, &ML, nb_plies-2);
     }
-    //if (4<=nb_plies) {
-    //    order_moves(B, &ML, nb_plies/4);
-    //}
 
     bool is_white = B->next_to_move==Color::white;
 
@@ -50,8 +72,9 @@ int alpha_beta(Board* B, int nb_plies, int alpha, int beta)
 
                                  /*  0   1  2    3    4   5   6   7  8   */
     //const int branching_factors[] = {-1, 64, 64, 64, 16, 16, 64,  8,  8}; 
-    const int branching_factors[] = {-1, 64, 64, 64, 64, 64, 64, 64, 64}; 
-    int nb_candidates = MIN(ML.length, branching_factors[nb_plies]);
+    //const int branching_factors[] = {-1, 64, 64, 64, 64, 64, 64, 64, 64}; 
+    //int nb_candidates = MIN(ML.length, branching_factors[nb_plies]);
+    int nb_candidates = ML.length;
 
     for (int l=0; l!=nb_candidates; ++l) {
         Move m = ML.moves[l];
@@ -76,6 +99,14 @@ int alpha_beta(Board* B, int nb_plies, int alpha, int beta)
         ///* cutoff! */
         //if (! (alpha <= beta)) { break; }
     }
+
+    if (nb_plies == AB_TABLE_DEPTH) {
+      ABRecord* rec = &(ab_table[B->hash % AB_TABLE_SIZE]);
+      rec->hash = B->hash;
+      rec->alpha = alpha;
+      rec->beta = beta;
+      rec->score = score;
+    }
     return score;
 }
 
@@ -83,7 +114,7 @@ Move get_best_move(Board* B, int nb_plies)
 {
     MoveList ML;  
     generate_moves(B, &ML);
-    if (3<=nb_plies) {
+    if (2<=nb_plies) {
         order_moves(B, &ML, nb_plies-2);
     }
     bool is_white = B->next_to_move==Color::white;
@@ -96,10 +127,11 @@ Move get_best_move(Board* B, int nb_plies)
 
                                  /*  0   1  2    3    4   5   6   7  8   */
     //const int branching_factors[] = {-1, 64, 64, 64, 16, 16, 64,  8,  8}; 
-    const int branching_factors[] = {-1, 64, 64, 64, 64, 64, 64, 64, 64}; 
-    int nb_candidates = MIN(ML.length, branching_factors[nb_plies]);
+    //const int branching_factors[] = {-1, 64, 64, 64, 64, 64, 64, 64, 64}; 
+    //int nb_candidates = MIN(ML.length, branching_factors[nb_plies]);
+    int nb_candidates = ML.length;
+
     for (int l=0; l!=nb_candidates; ++l) {
-    //for (int l=0; l!=ML.length; ++l) {
         Move m = ML.moves[l];
         print_move(B, m);
         std::cout << "\033[6D" << std::flush;

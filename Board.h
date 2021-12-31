@@ -26,6 +26,7 @@ struct Board {
     Color next_to_move;
     Piece grid[8][8];
     std::vector<float> evaluation_stack;
+    unsigned int hash;
 };
 
 extern Species init_row[];

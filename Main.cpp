@@ -22,7 +22,7 @@ int main(int argc, char** argv)
         Move m = get_best_move(&B, NB_PLIES);
         std::cout << "Played "; print_move(&B, m);
         std::cout << "\033[0;34m"; /* blue */
-        std::cout << " " << alpha_beta(&B, NB_PLIES, -KING_POINTS/2, +KING_POINTS/2) << std::endl;  
+        std::cout << " " << alpha_beta(&B, NB_PLIES-2, -KING_POINTS/2, +KING_POINTS/2) << std::endl;  
         std::cout << "\033[0;33m"; /* yellow */
         apply_move(&B, m);
         if (m.taken.species == Species::king) {
