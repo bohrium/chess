@@ -271,10 +271,10 @@ void generate_king_moves (Board const* B, MoveList* ML, Coordinate source)
 
 int KING_POINTS = 10000; /* should exceed twice the total remaining value */ 
               /* p    n    b     r    q    k      */
-int points[] = {100, 300, 325, 500, 900, KING_POINTS};
+int points[] = {100, 275, 325, 500, 900, KING_POINTS};
 /* note: pawn, bishop, rook placements are asymmetrical*/
 //int _X=-40,_x=-15,_o=+15,_O=+40; 
-int _X=-10,_x=-4,_o=+4,_O=+10; 
+int _X=-40,_x=-16,_o=+16,_O=+40; 
 
 int piece_placement[][8][8] = {
     /*pawn*/ {
@@ -294,7 +294,7 @@ int piece_placement[][8][8] = {
         {_X, 0,_o,_o,_o,_o, 0,_X},
         {_X, 0,_o,_o,_o,_o, 0,_X},
         {_X, 0, 0,_o,_o, 0, 0,_X},
-        {_X,_x, 0, 0, 0, 0, 0,_X},
+        {_X,_x, 0, 0, 0, 0,_x,_X},
         {_X,_X,_X,_X,_X,_X,_X,_X},
     },
     /*bishop*/ {

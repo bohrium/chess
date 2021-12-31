@@ -36,7 +36,7 @@ int alpha_beta(Board* B, int nb_plies, int alpha, int beta)
     if (nb_plies==0) { return evaluate(B); }
     MoveList ML;  
     generate_moves(B, &ML);
-    if (3<=nb_plies) {
+    if (2<=nb_plies) {
         order_moves(B, &ML, nb_plies-2);
     }
     //if (4<=nb_plies) {

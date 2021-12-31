@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <time.h>
 
-#define NB_PLIES 4
+#define NB_PLIES 6
 
 int main(int argc, char** argv)
 {
