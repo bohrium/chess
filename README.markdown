@@ -22,6 +22,8 @@ TODO : make sure hash includes who-is-to-move data!
            `attackers xray king neighborhood` (implemented slowly, un-tuned)
            `piece-square tables` (implemented, un-tuned)
 
+       implement pawn promotion to queen (enrich Move type)
+
      ^^^
 
 

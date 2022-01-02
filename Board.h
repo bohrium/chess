@@ -22,11 +22,19 @@ struct Piece {
     Species species;
 };
 const Piece empty_piece = {Color::empty_color, Species::empty_species};
+struct Coordinate {
+    int row, col; 
+};
+inline bool is_valid(Coordinate coor);
 struct Board {
     Color next_to_move;
     Piece grid[8][8];
-    std::vector<float> evaluation_stack;
+    std::vector<int> evaluation_stack;
     unsigned int hash;
+    //
+    Coordinate king_loc[2];
+    int nb_pawns_by_file[2][8];
+    int nb_pieces_by_quadrant[2][4];
 };
 
 
@@ -38,10 +46,6 @@ extern char letters[];
 void print_board(Board const* B);
 bool read_board(Board* B, char const* string);
 
-struct Coordinate {
-    int row, col; 
-};
-inline bool is_valid(Coordinate coor);
 
 inline Piece get_piece(Board const* B, Coordinate coor);
  
@@ -75,7 +79,7 @@ void generate_moves(Board const* B, MoveList* ML);
 
 extern int points[];
 extern int KING_POINTS;
-float evaluate(Board* B);
-float evaluation_difference(Board* B, Move m);
+int evaluate(Board* B);
+int evaluation_difference(Board* B, Move m);
 
 #endif//BOARD_H

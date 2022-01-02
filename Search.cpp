@@ -3,6 +3,8 @@
 #include <iostream>
 #include <algorithm>
 
+#define STABLE_DEPTH 2
+
 #define MIN(X,Y) (((X)<(Y))?(X):(Y))
 #define MAX(X,Y) (((X)>(Y))?(X):(Y))
 
@@ -85,7 +87,7 @@ ABRecord ab_table[AB_TABLE_SIZE]; /* todo: zero out */
 int alpha_beta(Board* B, int nb_plies, int alpha, int beta)
 {
     //if (nb_plies==0) { return evaluate(B); }
-    if (nb_plies==0) { return stable_eval(B, 4); }
+    if (nb_plies==0) { return stable_eval(B, STABLE_DEPTH); }
 
     if (nb_plies == AB_TABLE_DEPTH) {
       ABRecord rec = ab_table[B->hash % AB_TABLE_SIZE];

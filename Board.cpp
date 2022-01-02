@@ -36,6 +36,18 @@ void init_board(Board* B)
     }
     B->evaluation_stack.push_back(0.0); /* initial evaluation */ 
     B->hash = 0;
+
+    B->king_loc[0] = {0, 4};
+    B->king_loc[1] = {7, 4};
+
+    for (int color=0; color!=2; ++color) {
+        for (int c=0; c!=8; ++c) {
+            B->nb_pawns_by_file[color][c] = 1;
+        }
+        for (int q=0; q!=4; ++q) {
+            B->nb_pieces_by_quadrant[color][q] = (q&2)^(color<<1) ? 0 : 8;
+        }
+    }
 }
 
 char letters[] = "PNBRQK ";
@@ -45,6 +57,16 @@ void print_board(Board const* B)
         std::cout << "\tWhite to move" << std::endl;
     } else {
         std::cout << "\tBlack to move" << std::endl;
+    }
+    for (int color=0; color!=2; ++color) {
+        for (int c=0; c!=8; ++c) {
+            std::cout << B->nb_pawns_by_file[color][c] << ".";
+        }
+        std::cout << " ";
+        for (int q=0; q!=4; ++q) {
+            std::cout << B->nb_pieces_by_quadrant[color][q] <<".";
+        }
+        std::cout << std::endl;
     }
      
     std::cout << "\t   a b c d e f g h" << std::endl;
@@ -144,11 +166,11 @@ unsigned int hash_by_square[8][8] = {
     {987*1301, 987*3501, 987*5701, 987*7901, 987*3101, 987*5301, 987*7501, 987*9701},
 };
 
-unsigned int hash_of(Board* B, Move m)
+unsigned int hash_of(Move m, Piece mover)
 {
+    /* mode is whether for updating forward or backward*/
     int sr = m.source.row;
     int sc = m.source.col;
-    Piece mover = get_piece(B, m.source);
     int dr = m.dest.row;
     int dc = m.dest.col;
     Piece taken = m.taken;
@@ -160,21 +182,74 @@ unsigned int hash_of(Board* B, Move m)
     );
 } 
 
+int quadrant_by_coor[8][8] = {
+    {0,0,0,0,1,1,1,1},
+    {0,0,0,0,1,1,1,1},
+    {0,0,0,0,1,1,1,1},
+    {0,0,0,0,1,1,1,1},
+    {2,2,2,2,3,3,3,3},
+    {2,2,2,2,3,3,3,3},
+    {2,2,2,2,3,3,3,3},
+    {2,2,2,2,3,3,3,3},
+};
+
 void apply_move(Board* B, Move M)
 {
+    /* note asymmetry with analogous line in undo_move */
+    Piece mover = get_piece(B, M.source);
+    B->hash ^= hash_of(M, mover); 
+
     B->next_to_move = flip_color(B->next_to_move);
     B->evaluation_stack.push_back(B->evaluation_stack.back() + evaluation_difference(B, M));
     B->grid[M.dest.row][M.dest.col] = B->grid[M.source.row][M.source.col];
     B->grid[M.source.row][M.source.col] = empty_piece;
-    B->hash ^= hash_of(B, M); 
+
+    if (mover.species == Species::king) {
+        B->king_loc[mover.color] = M.dest;
+    }
+
+    B->nb_pieces_by_quadrant[mover.color][quadrant_by_coor[M.source.row][M.source.col]] -= 1; 
+    B->nb_pieces_by_quadrant[mover.color][quadrant_by_coor[M.dest.row][M.dest.col]] += 1; 
+
+    if (is_capture(M)) {
+        B->nb_pieces_by_quadrant[M.taken.color][quadrant_by_coor[M.dest.row][M.dest.col]] -= 1; 
+        if (M.taken.species == Species::pawn) {
+            B->nb_pawns_by_file[M.taken.color][M.dest.col] -= 1;
+        }
+        if (mover.species == Species::pawn) {
+            B->nb_pawns_by_file[mover.color][M.dest.col] += 1;
+            B->nb_pawns_by_file[mover.color][M.source.col] -= 1;
+        }
+    }
 }
 void undo_move(Board* B, Move M)
 {
+    /* note asymmetry with analogous line in apply_move */
+    Piece mover = get_piece(B, M.dest);
+    B->hash ^= hash_of(M, mover); 
+
     B->next_to_move = flip_color(B->next_to_move);
     B->evaluation_stack.pop_back();
     B->grid[M.source.row][M.source.col] = B->grid[M.dest.row][M.dest.col];
     B->grid[M.dest.row][M.dest.col] = M.taken;
-    B->hash ^= hash_of(B, M); 
+
+    if (mover.species == Species::king) {
+        B->king_loc[mover.color] = M.source;
+    }
+
+    B->nb_pieces_by_quadrant[mover.color][quadrant_by_coor[M.source.row][M.source.col]] += 1; 
+    B->nb_pieces_by_quadrant[mover.color][quadrant_by_coor[M.dest.row][M.dest.col]] -= 1; 
+
+    if (is_capture(M)) {
+        B->nb_pieces_by_quadrant[M.taken.color][quadrant_by_coor[M.dest.row][M.dest.col]] += 1; 
+        if (M.taken.species == Species::pawn) {
+            B->nb_pawns_by_file[M.taken.color][M.dest.col] += 1;
+        }
+        if (mover.species == Species::pawn) {
+            B->nb_pawns_by_file[mover.color][M.dest.col] -= 1;
+            B->nb_pawns_by_file[mover.color][M.source.col] += 1;
+        }
+    }
 }
 
 void print_move(Board const* B, Move M)
@@ -457,13 +532,25 @@ int king_safety(Board* B)
     return 15 * score;
 }
 
-float evaluate(Board* B) /*TODO: constify*/
+int king_tropism(Board* B)
 {
-    //return B->evaluation_stack.back() + king_safety(B);
-    return B->evaluation_stack.back();//+ king_safety(B);
+    int quad[2] = {
+        quadrant_by_coor[B->king_loc[0].row][B->king_loc[0].col],
+        quadrant_by_coor[B->king_loc[1].row][B->king_loc[1].col],
+    };
+    return 15 * (
+        B->nb_pieces_by_quadrant[1][quad[0]] /* white pieces near black king */
+      - B->nb_pieces_by_quadrant[0][quad[1]] /* black pieces near white king */
+    );
 }
 
-float evaluation_difference(Board* B, Move m) /*TODO: constify*/ // assumes m has not yet been applied to B 
+int evaluate(Board* B) /*TODO: constify*/
+{
+    //return B->evaluation_stack.back() + king_safety(B);
+    return B->evaluation_stack.back() + king_tropism(B);
+}
+
+int evaluation_difference(Board* B, Move m) /*TODO: constify*/ // assumes m has not yet been applied to B 
 {
     int material  = 0;
     int placement = 0;
