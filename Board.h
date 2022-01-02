@@ -35,6 +35,8 @@ struct Board {
     Coordinate king_loc[2];
     int nb_pawns_by_file[2][8];
     int nb_pieces_by_quadrant[2][4];
+    int nb_pawns_by_square_parity[2][2];
+    int nb_bishops_by_square_parity[2][2];
 };
 
 

@@ -47,6 +47,10 @@ void init_board(Board* B)
         for (int q=0; q!=4; ++q) {
             B->nb_pieces_by_quadrant[color][q] = (q&2)^(color<<1) ? 0 : 8;
         }
+        for (int p=0; p!=2; ++p) {
+            B->nb_pawns_by_square_parity[color][p] = 4;
+            B->nb_bishops_by_square_parity[color][p] = 1;
+        }
     }
 }
 
@@ -193,6 +197,11 @@ int quadrant_by_coor[8][8] = {
     {2,2,2,2,3,3,3,3},
 };
 
+int parity(Coordinate rc)
+{
+    return (rc.row + rc.col)%2;
+}
+
 void apply_move(Board* B, Move M)
 {
     /* note asymmetry with analogous line in undo_move */
@@ -207,6 +216,10 @@ void apply_move(Board* B, Move M)
     if (mover.species == Species::king) {
         B->king_loc[mover.color] = M.dest;
     }
+    if (mover.species == Species::pawn) {
+        B->nb_pawns_by_square_parity[mover.color][parity(M.source)] -= 1;
+        B->nb_pawns_by_square_parity[mover.color][parity(M.dest)] += 1;
+    }
 
     B->nb_pieces_by_quadrant[mover.color][quadrant_by_coor[M.source.row][M.source.col]] -= 1; 
     B->nb_pieces_by_quadrant[mover.color][quadrant_by_coor[M.dest.row][M.dest.col]] += 1; 
@@ -215,6 +228,9 @@ void apply_move(Board* B, Move M)
         B->nb_pieces_by_quadrant[M.taken.color][quadrant_by_coor[M.dest.row][M.dest.col]] -= 1; 
         if (M.taken.species == Species::pawn) {
             B->nb_pawns_by_file[M.taken.color][M.dest.col] -= 1;
+            B->nb_pawns_by_square_parity[M.taken.color][parity(M.dest)] -= 1;
+        } else if (M.taken.species == Species::bishop) {
+            B->nb_bishops_by_square_parity[M.taken.color][parity(M.dest)] -= 1;
         }
         if (mover.species == Species::pawn) {
             B->nb_pawns_by_file[mover.color][M.dest.col] += 1;
@@ -236,6 +252,10 @@ void undo_move(Board* B, Move M)
     if (mover.species == Species::king) {
         B->king_loc[mover.color] = M.source;
     }
+    if (mover.species == Species::pawn) {
+        B->nb_pawns_by_square_parity[mover.color][parity(M.source)] += 1;
+        B->nb_pawns_by_square_parity[mover.color][parity(M.dest)] -= 1;
+    }
 
     B->nb_pieces_by_quadrant[mover.color][quadrant_by_coor[M.source.row][M.source.col]] += 1; 
     B->nb_pieces_by_quadrant[mover.color][quadrant_by_coor[M.dest.row][M.dest.col]] -= 1; 
@@ -244,6 +264,9 @@ void undo_move(Board* B, Move M)
         B->nb_pieces_by_quadrant[M.taken.color][quadrant_by_coor[M.dest.row][M.dest.col]] += 1; 
         if (M.taken.species == Species::pawn) {
             B->nb_pawns_by_file[M.taken.color][M.dest.col] += 1;
+            B->nb_pawns_by_square_parity[M.taken.color][parity(M.dest)] += 1;
+        } else if (M.taken.species == Species::bishop) {
+            B->nb_bishops_by_square_parity[M.taken.color][parity(M.dest)] += 1;
         }
         if (mover.species == Species::pawn) {
             B->nb_pawns_by_file[mover.color][M.dest.col] -= 1;
@@ -544,6 +567,21 @@ int king_tropism(Board* B)
     );
 }
 
+int bishop_adjustment(Board* B)
+{
+    int net_pairs = (
+        B->nb_bishops_by_square_parity[1][0] * B->nb_bishops_by_square_parity[1][1]
+      - B->nb_bishops_by_square_parity[0][0] * B->nb_bishops_by_square_parity[0][1]
+    );
+    int net_pawnblocks = (
+        (B->nb_pawns_by_square_parity[0][0] + B->nb_pawns_by_square_parity[1][0])
+      * (B->nb_bishops_by_square_parity[1][0] - B->nb_bishops_by_square_parity[0][0])
+      + (B->nb_pawns_by_square_parity[0][1] + B->nb_pawns_by_square_parity[1][1])
+      * (B->nb_bishops_by_square_parity[1][1] - B->nb_bishops_by_square_parity[0][1])
+    );
+    return 25 * net_pairs - 10 * net_pawnblocks; 
+}
+
 int pawn_connectivity(Board* B)
 {
     return 25 * (
@@ -568,7 +606,10 @@ int pawn_connectivity(Board* B)
 int evaluate(Board* B) /*TODO: constify*/
 {
     //return B->evaluation_stack.back() + king_safety(B);
-    return B->evaluation_stack.back() + king_tropism(B) + pawn_connectivity(B);
+    return B->evaluation_stack.back()
+        + king_tropism(B)
+        + pawn_connectivity(B)
+        + bishop_adjustment(B);
 }
 
 int evaluation_difference(Board* B, Move m) /*TODO: constify*/ // assumes m has not yet been applied to B 

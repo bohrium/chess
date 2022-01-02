@@ -4,9 +4,10 @@
      vvv
 
 
-TODO : make sure hash includes who-is-to-move data!
-       
+TODO : 
+
        implement stable node eval (linear greedy search for pass/bestcapture) 
+         (implemented.)
 
        analyze mystery of hash table underusage
            partial progress: in apply_move/undo_move, computation of `mover`
@@ -15,19 +16,23 @@ TODO : make sure hash includes who-is-to-move data!
                              computation was incorrect and led to path
                              dependent value
 
-       accelerate (xray'd king) term by integrating differences
-
-       add and tune terms for
-           `attackers in same quadrant as king` (implemented, un-tuned)
-           `pawn connectivity`
-           `bishop pair / bishop-pawn badness`
-           `rooks on semi-open or open files`
-           `knights on protected weak squares` 
-           `"random" mobility-incentivizing term via hash`
-           `attackers xray king neighborhood` (implemented slowly, un-tuned)
-           `piece-square tables` (implemented, un-tuned)
+       analyze mystery of core dumps as recorded in commits for game-00, -01
 
        implement pawn promotion to queen (enrich Move type)
+
+       add and tune terms for
+           `piece-square tables`                (implemented, un-tuned)
+           `attackers in same quadrant as king` (implemented, un-tuned)
+           `pawn connectivity`                  (implemented, un-tuned)
+           `bishop pair / bishop-pawn badness`  (implemented, un-tuned)
+           `knights on protected weak squares` 
+           `attackers xray king neighborhood`   (implemented slowly, un-tuned)
+           `"random" mobility-incentivizing term via hash`
+           `rooks on semi-open or open files`
+
+       accelerate (xray'd king) term by integrating differences
+
+       make sure hash includes who-is-to-move data!
 
      ^^^
 
