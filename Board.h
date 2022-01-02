@@ -29,6 +29,7 @@ struct Board {
     unsigned int hash;
 };
 
+
 extern Species init_row[];
 
 void init_board(Board* B);
@@ -48,6 +49,7 @@ struct Move { // a standard move (no promotion, en passant, or castling)
     Coordinate source, dest; 
     Piece taken;
 };
+bool is_capture(Move m);
 
 void apply_move(Board* B, Move M);
 void undo_move(Board* B, Move M);

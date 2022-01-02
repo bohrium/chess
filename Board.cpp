@@ -17,6 +17,11 @@ Species init_row[] = {
     Species::rook
 };
 
+bool is_capture(Move m)
+{
+    return m.taken.species != Species::empty_species;
+}
+
 void init_board(Board* B)
 {
     B->next_to_move = Color::white;
@@ -150,8 +155,8 @@ unsigned int hash_of(Board* B, Move m)
     return (
          (hash_by_piece[mover.color][mover.species] * hash_by_square[sr][sc]) ^
          (hash_by_piece[mover.color][mover.species] * hash_by_square[dr][dc]) ^
-        (taken.species==Species::empty_species ? 0 :
-         (hash_by_piece[taken.color][taken.species] * hash_by_square[dr][dc]))
+        (is_capture(m) ?
+         (hash_by_piece[taken.color][taken.species] * hash_by_square[dr][dc]) : 0)
     );
 } 
 
@@ -468,7 +473,7 @@ float evaluation_difference(Board* B, Move m) /*TODO: constify*/ // assumes m ha
     int sign = (mover.color==Color::white ? +1 : -1);
 
     /* material */ 
-    if (m.taken.species != Species::empty_species) {
+    if (is_capture(m)) {
         material = sign * points[m.taken.species];
     }
 

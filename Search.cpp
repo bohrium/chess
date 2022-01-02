@@ -4,9 +4,48 @@
 #include <algorithm>
 
 #define MIN(X,Y) (((X)<(Y))?(X):(Y))
+#define MAX(X,Y) (((X)>(Y))?(X):(Y))
 
+/*TODO: get rid of / simplify lambda usage*/
 auto const max_accumulator = [](int a, int b) {return a<b ? b : a;};
 auto const min_accumulator = [](int a, int b) {return a>b ? b : a;};
+
+Move shallow_greedy_move(Board* B)
+{
+    /* TODO: check for empty move list?? */
+    MoveList ML;  
+    generate_moves(B, &ML);
+    int move_acc = 0;
+
+    int sign = B->next_to_move == Color::white ? +1 : -1; 
+
+    int score_acc = -KING_POINTS/2; 
+    for (int m=0; m!=ML.length; ++m) {
+        apply_move(B, ML.moves[m]);
+        int score = sign * evaluate(B);
+        undo_move(B, ML.moves[m]);
+        score_acc = MAX(score_acc, score);
+        if (score_acc == score) { move_acc = m; }
+    }
+    //score_acc *= sign;
+    return ML.moves[move_acc];
+}
+
+int stable_eval(Board* B, int max_plies)
+{
+    /* TODO: check for taken king at very beginning and during loop */
+    /* TODO: implement alpha beta style cutoffs */
+
+    if (max_plies==0) { return evaluate(B); }
+    Move m = shallow_greedy_move(B);
+    if (!is_capture(m)) { return evaluate(B); }
+
+    int pass = evaluate(B);
+    apply_move(B, m);
+    int go = stable_eval(B, max_plies-1); 
+    undo_move(B, m);
+    return B->next_to_move==Color::white ? MAX(pass, go) : MIN(pass, go);
+}
 
 void order_moves(Board* B, MoveList* ML, int nb_plies)
 {
@@ -45,7 +84,8 @@ ABRecord ab_table[AB_TABLE_SIZE]; /* todo: zero out */
 
 int alpha_beta(Board* B, int nb_plies, int alpha, int beta)
 {
-    if (nb_plies==0) { return evaluate(B); }
+    //if (nb_plies==0) { return evaluate(B); }
+    if (nb_plies==0) { return stable_eval(B, 4); }
 
     if (nb_plies == AB_TABLE_DEPTH) {
       ABRecord rec = ab_table[B->hash % AB_TABLE_SIZE];

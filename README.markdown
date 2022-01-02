@@ -4,8 +4,7 @@
      vvv
 
 
-TODO : make sure white moves does best for white, black best for black! 
-          RESOLVED
+TODO : make sure hash includes who-is-to-move data!
        
        implement stable node eval (linear greedy search for pass/bestcapture) 
 
@@ -19,6 +18,7 @@ TODO : make sure white moves does best for white, black best for black!
            `bishop pair / bishop-pawn badness`
            `rooks on semi-open or open files`
            `knights on protected weak squares` 
+           `"random" mobility-incentivizing term via hash`
            `attackers xray king neighborhood` (implemented slowly, un-tuned)
            `piece-square tables` (implemented, un-tuned)
 
