@@ -310,35 +310,35 @@ int KING_POINTS = 10000; /* should exceed twice the total remaining value */
 int points[] = {100, 275, 325, 500, 900, KING_POINTS};
 /* note: pawn, bishop, rook placements are asymmetrical*/
 //int _X=-40,_x=-15,_o=+15,_O=+40; 
-int _X=-40,_x=-16,_o=+16,_O=+40; 
+int XX=-89,_X=-34,xx=-13,_x=-5,_o=+5,oo=+13,_O=+34,OO=+89; 
 
 int piece_placement[][8][8] = {
     /*pawn*/ {
         { 0, 0, 0, 0, 0, 0, 0, 0},
-        {_O,_O,_O,_O,_O,_O,_O,_O},
-        { 0,_o,_o,_o,_o,_o,_o, 0},
+        {OO,OO,OO,OO,OO,OO,OO,OO},
+        { 0,_O,_O,_O,_O,_O,_O, 0},
+        { 0, 0, 0,oo,oo, 0, 0, 0},
         { 0, 0, 0,_o,_o, 0, 0, 0},
-        { 0, 0, 0, 0, 0, 0, 0, 0},
-        { 0, 0,_x, 0, 0,_x, 0, 0},
-        { 0, 0, 0,_x,_x, 0, 0, 0},
+        { 0, 0,xx, 0, 0,xx, 0, 0},
+        { 0, 0, 0,xx,xx, 0, 0, 0},
         { 0, 0, 0, 0, 0, 0, 0, 0}, 
     },
     /*knight*/ { 
-        {_X,_X,_X,_X,_X,_X,_X,_X},
-        {_X,_x, 0, 0, 0, 0,_x,_X},
-        {_X, 0, 0,_o,_o, 0, 0,_X},
-        {_X, 0,_o,_o,_o,_o, 0,_X},
-        {_X, 0,_o,_o,_o,_o, 0,_X},
-        {_X, 0, 0,_o,_o, 0, 0,_X},
-        {_X,_x, 0, 0, 0, 0,_x,_X},
-        {_X,_X,_X,_X,_X,_X,_X,_X},
+        {XX,xx,xx,xx,xx,xx,xx,XX},
+        {xx,_x, 0, 0, 0, 0,_x,xx},
+        {xx, 0, 0,_o,_o, 0, 0,xx},
+        {xx, 0,_o,oo,oo,_o, 0,xx},
+        {xx, 0,_o,oo,oo,_o, 0,xx},
+        {xx, 0, 0,_o,_o, 0, 0,xx},
+        {xx,_x, 0, 0, 0, 0,_x,xx},
+        {XX,xx,xx,xx,xx,xx,xx,XX},
     },
     /*bishop*/ {
         {_X,_X,_X,_X,_X,_X,_X,_X},
-        {_X,_x,_x,_x,_x,_x,_x,_X},
-        {_X,_x,_x, 0, 0,_x,_x,_X},
-        {_X,_x,_x, 0, 0,_x,_x,_X},
-        {_X,_x, 0, 0, 0, 0,_x,_X},
+        {_X,xx,xx,xx,xx,xx,xx,_X},
+        {_X,xx,xx, 0, 0,xx,xx,_X},
+        {_X,xx,_x, 0, 0,_x,xx,_X},
+        {_X,xx, 0, 0, 0, 0,_x,_X},
         {_X, 0, 0, 0, 0, 0, 0,_X},
         {_X,_x, 0, 0, 0, 0,_x,_X},
         {_X,_X,_X,_X,_X,_X,_X,_X},
@@ -354,14 +354,14 @@ int piece_placement[][8][8] = {
         { 0, 0, 0, 0, 0, 0, 0, 0}, 
     },
     /*queen*/ {
-        {_x,_x,_x, 0, 0,_x,_x,_x},
+        {xx,_x,_x, 0, 0,_x,_x,xx},
         {_x, 0, 0, 0, 0, 0, 0,_x},
         {_x, 0, 0, 0, 0, 0, 0,_x},
         { 0, 0, 0, 0, 0, 0, 0, 0},
         { 0, 0, 0, 0, 0, 0, 0, 0},
         {_x, 0, 0, 0, 0, 0, 0,_x},
         {_x, 0, 0, 0, 0, 0, 0,_x},
-        {_x,_x,_x, 0, 0,_x,_x,_x},
+        {xx,_x,_x, 0, 0,_x,_x,xx},
     },
     /*king*/ { /* TODO: fill in */
         { 0, 0, 0, 0, 0, 0, 0, 0},

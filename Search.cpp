@@ -39,8 +39,8 @@ typedef struct ABRecord {
     int beta;
     int score;
 } ABRecord;
-#define AB_TABLE_SIZE 1000
-#define AB_TABLE_DEPTH 3
+#define AB_TABLE_SIZE 100000
+#define AB_TABLE_DEPTH 5
 ABRecord ab_table[AB_TABLE_SIZE]; /* todo: zero out */
 
 int alpha_beta(Board* B, int nb_plies, int alpha, int beta)
@@ -71,10 +71,10 @@ int alpha_beta(Board* B, int nb_plies, int alpha, int beta)
     int score = is_white ? -KING_POINTS : +KING_POINTS; 
 
                                  /*  0   1  2    3    4   5   6   7  8   */
-    //const int branching_factors[] = {-1, 64, 64, 64, 16, 16, 64,  8,  8}; 
+    const int branching_factors[] = {-1, 64, 64, 16, 16, 8, 8,  4,  4}; 
     //const int branching_factors[] = {-1, 64, 64, 64, 64, 64, 64, 64, 64}; 
-    //int nb_candidates = MIN(ML.length, branching_factors[nb_plies]);
-    int nb_candidates = ML.length;
+    int nb_candidates = MIN(ML.length, branching_factors[nb_plies]);
+    //int nb_candidates = ML.length;
 
     for (int l=0; l!=nb_candidates; ++l) {
         Move m = ML.moves[l];
@@ -126,10 +126,10 @@ Move get_best_move(Board* B, int nb_plies)
     Move best_move;
 
                                  /*  0   1  2    3    4   5   6   7  8   */
-    //const int branching_factors[] = {-1, 64, 64, 64, 16, 16, 64,  8,  8}; 
+    const int branching_factors[] = {-1, 64, 64, 16, 16, 8, 8,  4,  4}; 
     //const int branching_factors[] = {-1, 64, 64, 64, 64, 64, 64, 64, 64}; 
-    //int nb_candidates = MIN(ML.length, branching_factors[nb_plies]);
-    int nb_candidates = ML.length;
+    int nb_candidates = MIN(ML.length, branching_factors[nb_plies]);
+    //int nb_candidates = ML.length;
 
     for (int l=0; l!=nb_candidates; ++l) {
         Move m = ML.moves[l];

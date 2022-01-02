@@ -5,7 +5,22 @@
 
 
 TODO : make sure white moves does best for white, black best for black! 
+          RESOLVED
+       
+       implement stable node eval (linear greedy search for pass/bestcapture) 
 
+       analyze mystery of hash table underusage
+
+       accelerate (xray'd king) term by integrating differences
+
+       add and tune terms for
+           `attackers in same quadrant as king`
+           `pawn connectivity`
+           `bishop pair / bishop-pawn badness`
+           `rooks on semi-open or open files`
+           `knights on protected weak squares` 
+           `attackers xray king neighborhood` (implemented slowly, un-tuned)
+           `piece-square tables` (implemented, un-tuned)
 
      ^^^
 
