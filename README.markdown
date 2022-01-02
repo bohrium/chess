@@ -9,11 +9,16 @@ TODO : make sure hash includes who-is-to-move data!
        implement stable node eval (linear greedy search for pass/bestcapture) 
 
        analyze mystery of hash table underusage
+           partial progress: in apply_move/undo_move, computation of `mover`
+                             should know that the `mover` piece is in different
+                             squares (dest or source)!  thus originally hash
+                             computation was incorrect and led to path
+                             dependent value
 
        accelerate (xray'd king) term by integrating differences
 
        add and tune terms for
-           `attackers in same quadrant as king`
+           `attackers in same quadrant as king` (implemented, un-tuned)
            `pawn connectivity`
            `bishop pair / bishop-pawn badness`
            `rooks on semi-open or open files`

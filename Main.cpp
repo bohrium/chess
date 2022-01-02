@@ -4,7 +4,9 @@
 #include <stdlib.h>
 #include <time.h>
 
-#define NB_PLIES 6
+#define NB_WHITE_PLIES 4
+#define NB_BLACK_PLIES 4
+#define NB_COMMENTARY_PLIES 4
 
 int main(int argc, char** argv)
 {
@@ -19,11 +21,11 @@ int main(int argc, char** argv)
     for (int t=0; ; ++t) {
         std::cout << std::endl;
         print_board(&B);
-        Move m = t%2==0 ? get_best_move(&B, NB_PLIES) 
-                        : get_best_move(&B, NB_PLIES-2);
+        Move m = t%2==0 ? get_best_move(&B, NB_WHITE_PLIES) 
+                        : get_best_move(&B, NB_BLACK_PLIES);
         std::cout << "Played "; print_move(&B, m);
         std::cout << "\033[0;34m"; /* blue */
-        std::cout << " " << alpha_beta(&B, NB_PLIES-2, -KING_POINTS/2, +KING_POINTS/2) << std::endl;  
+        std::cout << " " << alpha_beta(&B, NB_COMMENTARY_PLIES, -KING_POINTS/2, +KING_POINTS/2) << std::endl;  
         std::cout << "\033[0;33m"; /* yellow */
         apply_move(&B, m);
         if (m.taken.species == Species::king) {

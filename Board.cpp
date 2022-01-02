@@ -544,10 +544,31 @@ int king_tropism(Board* B)
     );
 }
 
+int pawn_connectivity(Board* B)
+{
+    return 25 * (
+        (B->nb_pawns_by_file[1][0] * B->nb_pawns_by_file[1][1] ? 1 : 0)
+      + (B->nb_pawns_by_file[1][1] * B->nb_pawns_by_file[1][2] ? 1 : 0)
+      + (B->nb_pawns_by_file[1][2] * B->nb_pawns_by_file[1][3] ? 1 : 0)
+      + (B->nb_pawns_by_file[1][3] * B->nb_pawns_by_file[1][4] ? 1 : 0)
+      + (B->nb_pawns_by_file[1][4] * B->nb_pawns_by_file[1][5] ? 1 : 0)
+      + (B->nb_pawns_by_file[1][5] * B->nb_pawns_by_file[1][6] ? 1 : 0)
+      + (B->nb_pawns_by_file[1][6] * B->nb_pawns_by_file[1][7] ? 1 : 0)
+      // 
+      - (B->nb_pawns_by_file[0][0] * B->nb_pawns_by_file[0][1] ? 1 : 0)
+      - (B->nb_pawns_by_file[0][1] * B->nb_pawns_by_file[0][2] ? 1 : 0)
+      - (B->nb_pawns_by_file[0][2] * B->nb_pawns_by_file[0][3] ? 1 : 0)
+      - (B->nb_pawns_by_file[0][3] * B->nb_pawns_by_file[0][4] ? 1 : 0)
+      - (B->nb_pawns_by_file[0][4] * B->nb_pawns_by_file[0][5] ? 1 : 0)
+      - (B->nb_pawns_by_file[0][5] * B->nb_pawns_by_file[0][6] ? 1 : 0)
+      - (B->nb_pawns_by_file[0][6] * B->nb_pawns_by_file[0][7] ? 1 : 0)
+    );        
+}
+
 int evaluate(Board* B) /*TODO: constify*/
 {
     //return B->evaluation_stack.back() + king_safety(B);
-    return B->evaluation_stack.back() + king_tropism(B);
+    return B->evaluation_stack.back() + king_tropism(B) + pawn_connectivity(B);
 }
 
 int evaluation_difference(Board* B, Move m) /*TODO: constify*/ // assumes m has not yet been applied to B 
