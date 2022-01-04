@@ -3,7 +3,7 @@
 #include <iostream>
 #include <algorithm>
 
-#define STABLE_DEPTH 2
+#define STABLE_DEPTH 4
 
 #define MIN(X,Y) (((X)<(Y))?(X):(Y))
 #define MAX(X,Y) (((X)>(Y))?(X):(Y))
@@ -11,6 +11,9 @@
 /*TODO: get rid of / simplify lambda usage*/
 auto const max_accumulator = [](int a, int b) {return a<b ? b : a;};
 auto const min_accumulator = [](int a, int b) {return a>b ? b : a;};
+
+
+int alpha_beta_inner(Board* B, int nb_plies, int alpha, int beta, bool stable);
 
 Move shallow_greedy_move(Board* B)
 {
@@ -55,7 +58,7 @@ void order_moves(Board* B, MoveList* ML, int nb_plies)
     int sorted_indices[MAX_NB_MOVES];
     for (int m=0; m!=ML->length; ++m) {
         apply_move(B, ML->moves[m]);
-        shallow_scores[m] = alpha_beta(B, nb_plies, -KING_POINTS/2, +KING_POINTS/2); /* less than king value to avoid king trade */
+        shallow_scores[m] = alpha_beta_inner(B, nb_plies, -KING_POINTS/2, +KING_POINTS/2, false); /* less than king value to avoid king trade */
         undo_move(B, ML->moves[m]);
         sorted_indices[m] = m;
     }
@@ -84,25 +87,35 @@ typedef struct ABRecord {
 #define AB_TABLE_DEPTH 5
 ABRecord ab_table[AB_TABLE_SIZE]; /* todo: zero out */
 
+
+
 int alpha_beta(Board* B, int nb_plies, int alpha, int beta)
 {
-    //if (nb_plies==0) { return evaluate(B); }
-    if (nb_plies==0) { return stable_eval(B, STABLE_DEPTH); }
+    return alpha_beta_inner(B, nb_plies, alpha, beta, true);
+}
 
-    if (nb_plies == AB_TABLE_DEPTH) {
-      ABRecord rec = ab_table[B->hash % AB_TABLE_SIZE];
-      if (rec.hash == B->hash) {
-        std::cout << "moo!" << std::endl;
-        if ((rec.score > rec.alpha || rec.alpha <= alpha) &&
-            (rec.score < rec.beta  || beta <= rec.beta)) {
-          std::cout << "hit!" << std::endl;
-          return rec.score; 
-        }
-      };
+int alpha_beta_inner(Board* B, int nb_plies, int alpha, int beta, bool stable)
+{
+    if (nb_plies==0) {
+        if (stable) { return stable_eval(B, STABLE_DEPTH); }
+        else        { return evaluate(B);                  }
     }
+
+    //if (nb_plies == AB_TABLE_DEPTH) {
+    //  ABRecord rec = ab_table[B->hash % AB_TABLE_SIZE];
+    //  if (rec.hash == B->hash) {
+    //    std::cout << "moo!" << std::endl;
+    //    if ((rec.score > rec.alpha || rec.alpha <= alpha) &&
+    //        (rec.score < rec.beta  || beta <= rec.beta)) {
+    //      std::cout << "hit!" << std::endl;
+    //      return rec.score; 
+    //    }
+    //  };
+    //}
 
     MoveList ML;  
     generate_moves(B, &ML);
+
     if (2<=nb_plies) {
         order_moves(B, &ML, nb_plies-2);
     }
@@ -112,11 +125,9 @@ int alpha_beta(Board* B, int nb_plies, int alpha, int beta)
     auto const accumulator = is_white ? max_accumulator : min_accumulator; 
     int score = is_white ? -KING_POINTS : +KING_POINTS; 
 
-                                 /*  0   1  2    3    4   5   6   7  8   */
-    const int branching_factors[] = {-1, 64, 64, 16, 16, 8, 8,  4,  4}; 
-    //const int branching_factors[] = {-1, 64, 64, 64, 64, 64, 64, 64, 64}; 
+                                 /*    0   1   2   3   4   5   6   7   8  */
+    const int branching_factors[] = { -1, 64, 32, 16, 16, 16, 16, 16, 16}; 
     int nb_candidates = MIN(ML.length, branching_factors[nb_plies]);
-    //int nb_candidates = ML.length;
 
     for (int l=0; l!=nb_candidates; ++l) {
         Move m = ML.moves[l];
@@ -125,7 +136,7 @@ int alpha_beta(Board* B, int nb_plies, int alpha, int beta)
         /* stack push/pop */
         {
             apply_move(B, m);
-            int child = alpha_beta(B, nb_plies-1, alpha, beta);
+            int child = alpha_beta_inner(B, nb_plies-1, alpha, beta, stable);
             score = accumulator(child, score);
             undo_move(B, m);
         }
@@ -142,13 +153,13 @@ int alpha_beta(Board* B, int nb_plies, int alpha, int beta)
         //if (! (alpha <= beta)) { break; }
     }
 
-    if (nb_plies == AB_TABLE_DEPTH) {
-      ABRecord* rec = &(ab_table[B->hash % AB_TABLE_SIZE]);
-      rec->hash = B->hash;
-      rec->alpha = alpha;
-      rec->beta = beta;
-      rec->score = score;
-    }
+    //if (nb_plies == AB_TABLE_DEPTH) {
+    //  ABRecord* rec = &(ab_table[B->hash % AB_TABLE_SIZE]);
+    //  rec->hash = B->hash;
+    //  rec->alpha = alpha;
+    //  rec->beta = beta;
+    //  rec->score = score;
+    //}
     return score;
 }
 
@@ -167,11 +178,9 @@ Move get_best_move(Board* B, int nb_plies)
     int score = is_white ? -KING_POINTS : +KING_POINTS; 
     Move best_move;
 
-                                 /*  0   1  2    3    4   5   6   7  8   */
-    const int branching_factors[] = {-1, 64, 64, 16, 16, 8, 8,  4,  4}; 
-    //const int branching_factors[] = {-1, 64, 64, 64, 64, 64, 64, 64, 64}; 
+                                 /*    0   1   2   3   4   5   6   7   8  */
+    const int branching_factors[] = { -1, 64, 32, 16, 16, 16, 16, 16, 16}; 
     int nb_candidates = MIN(ML.length, branching_factors[nb_plies]);
-    //int nb_candidates = ML.length;
 
     for (int l=0; l!=nb_candidates; ++l) {
         Move m = ML.moves[l];

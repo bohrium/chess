@@ -31,12 +31,47 @@ struct Board {
     Piece grid[8][8];
     std::vector<int> evaluation_stack;
     unsigned int hash;
-    //
+
+    // KING SAFETY TERMS
+    /* We define four quadrants (0123) representing black's queenside, black's
+     * kingside, white's queenside, white's kingside.  We say that a piece
+     * "xray attacks" a square if, in the absence of all occluding material and
+     * inhibiting pins, that piece would attack that square.  A king is less
+     * safe when enemy pieces lie in its current quadrant.  A king is less safe
+     * when any of the up-to-9 squares at and around it are xray attacked by
+     * enemy pieces.  
+     */ 
     Coordinate king_loc[2];
-    int nb_pawns_by_file[2][8];
     int nb_pieces_by_quadrant[2][4];
+    int nb_xrays[2][8][8];
+
+    // PAWN STRUCTURE
+    /*     (--- caution:   rank == 7-row   ---)
+     * For us, a "weak square" (from white's perspective) is a square in ranks
+     * 2,3,4 (of 01234567) and files b,c,d,e,f,g (of abcdefgh) such that no
+     * friendly pawn in either of the two adjacent files has strictly lesser
+     * rank.  For example, if three consecutive pawns advance, then the square
+     * in front of the middle pawn's initial square becomes weak.  An "outpost"
+     * for the enemy is a weak square of ours also attacked by an enemy pawn.
+     */ 
+    int nb_pawns_by_file[2][8];
+    int most_initial_pawn_rank[2][8]; 
+    bool attacked_by_pawn[2][8][8];
+    bool weak_squares[2][8][8];
+    bool outposts[2][8][8];
+    int nb_weak_squares[2];
+
+    // BISHOP TERMS
     int nb_pawns_by_square_parity[2][2];
     int nb_bishops_by_square_parity[2][2];
+
+    // KNIGHT TERMS
+    int nb_knights_on_weak_squares[2]; 
+    int nb_knights_on_outposts[2]; 
+
+    // ROOK TERMS
+    int nb_rooks_on_semi_files[2]; 
+    int nb_rooks_on_open_files[2]; 
 };
 
 

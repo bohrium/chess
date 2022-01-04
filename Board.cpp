@@ -58,21 +58,11 @@ char letters[] = "PNBRQK ";
 void print_board(Board const* B)
 {
     if (B->next_to_move == Color::white) {
-        std::cout << "\tWhite to move" << std::endl;
+        std::cout << "\tWhite to move        " << std::endl;
     } else {
-        std::cout << "\tBlack to move" << std::endl;
+        std::cout << "\tBlack to move        " << std::endl;
     }
-    for (int color=0; color!=2; ++color) {
-        for (int c=0; c!=8; ++c) {
-            std::cout << B->nb_pawns_by_file[color][c] << ".";
-        }
-        std::cout << " ";
-        for (int q=0; q!=4; ++q) {
-            std::cout << B->nb_pieces_by_quadrant[color][q] <<".";
-        }
-        std::cout << std::endl;
-    }
-     
+    
     std::cout << "\t   a b c d e f g h" << std::endl;
     for (int r=0; r!=8; ++r) {
         std::cout << "\t" << 8-r << " |";
@@ -89,6 +79,18 @@ void print_board(Board const* B)
         std::cout << std::endl;
     }
     std::cout << "\t   ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾ " << std::endl;
+
+    // status: 
+    for (int color=0; color!=2; ++color) {
+        for (int c=0; c!=8; ++c) {
+            std::cout << B->nb_pawns_by_file[color][c] << ".";
+        }
+        std::cout << " ";
+        for (int q=0; q!=4; ++q) {
+            std::cout << B->nb_pieces_by_quadrant[color][q] <<".";
+        }
+        std::cout << std::endl;
+    }
 } 
 /*
         White to move
@@ -439,11 +441,11 @@ int piece_placement[][8][8] = {
     /*bishop*/ {
         {_X,_X,_X,_X,_X,_X,_X,_X},
         {_X,xx,xx,xx,xx,xx,xx,_X},
-        {_X,xx,xx, 0, 0,xx,xx,_X},
-        {_X,xx,_x, 0, 0,_x,xx,_X},
-        {_X,xx, 0, 0, 0, 0,_x,_X},
-        {_X, 0, 0, 0, 0, 0, 0,_X},
+        {_X,xx, 0, 0, 0, 0,xx,_X},
+        {_X,xx, 0, 0, 0, 0,xx,_X},
         {_X,_x, 0, 0, 0, 0,_x,_X},
+        {_X,_x, 0, 0, 0, 0,_x,_X},
+        {_X,_x,_x,_x,_x,_x,_x,_X},
         {_X,_X,_X,_X,_X,_X,_X,_X},
     },
     /*rook*/ {
@@ -478,83 +480,6 @@ int piece_placement[][8][8] = {
     },
 };
 
-int king_safety(Board* B) 
-{
-    int nb_attackers[2][8][8]; 
-    for (int r=0; r!=8; ++r) {
-        for (int c=0; c!=8; ++c) {
-            nb_attackers[Color::black][r][c] = 0; /* black */
-            nb_attackers[Color::white][r][c] = 0; /* white */
-        } 
-    }
-    Coordinate king_locations[2];
-    for (int r=0; r!=8; ++r) {
-        for (int c=0; c!=8; ++c) {
-            Piece p = get_piece(B, {r,c});
-            if (p.species == Species::empty_species) { continue; }
-            if (p.species == Species::king) { king_locations[p.color] = {r,c}; }
-            switch (p.species) {
-                case Species::knight:
-                    for (int dr=-2; dr!=3; ++dr) {
-                        for (int dc=-2; dc!=3; ++dc) {
-                            if (dr*dr + dc*dc != 2*2 + 1*1) { continue; }  
-                            if (! (0<=r+dr && r+dr<8 && 0<=c+dc && c+dc<8)) { continue; }  
-                            nb_attackers[p.color][r+dr][c+dc] += 1; 
-                        }
-                    }
-                    break;
-                case Species::bishop:
-                    for (int dr=-1; dr!=2; ++dr) {
-                        for (int dc=-1; dc!=2; ++dc) {
-                            if (dr*dr + dc*dc != 1*1 + 1*1) { continue; }
-                            for (int t=1; t!=8; ++t) {
-                                if (! (0<=r+t*dr && r+t*dr<8 && 0<=c+t*dc && c+t*dc<8)) { break; }  
-                                nb_attackers[p.color][r+t*dr][c+t*dc] += 1; 
-                            }
-                        }
-                    }
-                    break;
-                case Species::rook:
-                    for (int dr=-1; dr!=2; ++dr) {
-                        for (int dc=-1; dc!=2; ++dc) {
-                            if (dr*dr + dc*dc != 1*1) { continue; }
-                            for (int t=1; t!=8; ++t) {
-                                if (! (0<=r+t*dr && r+t*dr<8 && 0<=c+t*dc && c+t*dc<8)) { break; }  
-                                nb_attackers[p.color][r+t*dr][c+t*dc] += 1; 
-                            }
-                        }
-                    }
-                    break;
-                case Species::queen:
-                    for (int dr=-1; dr!=2; ++dr) {
-                        for (int dc=-1; dc!=2; ++dc) {
-                            if (dr*dr + dc*dc == 0) { continue; }
-                            for (int t=1; t!=8; ++t) {
-                                if (! (0<=r+t*dr && r+t*dr<8 && 0<=c+t*dc && c+t*dc<8)) { break; }  
-                                nb_attackers[p.color][r+t*dr][c+t*dc] += 1; 
-                            }
-                        }
-                    }
-                    break;
-                default: break;
-            }
-        }
-    }
-    int score = 0;
-    for (int color = 0; color != 2; ++color) {
-        int r = king_locations[color].row;
-        int c = king_locations[color].col;
-        for (int dr=-1; dr!=2; ++dr) {
-            for (int dc=-1; dc!=2; ++dc) {
-                //if (dr*dr + dc*dc == 0) { continue; }
-                if (! (0<=r+dr && r+dr<8 && 0<=c+dc && c+dc<8)) { continue; }  
-                score += (color==Color::black ? +1 : -1) * nb_attackers[1-color][r+dr][c+dc];
-            }
-        }
-    }
-    return 15 * score;
-}
-
 int king_tropism(Board* B)
 {
     int quad[2] = {
@@ -580,6 +505,34 @@ int bishop_adjustment(Board* B)
       * (B->nb_bishops_by_square_parity[1][1] - B->nb_bishops_by_square_parity[0][1])
     );
     return 25 * net_pairs - 10 * net_pawnblocks; 
+}
+
+/* TODO: IMPLEMENT! */
+int weak_square_malus(Board* B)
+{
+    //return (-10) * ( B->nb_weak_squares[1] - B->nb_weak_squares[0] );
+    return 0;
+}
+int knight_outpost(Board* B)
+{
+    /* NB: every outpost is also a weak square */
+    //return (
+    //    25 * (B->nb_knights_on_weak_squares[1]-B->nb_knights_on_weak_squares[0])
+    //  + (50-25) * (B->nb_knights_on_outposts[1]-B->nb_knights_on_outposts[0])
+    //);
+    return 0;
+}
+    int nb_rooks_on_semi_files[2]; 
+    int nb_rooks_on_open_files[2]; 
+
+int rook_placement(Board* B)
+{
+    /* NB: semi and open are mutually exclusive */
+    return (
+        10 * (B->nb_rooks_on_semi_files[1]-B->nb_rooks_on_semi_files[0])
+      + 25 * (B->nb_rooks_on_open_files[1]-B->nb_rooks_on_open_files[0])
+    );
+    return 0;
 }
 
 int pawn_connectivity(Board* B)
@@ -609,7 +562,9 @@ int evaluate(Board* B) /*TODO: constify*/
     return B->evaluation_stack.back()
         + king_tropism(B)
         + pawn_connectivity(B)
-        + bishop_adjustment(B);
+        + bishop_adjustment(B) 
+        + weak_square_malus(B) 
+        + knight_outpost(B);
 }
 
 int evaluation_difference(Board* B, Move m) /*TODO: constify*/ // assumes m has not yet been applied to B 
@@ -641,3 +596,82 @@ int evaluation_difference(Board* B, Move m) /*TODO: constify*/ // assumes m has 
 
     return material + placement;
 }
+
+//int king_safety(Board* B) 
+//{
+//    int nb_attackers[2][8][8]; 
+//    for (int r=0; r!=8; ++r) {
+//        for (int c=0; c!=8; ++c) {
+//            nb_attackers[Color::black][r][c] = 0; /* black */
+//            nb_attackers[Color::white][r][c] = 0; /* white */
+//        } 
+//    }
+//    Coordinate king_locations[2];
+//    for (int r=0; r!=8; ++r) {
+//        for (int c=0; c!=8; ++c) {
+//            Piece p = get_piece(B, {r,c});
+//            if (p.species == Species::empty_species) { continue; }
+//            if (p.species == Species::king) { king_locations[p.color] = {r,c}; }
+//            switch (p.species) {
+//                case Species::knight:
+//                    for (int dr=-2; dr!=3; ++dr) {
+//                        for (int dc=-2; dc!=3; ++dc) {
+//                            if (dr*dr + dc*dc != 2*2 + 1*1) { continue; }  
+//                            if (! (0<=r+dr && r+dr<8 && 0<=c+dc && c+dc<8)) { continue; }  
+//                            nb_attackers[p.color][r+dr][c+dc] += 1; 
+//                        }
+//                    }
+//                    break;
+//                case Species::bishop:
+//                    for (int dr=-1; dr!=2; ++dr) {
+//                        for (int dc=-1; dc!=2; ++dc) {
+//                            if (dr*dr + dc*dc != 1*1 + 1*1) { continue; }
+//                            for (int t=1; t!=8; ++t) {
+//                                if (! (0<=r+t*dr && r+t*dr<8 && 0<=c+t*dc && c+t*dc<8)) { break; }  
+//                                nb_attackers[p.color][r+t*dr][c+t*dc] += 1; 
+//                            }
+//                        }
+//                    }
+//                    break;
+//                case Species::rook:
+//                    for (int dr=-1; dr!=2; ++dr) {
+//                        for (int dc=-1; dc!=2; ++dc) {
+//                            if (dr*dr + dc*dc != 1*1) { continue; }
+//                            for (int t=1; t!=8; ++t) {
+//                                if (! (0<=r+t*dr && r+t*dr<8 && 0<=c+t*dc && c+t*dc<8)) { break; }  
+//                                nb_attackers[p.color][r+t*dr][c+t*dc] += 1; 
+//                            }
+//                        }
+//                    }
+//                    break;
+//                case Species::queen:
+//                    for (int dr=-1; dr!=2; ++dr) {
+//                        for (int dc=-1; dc!=2; ++dc) {
+//                            if (dr*dr + dc*dc == 0) { continue; }
+//                            for (int t=1; t!=8; ++t) {
+//                                if (! (0<=r+t*dr && r+t*dr<8 && 0<=c+t*dc && c+t*dc<8)) { break; }  
+//                                nb_attackers[p.color][r+t*dr][c+t*dc] += 1; 
+//                            }
+//                        }
+//                    }
+//                    break;
+//                default: break;
+//            }
+//        }
+//    }
+//    int score = 0;
+//    for (int color = 0; color != 2; ++color) {
+//        int r = king_locations[color].row;
+//        int c = king_locations[color].col;
+//        for (int dr=-1; dr!=2; ++dr) {
+//            for (int dc=-1; dc!=2; ++dc) {
+//                //if (dr*dr + dc*dc == 0) { continue; }
+//                if (! (0<=r+dr && r+dr<8 && 0<=c+dc && c+dc<8)) { continue; }  
+//                score += (color==Color::black ? +1 : -1) * nb_attackers[1-color][r+dr][c+dc];
+//            }
+//        }
+//    }
+//    return 15 * score;
+//}
+//
+//
