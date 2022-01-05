@@ -126,7 +126,7 @@ int alpha_beta_inner(Board* B, int nb_plies, int alpha, int beta, bool stable)
     int score = is_white ? -KING_POINTS : +KING_POINTS; 
 
                                  /*    0   1   2   3   4   5   6   7   8  */
-    const int branching_factors[] = { -1, 64, 32, 16, 16, 16, 16, 16, 16}; 
+    const int branching_factors[] = { -1, 64, 32, 32, 32, 32, 32,  4,  4}; 
     int nb_candidates = MIN(ML.length, branching_factors[nb_plies]);
 
     for (int l=0; l!=nb_candidates; ++l) {
@@ -179,7 +179,7 @@ Move get_best_move(Board* B, int nb_plies)
     Move best_move;
 
                                  /*    0   1   2   3   4   5   6   7   8  */
-    const int branching_factors[] = { -1, 64, 32, 16, 16, 16, 16, 16, 16}; 
+    const int branching_factors[] = { -1, 64, 32, 32, 32, 32, 32,  4,  4};  
     int nb_candidates = MIN(ML.length, branching_factors[nb_plies]);
 
     for (int l=0; l!=nb_candidates; ++l) {

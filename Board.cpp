@@ -1,6 +1,8 @@
 #include "Board.h"
 #include <iostream>
 
+#define NB_PLIES_TIL_DRAW 20
+
 Color flip_color(Color c)
 {
     return c==Color::white ? Color::black : Color::white; 
@@ -25,6 +27,7 @@ bool is_capture(Move m)
 void init_board(Board* B)
 {
     B->next_to_move = Color::white;
+    B->plies_since_irreversible.push_back(0);
     for (int c=0; c!=8; ++c) {
         B->grid[0][c] = {Color::black, init_row[c]};
         B->grid[1][c] = {Color::black, Species::pawn};
@@ -34,7 +37,7 @@ void init_board(Board* B)
         B->grid[6][c] = {Color::white, Species::pawn};
         B->grid[7][c] = {Color::white, init_row[c]};
     }
-    B->evaluation_stack.push_back(0.0); /* initial evaluation */ 
+    B->evaluation_stack.push_back(0); /* initial evaluation */ 
     B->hash = 0;
 
     B->king_loc[0] = {0, 4};
@@ -76,12 +79,13 @@ void print_board(Board const* B)
             }
             std::cout << l << "\033[0;33m|"; /* yellow */
         }
-        std::cout << std::endl;
+        std::cout << "        " << std::endl;
     }
-    std::cout << "\t   ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾ " << std::endl;
+    std::cout << "\t   ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾          " << std::endl;
 
     // status: 
     for (int color=0; color!=2; ++color) {
+        std::cout << "\t";
         for (int c=0; c!=8; ++c) {
             std::cout << B->nb_pawns_by_file[color][c] << ".";
         }
@@ -91,6 +95,7 @@ void print_board(Board const* B)
         }
         std::cout << std::endl;
     }
+    std::cout << "\t" << B->plies_since_irreversible.back() << std::endl;
 } 
 /*
         White to move
@@ -142,7 +147,7 @@ bool read_board(Board* B, char const* string) /* returns TRUE if error */
             B->grid[r][c] = {color, species}; 
         }
     } 
-    /* TODO: compute hash!! (and other associated precomputed vals!)  */
+    /* TODO: compute hash, plies_since_irreversible!! (and other associated precomputed vals!)  */
     return false;
 }
 
@@ -210,6 +215,14 @@ void apply_move(Board* B, Move M)
     Piece mover = get_piece(B, M.source);
     B->hash ^= hash_of(M, mover); 
 
+    // fifty move rule
+    if ((mover.species == Species::pawn || M.taken.species != Species::empty_species
+                && B->plies_since_irreversible.back() < NB_PLIES_TIL_DRAW )) {
+        B->plies_since_irreversible.push_back(0);
+    } else {
+        B->plies_since_irreversible.push_back(B->plies_since_irreversible.back() + 1);
+    }
+
     B->next_to_move = flip_color(B->next_to_move);
     B->evaluation_stack.push_back(B->evaluation_stack.back() + evaluation_difference(B, M));
     B->grid[M.dest.row][M.dest.col] = B->grid[M.source.row][M.source.col];
@@ -245,6 +258,8 @@ void undo_move(Board* B, Move M)
     /* note asymmetry with analogous line in apply_move */
     Piece mover = get_piece(B, M.dest);
     B->hash ^= hash_of(M, mover); 
+
+    B->plies_since_irreversible.pop_back();
 
     B->next_to_move = flip_color(B->next_to_move);
     B->evaluation_stack.pop_back();
@@ -556,46 +571,42 @@ int pawn_connectivity(Board* B)
     );        
 }
 
-int evaluate(Board* B) /*TODO: constify*/
+int diff_king_safety(Board* B, Move M) 
 {
-    //return B->evaluation_stack.back() + king_safety(B);
-    return B->evaluation_stack.back()
-        + king_tropism(B)
-        + pawn_connectivity(B)
-        + bishop_adjustment(B) 
-        + weak_square_malus(B) 
-        + knight_outpost(B);
-}
+    Piece mover = get_piece(B, M.source);
+    int sign = mover.color == Color::white : +1 : -1;
+    Coordinate king_loc = B->king_loc[flip_color(mover.color)];
 
-int evaluation_difference(Board* B, Move m) /*TODO: constify*/ // assumes m has not yet been applied to B 
-{
-    int material  = 0;
-    int placement = 0;
-    //int safety = 0;
+    int net_xrays = 0;
 
-    Piece mover = get_piece(B, m.source);
-    int sign = (mover.color==Color::white ? +1 : -1);
+    int king_hor  = 3;
+    int king_vert = 3;
 
-    /* material */ 
-    if (is_capture(m)) {
-        material = sign * points[m.taken.species];
+    int sr = M.source.row;
+    int sc = M.source.col;
+    int dr = M.dest.row;
+    int dc = M.dest.col;
+    int kr = king_loc.row;
+    int kc = king_loc.col;
+
+    switch (mover.species) {
+        break; case Species::pawn:
+        break; case Species::knight:
+        break; case Species::bishop:
+        break; case Species::rook:
+            net_xrays = (
+                (sr == dr) ? (
+                    ()
+                ) : (
+                ) 
+            );
+        break; case Species::queen:
+        break; case Species::king:
     }
 
-    /* placement */ 
-    if (mover.color==Color::white) {
-        placement = sign * ( 
-            piece_placement[mover.species][m.dest.row][m.dest.col] -
-            piece_placement[mover.species][m.source.row][m.source.col] 
-        );
-    } else {
-        placement = sign * ( 
-            piece_placement[mover.species][7-m.dest.row][m.dest.col] -
-            piece_placement[mover.species][7-m.source.row][m.source.col] 
-        );
-    }
-
-    return material + placement;
+    return sign * net_xrays;
 }
+
 
 //int king_safety(Board* B) 
 //{
@@ -659,7 +670,7 @@ int evaluation_difference(Board* B, Move m) /*TODO: constify*/ // assumes m has 
 //            }
 //        }
 //    }
-//    int score = 0;
+//    int net_xrays = 0;
 //    for (int color = 0; color != 2; ++color) {
 //        int r = king_locations[color].row;
 //        int c = king_locations[color].col;
@@ -667,11 +678,54 @@ int evaluation_difference(Board* B, Move m) /*TODO: constify*/ // assumes m has 
 //            for (int dc=-1; dc!=2; ++dc) {
 //                //if (dr*dr + dc*dc == 0) { continue; }
 //                if (! (0<=r+dr && r+dr<8 && 0<=c+dc && c+dc<8)) { continue; }  
-//                score += (color==Color::black ? +1 : -1) * nb_attackers[1-color][r+dr][c+dc];
+//                net_xray += (color==Color::black ? +1 : -1) * nb_attackers[1-color][r+dr][c+dc];
 //            }
 //        }
 //    }
-//    return 15 * score;
+//    return net_xrays;
 //}
-//
-//
+
+int evaluate(Board* B) /* todo: constify type signature */
+{
+    if (B->plies_since_irreversible.back() >= NB_PLIES_TIL_DRAW ) { /* the 20 ply rule */
+        return -KING_POINTS/2; /* black wins*/
+    }
+    return B->evaluation_stack.back()
+        + king_tropism(B)
+        + pawn_connectivity(B)
+        + bishop_adjustment(B) 
+        + weak_square_malus(B) 
+        + knight_outpost(B);
+}
+
+int evaluation_difference(Board* B, Move m) /*TODO: constify*/ // assumes m has not yet been applied to B 
+{
+    int material  = 0;
+    int placement = 0;
+    //int safety = 0;
+
+    Piece mover = get_piece(B, m.source);
+    int sign = (mover.color==Color::white ? +1 : -1);
+
+    /* material */ 
+    if (is_capture(m)) {
+        material = sign * points[m.taken.species];
+    }
+
+    /* placement */ 
+    if (mover.color==Color::white) {
+        placement = sign * ( 
+            piece_placement[mover.species][m.dest.row][m.dest.col] -
+            piece_placement[mover.species][m.source.row][m.source.col] 
+        );
+    } else {
+        placement = sign * ( 
+            piece_placement[mover.species][7-m.dest.row][m.dest.col] -
+            piece_placement[mover.species][7-m.source.row][m.source.col] 
+        );
+    }
+
+    return material + placement;
+}
+
+

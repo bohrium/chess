@@ -1,0 +1,210 @@
+valgrind --leak-check=yes ./main.o 
+==68938== Memcheck, a memory error detector
+==68938== Copyright (C) 2002-2017, and GNU GPL'd, by Julian Seward et al.
+==68938== Using Valgrind-3.18.1 and LibVEX; rerun with -h for copyright info
+==68938== Command: ./main.o
+==68938== 
+Welcome!
+
+Played Pd4( ) 0            
+Played Pd5( ) 15             
+Played Nc3( ) 0              
+Played Bg4( ) 13                   
+Played Ph3( ) 0                    
+Played Bf5( ) 13                   
+Played Bg5( ) 0                    
+Played Ph6( ) 15                   
+Played Bd2( ) -7                   
+Played Nf6( ) 9                    
+Played Pg4( ) 11                   
+Played Be4( ) 16                    
+Played Ne4(B) 30                    
+Played Ne4(N) 37                    
+Played Pe3( ) 8                     
+Played Pe6( ) 22                    
+Played Bd3( ) 8                     
+Played Bd6( ) 28                    
+Played Be4(N) 20                    
+Played Pe4(B) 27                    
+Played Ne2( ) 15                    
+Played Nc6( ) 20                    
+Played Nc3( ) 17                    
+Played Pf5( ) 37                    
+Played Pa3( ) 2                     
+Played Qh4( ) 22                    
+Played Pa4( ) -6                    
+Played Pg5( ) 7                     
+Played Pb3( ) -6                    
+Played Rb8( ) 7                     
+Played Rc1( ) -6                    
+Played Ra8( ) 7                     
+Played Qe2( ) -6                    
+Played Pg4(P) 17                    
+Played Qg4(P) 35                    
+Played Qg4(Q) 159                   
+Played Pg4(Q) 47                    
+Played Pe5( ) 66                    
+Played Ne4(P) 98                    
+Played Pd4(P) 111                   
+Played Pd4(P) 91                    
+Played Nd4(P) 145                   
+Played Nd6(B) 123                   
+Played Pd6(N) 116                   
+Played Bc3( ) 1                     
+Played Nf3( ) 16                    
+Played Ke2( ) 1                     
+Played Ne5( ) 11                    
+Played Rh5( ) 11                    
+Played Kd8( ) 11                    
+Played Pa5( ) 11                    
+Played Rc8( ) -106                  
+Played Ba1( ) 11                    
+Played Pb5( ) 11                    
+Played Pa6( ) 11                    
+Played Pb4( ) 11                    
+Played Bd4( ) 11                    
+Played Rh7( ) 11                    
+Played Pf3( ) -2                    
+Played Rf7( ) -2                    
+Played Be5(N) 108                   
+Played Pe5(B) 108                   
+Played Rh6(P) 8                     
+Played Rf4( ) 123                   
+Played Rh8( ) 108                   
+Played Kd7( ) 128                   
+Played Rh7( ) 218                   
+Played Ke6( ) 218                   
+Played Rh6( ) 108                   
+Played Kf7( ) 123                   
+Played Rh7( ) 218                   
+Played Kf8( ) 218                   
+Played Rh8( ) 578                   
+Played Ke7( ) 578                   
+==68938== Conditional jump or move depends on uninitialised value(s)
+==68938==    at 0x10DDAF: stable_eval(Board*, int) (in /home/sam/Desktop/projects/chess/main.o)
+==68938==    by 0x10DE01: stable_eval(Board*, int) (in /home/sam/Desktop/projects/chess/main.o)
+==68938==    by 0x10E2B0: alpha_beta_inner(Board*, int, int, int, bool) (in /home/sam/Desktop/projects/chess/main.o)P| | | | | | | |         
+==68938==    by 0x10E4DE: alpha_beta_inner(Board*, int, int, int, bool) (in /home/sam/Desktop/projects/chess/main.o) |p| | | |r|P| |         
+==68938==    by 0x10E4DE: alpha_beta_inner(Board*, int, int, int, bool) (in /home/sam/Desktop/projects/chess/main.o) | |P| |K| | | |         
+==68938==    by 0x10E4DE: alpha_beta_inner(Board*, int, int, int, bool) (in /home/sam/Desktop/projects/chess/main.o)‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾          
+==68938==    by 0x10E23C: alpha_beta(Board*, int, int, int) (in /home/sam/Desktop/projects/chess/main.o)
+==68938==    by 0x10E88E: get_best_move(Board*, int) (in /home/sam/Desktop/projects/chess/main.o)
+==68938==    by 0x109455: main (in /home/sam/Desktop/projects/chess/main.o)
+==68938== 
+==68938== Use of uninitialised value of size 8
+==68938==    at 0x10CA77: get_piece(Board const*, Coordinate) (in /home/sam/Desktop/projects/chess/main.o)
+==68938==    by 0x10A484: apply_move(Board*, Move) (in /home/sam/Desktop/projects/chess/main.o)
+==68938==    by 0x10DDE9: stable_eval(Board*, int) (in /home/sam/Desktop/projects/chess/main.o)
+==68938==    by 0x10DE01: stable_eval(Board*, int) (in /home/sam/Desktop/projects/chess/main.o)
+==68938==    by 0x10E2B0: alpha_beta_inner(Board*, int, int, int, bool) (in /home/sam/Desktop/projects/chess/main.o)
+==68938==    by 0x10E4DE: alpha_beta_inner(Board*, int, int, int, bool) (in /home/sam/Desktop/projects/chess/main.o)
+==68938==    by 0x10E4DE: alpha_beta_inner(Board*, int, int, int, bool) (in /home/sam/Desktop/projects/chess/main.o)
+==68938==    by 0x10E4DE: alpha_beta_inner(Board*, int, int, int, bool) (in /home/sam/Desktop/projects/chess/main.o)
+==68938==    by 0x10E23C: alpha_beta(Board*, int, int, int) (in /home/sam/Desktop/projects/chess/main.o)
+==68938==    by 0x10E88E: get_best_move(Board*, int) (in /home/sam/Desktop/projects/chess/main.o)
+==68938==    by 0x109455: main (in /home/sam/Desktop/projects/chess/main.o)
+==68938== 
+==68938== Use of uninitialised value of size 8
+==68938==    at 0x10A353: hash_of(Move, Piece) (in /home/sam/Desktop/projects/chess/main.o)
+==68938==    by 0x10A4A1: apply_move(Board*, Move) (in /home/sam/Desktop/projects/chess/main.o)
+==68938==    by 0x10DDE9: stable_eval(Board*, int) (in /home/sam/Desktop/projects/chess/main.o)
+==68938==    by 0x10DE01: stable_eval(Board*, int) (in /home/sam/Desktop/projects/chess/main.o)
+==68938==    by 0x10E2B0: alpha_beta_inner(Board*, int, int, int, bool) (in /home/sam/Desktop/projects/chess/main.o)
+==68938==    by 0x10E4DE: alpha_beta_inner(Board*, int, int, int, bool) (in /home/sam/Desktop/projects/chess/main.o)
+==68938==    by 0x10E4DE: alpha_beta_inner(Board*, int, int, int, bool) (in /home/sam/Desktop/projects/chess/main.o)
+==68938==    by 0x10E4DE: alpha_beta_inner(Board*, int, int, int, bool) (in /home/sam/Desktop/projects/chess/main.o)
+==68938==    by 0x10E23C: alpha_beta(Board*, int, int, int) (in /home/sam/Desktop/projects/chess/main.o)
+==68938==    by 0x10E88E: get_best_move(Board*, int) (in /home/sam/Desktop/projects/chess/main.o)
+==68938==    by 0x109455: main (in /home/sam/Desktop/projects/chess/main.o)
+==68938== 
+==68938== Use of uninitialised value of size 8
+==68938==    at 0x10A3A9: hash_of(Move, Piece) (in /home/sam/Desktop/projects/chess/main.o)
+==68938==    by 0x10A4A1: apply_move(Board*, Move) (in /home/sam/Desktop/projects/chess/main.o)
+==68938==    by 0x10DDE9: stable_eval(Board*, int) (in /home/sam/Desktop/projects/chess/main.o)
+==68938==    by 0x10DE01: stable_eval(Board*, int) (in /home/sam/Desktop/projects/chess/main.o)
+==68938==    by 0x10E2B0: alpha_beta_inner(Board*, int, int, int, bool) (in /home/sam/Desktop/projects/chess/main.o)
+==68938==    by 0x10E4DE: alpha_beta_inner(Board*, int, int, int, bool) (in /home/sam/Desktop/projects/chess/main.o)
+==68938==    by 0x10E4DE: alpha_beta_inner(Board*, int, int, int, bool) (in /home/sam/Desktop/projects/chess/main.o)
+==68938==    by 0x10E4DE: alpha_beta_inner(Board*, int, int, int, bool) (in /home/sam/Desktop/projects/chess/main.o)
+==68938==    by 0x10E23C: alpha_beta(Board*, int, int, int) (in /home/sam/Desktop/projects/chess/main.o)
+==68938==    by 0x10E88E: get_best_move(Board*, int) (in /home/sam/Desktop/projects/chess/main.o)
+==68938==    by 0x109455: main (in /home/sam/Desktop/projects/chess/main.o)
+==68938== 
+==68938== Conditional jump or move depends on uninitialised value(s)
+==68938==    at 0x10A3C7: hash_of(Move, Piece) (in /home/sam/Desktop/projects/chess/main.o)
+==68938==    by 0x10A4A1: apply_move(Board*, Move) (in /home/sam/Desktop/projects/chess/main.o)
+==68938==    by 0x10DDE9: stable_eval(Board*, int) (in /home/sam/Desktop/projects/chess/main.o)
+==68938==    by 0x10DE01: stable_eval(Board*, int) (in /home/sam/Desktop/projects/chess/main.o)
+==68938==    by 0x10E2B0: alpha_beta_inner(Board*, int, int, int, bool) (in /home/sam/Desktop/projects/chess/main.o)
+==68938==    by 0x10E4DE: alpha_beta_inner(Board*, int, int, int, bool) (in /home/sam/Desktop/projects/chess/main.o)
+==68938==    by 0x10E4DE: alpha_beta_inner(Board*, int, int, int, bool) (in /home/sam/Desktop/projects/chess/main.o)
+==68938==    by 0x10E4DE: alpha_beta_inner(Board*, int, int, int, bool) (in /home/sam/Desktop/projects/chess/main.o)
+==68938==    by 0x10E23C: alpha_beta(Board*, int, int, int) (in /home/sam/Desktop/projects/chess/main.o)
+==68938==    by 0x10E88E: get_best_move(Board*, int) (in /home/sam/Desktop/projects/chess/main.o)
+==68938==    by 0x109455: main (in /home/sam/Desktop/projects/chess/main.o)
+==68938== 
+==68938== Use of uninitialised value of size 8
+==68938==    at 0x10A3F3: hash_of(Move, Piece) (in /home/sam/Desktop/projects/chess/main.o)
+==68938==    by 0x10A4A1: apply_move(Board*, Move) (in /home/sam/Desktop/projects/chess/main.o)
+==68938==    by 0x10DDE9: stable_eval(Board*, int) (in /home/sam/Desktop/projects/chess/main.o)
+==68938==    by 0x10DE01: stable_eval(Board*, int) (in /home/sam/Desktop/projects/chess/main.o)
+==68938==    by 0x10E2B0: alpha_beta_inner(Board*, int, int, int, bool) (in /home/sam/Desktop/projects/chess/main.o)
+==68938==    by 0x10E4DE: alpha_beta_inner(Board*, int, int, int, bool) (in /home/sam/Desktop/projects/chess/main.o)
+==68938==    by 0x10E4DE: alpha_beta_inner(Board*, int, int, int, bool) (in /home/sam/Desktop/projects/chess/main.o)
+==68938==    by 0x10E4DE: alpha_beta_inner(Board*, int, int, int, bool) (in /home/sam/Desktop/projects/chess/main.o)
+==68938==    by 0x10E23C: alpha_beta(Board*, int, int, int) (in /home/sam/Desktop/projects/chess/main.o)
+==68938==    by 0x10E88E: get_best_move(Board*, int) (in /home/sam/Desktop/projects/chess/main.o)
+==68938==    by 0x109455: main (in /home/sam/Desktop/projects/chess/main.o)
+==68938== 
+==68938== Invalid read of size 4
+==68938==    at 0x10A3F3: hash_of(Move, Piece) (in /home/sam/Desktop/projects/chess/main.o)
+==68938==    by 0x10A4A1: apply_move(Board*, Move) (in /home/sam/Desktop/projects/chess/main.o)
+==68938==    by 0x10DDE9: stable_eval(Board*, int) (in /home/sam/Desktop/projects/chess/main.o)
+==68938==    by 0x10DE01: stable_eval(Board*, int) (in /home/sam/Desktop/projects/chess/main.o)
+==68938==    by 0x10E2B0: alpha_beta_inner(Board*, int, int, int, bool) (in /home/sam/Desktop/projects/chess/main.o)
+==68938==    by 0x10E4DE: alpha_beta_inner(Board*, int, int, int, bool) (in /home/sam/Desktop/projects/chess/main.o)
+==68938==    by 0x10E4DE: alpha_beta_inner(Board*, int, int, int, bool) (in /home/sam/Desktop/projects/chess/main.o)
+==68938==    by 0x10E4DE: alpha_beta_inner(Board*, int, int, int, bool) (in /home/sam/Desktop/projects/chess/main.o)
+==68938==    by 0x10E23C: alpha_beta(Board*, int, int, int) (in /home/sam/Desktop/projects/chess/main.o)
+==68938==    by 0x10E88E: get_best_move(Board*, int) (in /home/sam/Desktop/projects/chess/main.o)
+==68938==    by 0x109455: main (in /home/sam/Desktop/projects/chess/main.o)
+==68938==  Address 0x54b218 is not stack'd, malloc'd or (recently) free'd
+==68938== 
+==68938== 
+==68938== Process terminating with default action of signal 11 (SIGSEGV)
+==68938==  Access not within mapped region at address 0x54B218
+==68938==    at 0x10A3F3: hash_of(Move, Piece) (in /home/sam/Desktop/projects/chess/main.o)
+==68938==    by 0x10A4A1: apply_move(Board*, Move) (in /home/sam/Desktop/projects/chess/main.o)
+==68938==    by 0x10DDE9: stable_eval(Board*, int) (in /home/sam/Desktop/projects/chess/main.o)
+==68938==    by 0x10DE01: stable_eval(Board*, int) (in /home/sam/Desktop/projects/chess/main.o)
+==68938==    by 0x10E2B0: alpha_beta_inner(Board*, int, int, int, bool) (in /home/sam/Desktop/projects/chess/main.o)
+==68938==    by 0x10E4DE: alpha_beta_inner(Board*, int, int, int, bool) (in /home/sam/Desktop/projects/chess/main.o)
+==68938==    by 0x10E4DE: alpha_beta_inner(Board*, int, int, int, bool) (in /home/sam/Desktop/projects/chess/main.o)
+==68938==    by 0x10E4DE: alpha_beta_inner(Board*, int, int, int, bool) (in /home/sam/Desktop/projects/chess/main.o)
+==68938==    by 0x10E23C: alpha_beta(Board*, int, int, int) (in /home/sam/Desktop/projects/chess/main.o)
+==68938==    by 0x10E88E: get_best_move(Board*, int) (in /home/sam/Desktop/projects/chess/main.o)
+==68938==    by 0x109455: main (in /home/sam/Desktop/projects/chess/main.o)
+==68938==  If you believe this happened as a result of a stack
+==68938==  overflow in your program's main thread (unlikely but
+==68938==  possible), you can try to increase the size of the
+==68938==  main thread stack using the --main-stacksize= flag.
+==68938==  The main thread stack size used in this run was 8388608.
+==68938== 
+==68938== HEAP SUMMARY:
+==68938==     in use at exit: 74,752 bytes in 4 blocks
+==68938==   total heap usage: 18 allocs, 14 frees, 75,768 bytes allocated
+==68938== 
+==68938== LEAK SUMMARY:
+==68938==    definitely lost: 0 bytes in 0 blocks
+==68938==    indirectly lost: 0 bytes in 0 blocks
+==68938==      possibly lost: 0 bytes in 0 blocks
+==68938==    still reachable: 74,752 bytes in 4 blocks
+==68938==         suppressed: 0 bytes in 0 blocks
+==68938== Reachable blocks (those to which a pointer was found) are not shown.
+==68938== To see them, rerun with: --leak-check=full --show-leak-kinds=all
+==68938== 
+==68938== Use --track-origins=yes to see where uninitialised values come from
+==68938== For lists of detected and suppressed errors, rerun with: -s
+==68938== ERROR SUMMARY: 7 errors from 7 contexts (suppressed: 0 from 0)
+Segmentation fault (core dumped)
+

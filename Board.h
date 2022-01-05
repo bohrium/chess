@@ -30,6 +30,7 @@ struct Board {
     Color next_to_move;
     Piece grid[8][8];
     std::vector<int> evaluation_stack;
+    std::vector<int> plies_since_irreversible;
     unsigned int hash;
 
     // KING SAFETY TERMS

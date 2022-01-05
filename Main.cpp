@@ -4,8 +4,8 @@
 #include <stdlib.h>
 #include <time.h>
 
-#define NB_WHITE_PLIES 6
-#define NB_BLACK_PLIES 6
+#define NB_WHITE_PLIES 4
+#define NB_BLACK_PLIES 2
 #define NB_COMMENTARY_PLIES 4
 
 int main(int argc, char** argv)
@@ -33,7 +33,7 @@ int main(int argc, char** argv)
             std::cout << "CHECKMATE!" << std::endl;
             break; 
         }
-        std::cout << "\033[14A" << std::flush; /* go up clear */
+        std::cout << "\033[15A" << std::flush; /* go up clear */
         //char c;  std::cin >> c;
     }
     print_board(&B);    
