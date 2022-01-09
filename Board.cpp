@@ -162,8 +162,9 @@ inline Piece get_piece(Board const* B, Coordinate coor)
 } 
 
 unsigned int hash_by_piece[3][7] = {
-  {1234567, 2345671, 3456712, 45767123, 5671234, 6712345, 7123456},
-  {3456701, 4567101, 5671201, 76712301, 7123401, 1234501, 2345601},
+  {1234567, 2345671, 3456712, 45767123, 5671234, 6712345, 0},
+  {3456701, 4567101, 5671201, 76712301, 7123401, 1234501, 0},
+  {0, 0, 0, 0, 0, 0, 0},
 };
 
 unsigned int hash_by_square[8][8] = {
@@ -213,7 +214,7 @@ void apply_move(Board* B, Move M)
 {
     /* note asymmetry with analogous line in undo_move */
     Piece mover = get_piece(B, M.source);
-    B->hash ^= hash_of(M, mover); 
+    //B->hash ^= hash_of(M, mover); 
 
     // fifty move rule
     if ((mover.species == Species::pawn || M.taken.species != Species::empty_species
@@ -223,6 +224,12 @@ void apply_move(Board* B, Move M)
         B->plies_since_irreversible.push_back(B->plies_since_irreversible.back() + 1);
     }
 
+    /* check well formed*/
+    if (! (0<=M.source.row && M.source.row<8) && 
+          (0<=M.source.col && M.source.col<8) &&
+          (0<=M.dest.row && M.dest.row<8) &&
+          (0<=M.dest.col && M.dest.col<8)) {std::cout << "!!" << std::flush;}
+
     B->next_to_move = flip_color(B->next_to_move);
     B->evaluation_stack.push_back(B->evaluation_stack.back() + evaluation_difference(B, M));
     B->grid[M.dest.row][M.dest.col] = B->grid[M.source.row][M.source.col];
@@ -230,8 +237,7 @@ void apply_move(Board* B, Move M)
 
     if (mover.species == Species::king) {
         B->king_loc[mover.color] = M.dest;
-    }
-    if (mover.species == Species::pawn) {
+    } else if (mover.species == Species::pawn) {
         B->nb_pawns_by_square_parity[mover.color][parity(M.source)] -= 1;
         B->nb_pawns_by_square_parity[mover.color][parity(M.dest)] += 1;
     }
@@ -257,7 +263,7 @@ void undo_move(Board* B, Move M)
 {
     /* note asymmetry with analogous line in apply_move */
     Piece mover = get_piece(B, M.dest);
-    B->hash ^= hash_of(M, mover); 
+    //B->hash ^= hash_of(M, mover); 
 
     B->plies_since_irreversible.pop_back();
 
@@ -268,8 +274,7 @@ void undo_move(Board* B, Move M)
 
     if (mover.species == Species::king) {
         B->king_loc[mover.color] = M.source;
-    }
-    if (mover.species == Species::pawn) {
+    } else if (mover.species == Species::pawn) {
         B->nb_pawns_by_square_parity[mover.color][parity(M.source)] += 1;
         B->nb_pawns_by_square_parity[mover.color][parity(M.dest)] -= 1;
     }
@@ -571,41 +576,41 @@ int pawn_connectivity(Board* B)
     );        
 }
 
-int diff_king_safety(Board* B, Move M) 
-{
-    Piece mover = get_piece(B, M.source);
-    int sign = mover.color == Color::white : +1 : -1;
-    Coordinate king_loc = B->king_loc[flip_color(mover.color)];
-
-    int net_xrays = 0;
-
-    int king_hor  = 3;
-    int king_vert = 3;
-
-    int sr = M.source.row;
-    int sc = M.source.col;
-    int dr = M.dest.row;
-    int dc = M.dest.col;
-    int kr = king_loc.row;
-    int kc = king_loc.col;
-
-    switch (mover.species) {
-        break; case Species::pawn:
-        break; case Species::knight:
-        break; case Species::bishop:
-        break; case Species::rook:
-            net_xrays = (
-                (sr == dr) ? (
-                    ()
-                ) : (
-                ) 
-            );
-        break; case Species::queen:
-        break; case Species::king:
-    }
-
-    return sign * net_xrays;
-}
+//int diff_king_safety(Board* B, Move M) 
+//{
+//    Piece mover = get_piece(B, M.source);
+//    int sign = mover.color == Color::white : +1 : -1;
+//    Coordinate king_loc = B->king_loc[flip_color(mover.color)];
+//
+//    int net_xrays = 0;
+//
+//    int king_hor  = 3;
+//    int king_vert = 3;
+//
+//    int sr = M.source.row;
+//    int sc = M.source.col;
+//    int dr = M.dest.row;
+//    int dc = M.dest.col;
+//    int kr = king_loc.row;
+//    int kc = king_loc.col;
+//
+//    switch (mover.species) {
+//        break; case Species::pawn:
+//        break; case Species::knight:
+//        break; case Species::bishop:
+//        break; case Species::rook:
+//            net_xrays = (
+//                (sr == dr) ? (
+//                    ()
+//                ) : (
+//                ) 
+//            );
+//        break; case Species::queen:
+//        break; case Species::king:
+//    }
+//
+//    return sign * net_xrays;
+//}
 
 
 //int king_safety(Board* B) 

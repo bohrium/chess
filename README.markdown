@@ -42,25 +42,40 @@ This project has two aims: to practice tree search and to use learning
 techniques to infer and visualize interpretable chess heuristics.
 
 ### tree search
-We use constant-depth tree search with a hand-crafted leaf evaluation function
+We wish to approximate **perfect play**.  Thus, we make no effort to model the
+opponent (by finding Tal moves: incorrect moves whose refutations might be
+difficult for the opponent to find) and we make no effort to model ourselves.
+In other words, we seek a next move that most advantages our side if perfect
+players are to substitute for our opponent and ourselves immediately after we
+make our move.  In other words, we seek to approximate minimax values on an
+enormous gametree whose leaves are labeled with {-1, 0, +1}. 
+
+As a first approximation, we compute minimax values of a constant-depth subtree
+labeled by a hand-crafted evaluation function whose target toset is richer than
+{-1, 0, +1} and meant to correlate with probability of a forced win.
+Alpha-beta is a standard algorithm that in the best case halves the effective
+depth.  Conveniently, we may introduce initial values for alpha and beta
+to induce cutoff at checkmate. 
+
 and 4 optimizations:
 
-*   alpha-beta pruning (with initial values to induce cutoff at checkmate)
-*   recursive move ordering (call shallow alpha-beta to determine move ordering
-    of deep alpha-beta)
-*   reversible move (our version of Smith notation --- allows us to keep one
-    board instance in Main)
-*   difference evaluation (moves are sparse board updates, so it's faster to
-    compute d(heuristic) and integrate) 
+*   **recursive move ordering** (call shallow alpha-beta to determine move
+    ordering of deep alpha-beta)
+*   **difference evaluation** (moves are sparse board updates, so it's faster
+    to compute d(heuristic) and integrate) made interesting via **reversible
+    move** (our version of Smith notation --- allows us to keep one board
+    instance in Main)
 
+*   TODO: BFS beam search outer layer for deep searching 
 *   TODO: memoize {(depth, board) --> eval} during search
-*   TODO: quiescnece search to handle checks and captures
+*   TODO: quiescnece search to handle captures (but not (yet) checks)
+*   TODO: zero-window scouting
 
 ### evaluation heuristic
 
 Our heuristic decomposes as:
 
-    score = king-safety + pawns + material + (midgame)(placement)
+    score = king-safety + pawns + pawn-piece + material + (midgame)(placement)
 
 Each term is quadratic in our one-hot board representation.  The expressions
 `material`, `midgame`, and `placement` are in fact linear and thus especially
@@ -93,6 +108,13 @@ board (right), we add (+25)(+1)+(-20)(+4+1+1+4+1) = -195 to white's score and
 we add (+25)(+1+1+1+1)+(-20)(-1-1-1-1-1) = 0 to black's score.  Even though
 white has two more pawns than black, the `pawns` term suggests that the 
 players' pawn structures are roughly equal.
+
+The `pawn-piece` adjustment penalizes bishops of the same square parity as many
+of their own side's pawns (-10 per pawn-bishop pair of same color and same
+square parity; +10 per pawn-bishop pair of same color and different square
+parity), rewards knights on outposts (+50 per knight protected by friendly
+pawn on a square weak for the opponent), and rewards rooks on open files
+(+50 per rook on a file with neither friendly nor enemy pawns). 
 
 We count `material` using Fischer's estimates: p,n,b,r,q = 100,300,325,500,900.
 The `placement` term adjusts these values based on piece location (hence

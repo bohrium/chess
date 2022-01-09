@@ -1,6 +1,10 @@
 all:
 	g++ --std=c++11 Main.cpp Board.cpp Search.cpp -o main.o 
 
+grind:
+	g++ -g --std=c++11 Main.cpp Board.cpp Search.cpp -o main.o 
+	valgrind --leak-check=yes ./main.o
+
 profile:
 	g++ --std=c++11 TestSearch.cpp Board.cpp Search.cpp -o testsearch.o -pg 
 	./testsearch.o 
