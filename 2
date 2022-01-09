@@ -139,7 +139,7 @@ int alpha_beta_inner(Board* B, int nb_plies, int alpha, int beta, bool stable)
             apply_move(B, m);
             int depth = (
                 1==branching_factors[nb_plies] ? nb_plies-1 :
-                l < branching_factors[nb_plies] ? nb_plies-2 : nb_plies-3);  
+                l < branching_factors[nb_plies] ? nb_plies-2 : nb_plies-2;  
             int child = alpha_beta_inner(B, depth, alpha, beta, stable);
             score = accumulator(child, score);
             undo_move(B, m);

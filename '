@@ -71,16 +71,6 @@ and 4 optimizations:
 *   TODO: quiescnece search to handle captures (but not (yet) checks)
 *   TODO: zero-window scouting
 
-#### BFS beam search
-
-    Vanilla alpha-beta is by nature a DFS: its sibling-to-sibling interface
-    is very narrow, being only an (alpha,beta) pair.  Sometimes, though, we 
-    may wish to go deeper than vanilla alpha-beta allows by keeping only the
-    top k nodes (according to some advanced heuristic such as depth-8 vanilla
-    alpha-beta) at each successive depth.  The notion of ``top k'' requires a
-    wide sibling-to-sibling interface: we must at least keep track of the 
-    best k kids so far.
-
 ### evaluation heuristic
 
 Our heuristic decomposes as:

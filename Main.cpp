@@ -5,8 +5,8 @@
 #include <time.h>
 
 #define NB_WHITE_PLIES 6
-#define NB_BLACK_PLIES 5
-#define NB_COMMENTARY_PLIES 5
+#define NB_BLACK_PLIES 6
+#define NB_COMMENTARY_PLIES 6
 
 int main(int argc, char** argv)
 {
