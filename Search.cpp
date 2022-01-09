@@ -96,7 +96,7 @@ int alpha_beta(Board* B, int nb_plies, int alpha, int beta)
 
 int alpha_beta_inner(Board* B, int nb_plies, int alpha, int beta, bool stable)
 {
-    if (nb_plies==0) {
+    if (nb_plies<=0) {
         if (stable) { return stable_eval(B, STABLE_DEPTH); }
         else        { return evaluate(B);                  }
     }
@@ -126,17 +126,19 @@ int alpha_beta_inner(Board* B, int nb_plies, int alpha, int beta, bool stable)
     int score = is_white ? -KING_POINTS : +KING_POINTS; 
 
                                  /*    0   1   2   3   4   5   6   7   8  */
-    const int branching_factors[] = { -1, 64, 32, 32, 32, 32, 32,  4,  4}; 
-    int nb_candidates = MIN(ML.length, branching_factors[nb_plies]);
+    const int branching_factors[] = { -1, 81, 81, 27, 27,  9,  9,  3,  3}; 
+    //int nb_candidates = MIN(ML.length, branching_factors[nb_plies]);
 
-    for (int l=0; l!=nb_candidates; ++l) {
+    //for (int l=0; l!=nb_candidates; ++l) {
+    for (int l=0; l!=ML.length; ++l) {
         Move m = ML.moves[l];
         if (m.taken.species == Species::king) { return is_white ? +KING_POINTS : -KING_POINTS;}
 
         /* stack push/pop */
         {
             apply_move(B, m);
-            int child = alpha_beta_inner(B, nb_plies-1, alpha, beta, stable);
+            int depth = l < branching_factors[nb_plies] ? nb_plies-1 : nb_plies-2;  
+            int child = alpha_beta_inner(B, depth, alpha, beta, stable);
             score = accumulator(child, score);
             undo_move(B, m);
         }
@@ -179,7 +181,7 @@ Move get_best_move(Board* B, int nb_plies)
     Move best_move;
 
                                  /*    0   1   2   3   4   5   6   7   8  */
-    const int branching_factors[] = { -1, 64, 32, 32, 32, 32, 32,  4,  4};  
+    const int branching_factors[] = { -1, 81, 81, 27, 27,  9,  9,  3,  3}; 
     int nb_candidates = MIN(ML.length, branching_factors[nb_plies]);
 
     for (int l=0; l!=nb_candidates; ++l) {
