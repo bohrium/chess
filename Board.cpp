@@ -168,14 +168,14 @@ unsigned int hash_by_piece[3][7] = {
 };
 
 unsigned int hash_by_square[8][8] = {
-    {123*1301, 123*3501, 123*5701, 123*7901, 123*3101, 123*5301, 123*7501, 123*9701},
+    {1123*1301, 123*3501, 123*5701, 123*7901, 123*3101, 123*5301, 123*7501, 1123*9701},
     {345*1301, 345*3501, 345*5701, 345*7901, 345*3101, 345*5301, 345*7501, 345*9701},
     {567*1301, 567*3501, 567*5701, 567*7901, 567*3101, 567*5301, 567*7501, 567*9701},
     {789*1301, 789*3501, 789*5701, 789*7901, 789*3101, 789*5301, 789*7501, 789*9701},
     {321*1301, 321*3501, 321*5701, 321*7901, 321*3101, 321*5301, 321*7501, 321*9701},
     {543*1301, 543*3501, 543*5701, 543*7901, 543*3101, 543*5301, 543*7501, 543*9701},
     {765*1301, 765*3501, 765*5701, 765*7901, 765*3101, 765*5301, 765*7501, 765*9701},
-    {987*1301, 987*3501, 987*5701, 987*7901, 987*3101, 987*5301, 987*7501, 987*9701},
+    {1987*1301, 987*3501, 987*5701, 987*7901, 987*3101, 987*5301, 987*7501, 1987*9701},
 };
 
 unsigned int hash_of(Move m, Piece mover)
@@ -213,11 +213,13 @@ int parity(Coordinate rc)
 void apply_null(Board* B)
 {
     B->next_to_move = flip_color(B->next_to_move);
+    B->hash ^= 271828;
     /* todo: change side-to-move hash */
 }
 void undo_null(Board* B)
 {
     B->next_to_move = flip_color(B->next_to_move);
+    B->hash ^= 271828;
     /* todo: change side-to-move hash */
 }
 
@@ -226,6 +228,7 @@ void apply_move(Board* B, Move M)
     /* note asymmetry with analogous line in undo_move */
     Piece mover = get_piece(B, M.source);
     B->hash ^= hash_of(M, mover); 
+    B->hash ^= 271828;
 
     // fifty move rule
     if ((mover.species == Species::pawn || M.taken.species != Species::empty_species
@@ -275,6 +278,7 @@ void undo_move(Board* B, Move M)
     /* note asymmetry with analogous line in apply_move */
     Piece mover = get_piece(B, M.dest);
     B->hash ^= hash_of(M, mover); 
+    B->hash ^= 271828;
 
     B->plies_since_irreversible.pop_back();
 

@@ -4,9 +4,9 @@
 #include <stdlib.h>
 #include <time.h>
 
-#define NB_WHITE_PLIES  8
-#define NB_BLACK_PLIES  7
-#define NB_COMMENTARY_PLIES 7
+#define NB_WHITE_PLIES  9
+#define NB_BLACK_PLIES  9
+#define NB_COMMENTARY_PLIES 9
 
 int main(int argc, char** argv)
 {
