@@ -11,7 +11,7 @@ struct ScoredMove {
     Move m;
     int score;
 };
-ScoredMove get_best_move(Board* B, int nb_plies, int alpha, int beta, int verbose);
+ScoredMove get_best_move(Board* B, int nb_plies, int alpha, int beta, int verbose, bool null_move_okay);
 void print_pv(Board* B, int nb_plies, int verbose);
 
 #endif//SEARCH_H

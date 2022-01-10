@@ -7,6 +7,7 @@
 TODO : 
 
        implement "get best k" moves for small k using alpha beta cutoffs.
+            (implemented, untested)
 
        add alpha/beta cutoffs to stable_eval, too!
 
