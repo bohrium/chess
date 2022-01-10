@@ -4,9 +4,9 @@
 #include <stdlib.h>
 #include <time.h>
 
-#define NB_WHITE_PLIES 8 
-#define NB_BLACK_PLIES 6
-#define NB_COMMENTARY_PLIES 6
+#define NB_WHITE_PLIES  8
+#define NB_BLACK_PLIES  6
+#define NB_COMMENTARY_PLIES 7
 
 int main(int argc, char** argv)
 {
@@ -22,10 +22,13 @@ int main(int argc, char** argv)
     for (int t=0; ; ++t) {
         std::cout << std::endl;
         int alpha=-KING_POINTS/2, beta=+KING_POINTS/2;
-        ScoredMove sm = t%2==0 ? get_best_move(&B, NB_WHITE_PLIES, alpha, beta, 2) 
-                               : get_best_move(&B, NB_BLACK_PLIES, alpha, beta, 2);
-        std::cout << std::endl;
-        std::cout << "Played "; print_move(&B, sm.m);
+        int nb_plies = t%2==0 ? NB_WHITE_PLIES : NB_BLACK_PLIES; 
+        int verbose  = 2;
+        ScoredMove sm = get_best_move(&B, nb_plies, alpha, beta, verbose);
+        //std::cout << std::endl;
+        //std::cout << "Played "; print_move(&B, sm.m);
+        std::cout << (t%2==0 ? 'W' : 'B');
+        std::cout << " plays "; print_pv(&B, nb_plies, verbose);
         std::cout << "\033[0;34m"; /* blue */
         std::cout << " " << alpha_beta(&B, NB_COMMENTARY_PLIES, -KING_POINTS/2, +KING_POINTS/2);  
         std::cout << "            \033[0;33m" << std::endl; /* yellow */

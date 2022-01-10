@@ -6,6 +6,10 @@
 
 TODO : 
 
+       implement "get best k" moves for small k using alpha beta cutoffs.
+
+       add alpha/beta cutoffs to stable_eval, too!
+
        implement stable node eval (linear greedy search for pass/bestcapture) 
          (implemented.)
 

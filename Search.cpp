@@ -78,18 +78,18 @@ typedef struct ABRecord {
     int beta;
     int score;
 } ABRecord;
-#define AB_TABLE_SIZE 100000
+#define AB_TABLE_SIZE 10000
 #define AB_TABLE_DEPTH 5
-ABRecord ab_table[AB_TABLE_SIZE]; /* todo: zero out */
+ABRecord ab_table[20][AB_TABLE_SIZE]; /* todo: zero out */
 
 int alpha_beta(Board* B, int nb_plies, int alpha, int beta)
 {
     return alpha_beta_inner(B, nb_plies, alpha, beta, true);
 }
 
-                             /*    0   1   2   3   4   5   6   7   8   9  10 */
-const int branching_factors[] = { -1, 64, 64, 64, 64, 16, 16,  4,  4,  4,  4}; 
-const int ordering_depths[]   = { -1,  0,  0,  1,  2,  3,  4,  4,  4,  4,  4}; 
+                             /*    0   1   2   3   4   5   6   7   8   9  10  11  12 */
+const int branching_factors[] = { -1, 50, 50, 50, 50, 50, 50, 50, 50,  2,  2,  2,  2}; 
+const int ordering_depths[]   = { -1,  0,  0,  1,  2,  3,  3,  3,  3,  7,  7,  7,  7}; 
 
 int alpha_beta_inner(Board* B, int nb_plies, int alpha, int beta, bool stable)
 {
@@ -113,7 +113,7 @@ int alpha_beta_inner(Board* B, int nb_plies, int alpha, int beta, bool stable)
     MoveList ML;  
     generate_moves(B, &ML);
     //if (2<=nb_plies) {
-      order_moves(B, &ML, ordering_depths[nb_plies]);
+    order_moves(B, &ML, ordering_depths[nb_plies]);
     //}
 
     bool is_white = B->next_to_move==Color::white;
@@ -131,11 +131,12 @@ int alpha_beta_inner(Board* B, int nb_plies, int alpha, int beta, bool stable)
         bool skip = false; 
 
         /* scout / late move reduction */
-        if (4<=nb_plies && 1<=l) {
+        if (3<=nb_plies && 1<=l) {
             apply_move(B, m);
             int alpha_ = is_white ? alpha : beta-1; 
             int beta_  = is_white ? alpha+1 : beta; 
-            int depth = nb_triumphs==0 ? nb_plies-3 : nb_plies-1; 
+            int depth = nb_triumphs!=0 ? nb_plies-1 : 
+                        (5 <= nb_plies ? nb_plies-3 : nb_plies-2); 
             int child = alpha_beta_inner(B, depth, alpha_, beta_, stable);
             if (( is_white && child<=alpha) ||
                 (!is_white && beta <=child)) {
@@ -170,6 +171,23 @@ int alpha_beta_inner(Board* B, int nb_plies, int alpha, int beta, bool stable)
     return score;
 }
 
+typedef struct PVRecord {
+    unsigned int hash;
+    ScoredMove sm;
+} PVRecord;
+#define PV_TABLE_SIZE 10000
+#define PV_TABLE_DEPTH
+PVRecord pv_table[20][PV_TABLE_SIZE]; /* todo: zero out */
+
+void print_pv(Board* B, int nb_plies, int verbose)
+{
+    PVRecord pvr = pv_table[nb_plies][(B->hash)%PV_TABLE_SIZE];
+    print_move(B, pvr.sm.m);
+    apply_move(B, pvr.sm.m);
+    if (verbose) { print_pv(B, nb_plies-1, verbose-1); } 
+    undo_move(B, pvr.sm.m);
+}
+
 ScoredMove get_best_move(Board* B, int nb_plies, int alpha, int beta, int verbose)
 {
     MoveList ML;  
@@ -190,9 +208,14 @@ ScoredMove get_best_move(Board* B, int nb_plies, int alpha, int beta, int verbos
 
     for (int l=0; l!=nb_candidates; ++l) {
         Move m = ML.moves[l];
-        if (m.taken.species == Species::king) { return {m, is_white ? +KING_POINTS : -KING_POINTS}; }
+        if (m.taken.species == Species::king) { 
+            best_move = m;
+            score = is_white ? +KING_POINTS : -KING_POINTS;
+            break;
+        }
 
         {
+            std::cout << "  ";
             for (int t=0; t!=3-verbose; ++t) {
                 std::cout << "\033[6C";
             }
@@ -203,11 +226,12 @@ ScoredMove get_best_move(Board* B, int nb_plies, int alpha, int beta, int verbos
         bool skip = false; 
 
         /* scout / late move reduction */
-        if (4<=nb_plies && 1<=l) {
+        if (3<=nb_plies && 1<=l) {
             apply_move(B, m);
             int alpha_ = is_white ? alpha : beta-1; 
             int beta_  = is_white ? alpha+1 : beta; 
-            int depth = nb_triumphs==0 ? nb_plies-3 : nb_plies-1; 
+            int depth = nb_triumphs!=0 ? nb_plies-1 : 
+                        (5 <= nb_plies ? nb_plies-3 : nb_plies-2); 
             int child = alpha_beta(B, depth, alpha_, beta_);
             if (( is_white && child<=alpha) ||
                 (!is_white && beta <=child)) {
@@ -237,6 +261,8 @@ ScoredMove get_best_move(Board* B, int nb_plies, int alpha, int beta, int verbos
         if (is_white) { if (score >= beta ) break; alpha = MAX(alpha, score); } 
         else          { if (score <= alpha) break; beta  = MIN(beta , score); } 
     }
+
+    pv_table[nb_plies][(B->hash)%PV_TABLE_SIZE] = {B->hash, {best_move, score}};
     return {best_move, score};
 } 
 
