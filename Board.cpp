@@ -443,7 +443,7 @@ void generate_king_moves (Board const* B, MoveList* ML, Coordinate source)
 
 int KING_POINTS = 10000; /* should exceed twice the total remaining value */ 
               /* p    n    b     r    q    k      */
-int points[] = {100, 275, 325, 500, 900, KING_POINTS};
+int points[] = {100, 325, 350, 475, 900, KING_POINTS};
 /* note: pawn, bishop, rook placements are asymmetrical*/
 //int _X=-40,_x=-15,_o=+15,_O=+40; 
 int XX=-89,_X=-34,xx=-13,_x=-5,_o=+5,oo=+13,_O=+34,OO=+89; 
