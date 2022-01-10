@@ -3,15 +3,10 @@
 #include <iostream>
 #include <algorithm>
 
-#define STABLE_DEPTH 4
+#define STABLE_DEPTH 2
 
 #define MIN(X,Y) (((X)<(Y))?(X):(Y))
 #define MAX(X,Y) (((X)>(Y))?(X):(Y))
-
-/*TODO: get rid of / simplify lambda usage*/
-auto const max_accumulator = [](int a, int b) {return a<b ? b : a;};
-auto const min_accumulator = [](int a, int b) {return a>b ? b : a;};
-
 
 int alpha_beta_inner(Board* B, int nb_plies, int alpha, int beta, bool stable);
 
@@ -87,12 +82,14 @@ typedef struct ABRecord {
 #define AB_TABLE_DEPTH 5
 ABRecord ab_table[AB_TABLE_SIZE]; /* todo: zero out */
 
-
-
 int alpha_beta(Board* B, int nb_plies, int alpha, int beta)
 {
     return alpha_beta_inner(B, nb_plies, alpha, beta, true);
 }
+
+                             /*    0   1   2   3   4   5   6   7   8   9  10 */
+const int branching_factors[] = { -1, 64, 64, 64, 64, 16, 16,  4,  4,  4,  4}; 
+const int ordering_depths[]   = { -1,  0,  0,  1,  2,  3,  4,  4,  4,  4,  4}; 
 
 int alpha_beta_inner(Board* B, int nb_plies, int alpha, int beta, bool stable)
 {
@@ -115,46 +112,52 @@ int alpha_beta_inner(Board* B, int nb_plies, int alpha, int beta, bool stable)
 
     MoveList ML;  
     generate_moves(B, &ML);
-
-    if (2<=nb_plies) {
-        order_moves(B, &ML, nb_plies-2);
-    }
+    //if (2<=nb_plies) {
+      order_moves(B, &ML, ordering_depths[nb_plies]);
+    //}
 
     bool is_white = B->next_to_move==Color::white;
 
-    auto const accumulator = is_white ? max_accumulator : min_accumulator; 
     int score = is_white ? -KING_POINTS : +KING_POINTS; 
 
-                                 /*    0   1   2   3   4   5   6   7   8  */
-    const int branching_factors[] = { -1, 81, 81, 27, 27,  9,  9,  3,  3}; 
-    //int nb_candidates = MIN(ML.length, branching_factors[nb_plies]);
+    int nb_candidates = MIN(ML.length, branching_factors[nb_plies]);
 
-    //for (int l=0; l!=nb_candidates; ++l) {
-    for (int l=0; l!=ML.length; ++l) {
+    int nb_triumphs = 0; 
+
+    for (int l=0; l!=nb_candidates; ++l) {
         Move m = ML.moves[l];
         if (m.taken.species == Species::king) { return is_white ? +KING_POINTS : -KING_POINTS;}
 
-        /* stack push/pop */
+        bool skip = false; 
+
+        /* scout / late move reduction */
+        if (4<=nb_plies && 1<=l) {
+            apply_move(B, m);
+            int alpha_ = is_white ? alpha : beta-1; 
+            int beta_  = is_white ? alpha+1 : beta; 
+            int depth = nb_triumphs==0 ? nb_plies-3 : nb_plies-1; 
+            int child = alpha_beta_inner(B, depth, alpha_, beta_, stable);
+            if (( is_white && child<=alpha) ||
+                (!is_white && beta <=child)) {
+                skip = true;
+            }
+            undo_move(B, m);
+        }
+        if (skip) { continue; }
+
+        /* full search */
         {
             apply_move(B, m);
-            int depth = (
-                1==branching_factors[nb_plies] ? nb_plies-1 :
-                l < branching_factors[nb_plies] ? nb_plies-2 : nb_plies-3);  
-            int child = alpha_beta_inner(B, depth, alpha, beta, stable);
-            score = accumulator(child, score);
+            int child = alpha_beta_inner(B, nb_plies-1, alpha, beta, stable);
+            score = is_white ? MAX(child, score) : MIN(child, score);
+            if (child == (is_white ? MAX(child, alpha) : MIN(child, beta))) {
+                nb_triumphs += 1;
+            }
             undo_move(B, m);
         }
 
-        if (is_white) {
-            if (score >= beta) break;
-            alpha = accumulator(alpha, score); 
-        } else {
-            if (score <= alpha) break;
-            beta = accumulator(beta, score); 
-        } 
-
-        ///* cutoff! */
-        //if (! (alpha <= beta)) { break; }
+        if (is_white) { if (score >= beta ) break; alpha = MAX(alpha, score); } 
+        else          { if (score <= alpha) break; beta  = MIN(beta , score); } 
     }
 
     //if (nb_plies == AB_TABLE_DEPTH) {
@@ -167,48 +170,79 @@ int alpha_beta_inner(Board* B, int nb_plies, int alpha, int beta, bool stable)
     return score;
 }
 
-Move get_best_move(Board* B, int nb_plies)
+ScoredMove get_best_move(Board* B, int nb_plies, int alpha, int beta, int verbose)
 {
     MoveList ML;  
     generate_moves(B, &ML);
-    if (2<=nb_plies) {
-        order_moves(B, &ML, nb_plies-2);
-    }
+
+    //if (2<=nb_plies) {
+      order_moves(B, &ML, ordering_depths[nb_plies]);
+    //}
+
     bool is_white = B->next_to_move==Color::white;
 
-    int alpha=-KING_POINTS/2, beta=+KING_POINTS/2;
-
-    auto const accumulator = is_white ? max_accumulator : min_accumulator; 
     int score = is_white ? -KING_POINTS : +KING_POINTS; 
     Move best_move;
 
-                                 /*    0   1   2   3   4   5   6   7   8  */
-    const int branching_factors[] = { -1, 81, 81, 27, 27,  9,  9,  3,  3}; 
-    //int nb_candidates = MIN(ML.length, branching_factors[nb_plies]);
+    int nb_candidates = MIN(ML.length, branching_factors[nb_plies]);
 
-    //for (int l=0; l!=nb_candidates; ++l) {
-    for (int l=0; l!=ML.length; ++l) {
+    int nb_triumphs = 0; 
+
+    for (int l=0; l!=nb_candidates; ++l) {
         Move m = ML.moves[l];
-        print_move(B, m);
-        std::cout << "\033[6D" << std::flush;
-        if (m.taken.species == Species::king) { return m; }
-        apply_move(B, m);
-        int child = alpha_beta(B, nb_plies-1, alpha, beta);
-        if (score != accumulator(child, score)) {
-            score = accumulator(child, score);
-            best_move = m;
-        }
-        undo_move(B, m);
+        if (m.taken.species == Species::king) { return {m, is_white ? +KING_POINTS : -KING_POINTS}; }
 
-        if (is_white) {
-            alpha = accumulator(alpha, score); 
-        } else {
-            beta = accumulator(beta, score); 
-        } 
+        {
+            for (int t=0; t!=3-verbose; ++t) {
+                std::cout << "\033[6C";
+            }
+            print_move(B, m);
+            std::cout << "\033[100D" << std::flush;
+        }
+
+        bool skip = false; 
+
+        /* scout / late move reduction */
+        if (4<=nb_plies && 1<=l) {
+            apply_move(B, m);
+            int alpha_ = is_white ? alpha : beta-1; 
+            int beta_  = is_white ? alpha+1 : beta; 
+            int depth = nb_triumphs==0 ? nb_plies-3 : nb_plies-1; 
+            int child = alpha_beta(B, depth, alpha_, beta_);
+            if (( is_white && child<=alpha) ||
+                (!is_white && beta <=child)) {
+                skip = true;
+            }
+            undo_move(B, m);
+        }
+        if (skip) { continue; }
+
+        /* full search */
+        {
+            apply_move(B, m);
+            int child = verbose==0 ? alpha_beta(B, nb_plies-1, alpha, beta) :
+                                     get_best_move(B, nb_plies-1, alpha, beta, verbose-1).score;
+            int new_score = is_white ? MAX(child, score) : MIN(child, score);
+            if (child == (is_white ? MAX(child, alpha) : MIN(child, beta))) {
+                nb_triumphs += 1;
+            }
+            if (new_score != score) {
+                score = new_score; 
+                best_move = m;
+            }
+            undo_move(B, m);
+        }
+
         /* cutoff will never happen at top level (except in king-taking case) */
+        if (is_white) { if (score >= beta ) break; alpha = MAX(alpha, score); } 
+        else          { if (score <= alpha) break; beta  = MIN(beta , score); } 
     }
-    return best_move;
+    return {best_move, score};
 } 
 
 
+
+        //int depth = (
+        //    1==branching_factors[nb_plies] ? nb_plies-1 :
+        //    l < branching_factors[nb_plies] ? nb_plies-2 : nb_plies-3);  
 

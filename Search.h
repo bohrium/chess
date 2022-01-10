@@ -5,6 +5,11 @@
 
 int alpha_beta(Board* B, int nb_plies, int alpha, int beta);
 void order_moves(Board* B, MoveList* ML);
-Move get_best_move(Board* B, int nb_plies);
+
+struct ScoredMove {
+    Move m;
+    int score;
+};
+ScoredMove get_best_move(Board* B, int nb_plies, int alpha, int beta, int verbose);
 
 #endif//SEARCH_H
