@@ -96,6 +96,9 @@ bool is_capture(Move m);
 void apply_move(Board* B, Move M);
 void undo_move(Board* B, Move M);
 
+void apply_null(Board* B);
+void undo_null(Board* B);
+
 // A chess position can have at most 332 possible next moves:
 // Consider a board with 9 queens, 2 rooks, 2 bishops, 2 knights, 1 king
 #define MAX_NB_MOVES (9*4*7 + 2*2*7 + 2*2*7 + 2*8 + 1*8) 

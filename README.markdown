@@ -19,6 +19,7 @@ TODO :
                              squares (dest or source)!  thus originally hash
                              computation was incorrect and led to path
                              dependent value
+           partial progress: orig_alpha
 
        analyze mystery of core dumps as recorded in commits for game-00, -01
 

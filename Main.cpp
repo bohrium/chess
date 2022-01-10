@@ -6,7 +6,7 @@
 
 #define NB_WHITE_PLIES  8
 #define NB_BLACK_PLIES  6
-#define NB_COMMENTARY_PLIES 7
+#define NB_COMMENTARY_PLIES 6
 
 int main(int argc, char** argv)
 {
@@ -23,21 +23,23 @@ int main(int argc, char** argv)
         std::cout << std::endl;
         int alpha=-KING_POINTS/2, beta=+KING_POINTS/2;
         int nb_plies = t%2==0 ? NB_WHITE_PLIES : NB_BLACK_PLIES; 
-        int verbose  = 2;
+        int verbose  = 3;
         ScoredMove sm = get_best_move(&B, nb_plies, alpha, beta, verbose);
-        //std::cout << std::endl;
-        //std::cout << "Played "; print_move(&B, sm.m);
+
         std::cout << (t%2==0 ? 'W' : 'B');
         std::cout << " plays "; print_pv(&B, nb_plies, verbose);
         std::cout << "\033[0;34m"; /* blue */
         std::cout << " " << alpha_beta(&B, NB_COMMENTARY_PLIES, -KING_POINTS/2, +KING_POINTS/2);  
-        std::cout << "            \033[0;33m" << std::endl; /* yellow */
+        std::cout << "            ";
+        std::cout << "\033[0;33m" << std::endl; /* yellow */
+
         apply_move(&B, sm.m);
         print_board(&B);
         if (sm.m.taken.species == Species::king) {
             std::cout << "CHECKMATE!" << std::endl;
             break; 
         }
+
         std::cout << "\033[15A" << std::flush; /* go up clear */
         //char c;  std::cin >> c;
     }

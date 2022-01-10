@@ -210,6 +210,17 @@ int parity(Coordinate rc)
     return (rc.row + rc.col)%2;
 }
 
+void apply_null(Board* B)
+{
+    B->next_to_move = flip_color(B->next_to_move);
+    /* todo: change side-to-move hash */
+}
+void undo_null(Board* B)
+{
+    B->next_to_move = flip_color(B->next_to_move);
+    /* todo: change side-to-move hash */
+}
+
 void apply_move(Board* B, Move M)
 {
     /* note asymmetry with analogous line in undo_move */

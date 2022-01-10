@@ -3,10 +3,14 @@
 #include <iostream>
 #include <algorithm>
 
-#define STABLE_DEPTH 2
+#define STABLE_DEPTH 6
 
 #define MIN(X,Y) (((X)<(Y))?(X):(Y))
 #define MAX(X,Y) (((X)>(Y))?(X):(Y))
+
+#define NULL_THRESHOLD 10
+#define MIN_FILTER_DEPTH 3
+#define LATE_MOVE_REDUCTION 3
 
 int alpha_beta_inner(Board* B, int nb_plies, int alpha, int beta, bool stable);
 
@@ -79,8 +83,7 @@ typedef struct ABRecord {
     int score;
 } ABRecord;
 #define AB_TABLE_SIZE 10000
-#define AB_TABLE_DEPTH 5
-ABRecord ab_table[20][AB_TABLE_SIZE]; /* todo: zero out */
+ABRecord ab_table[15][AB_TABLE_SIZE]; /* todo: zero out */
 
 int alpha_beta(Board* B, int nb_plies, int alpha, int beta)
 {
@@ -88,11 +91,12 @@ int alpha_beta(Board* B, int nb_plies, int alpha, int beta)
 }
 
                              /*    0   1   2   3   4   5   6   7   8   9  10  11  12 */
-const int branching_factors[] = { -1, 50, 50, 50, 50, 50, 50, 50, 50,  2,  2,  2,  2}; 
-const int ordering_depths[]   = { -1,  0,  0,  1,  2,  3,  3,  3,  3,  7,  7,  7,  7}; 
+const int branching_factors[] = { -1, 30, 30, 30, 30, 30, 30,  2,  2,  2,  2,  2,  2}; 
+const int ordering_depths[]   = { -1,  0,  0,  1,  2,  3,  4,  6,  6,  6,  6,  6,  6}; 
 
 int alpha_beta_inner(Board* B, int nb_plies, int alpha, int beta, bool stable)
 {
+    /* BASE CASE */
     if (nb_plies<=0) {
         if (stable) { return stable_eval(B, STABLE_DEPTH); }
         else        { return evaluate(B);                  }
@@ -101,32 +105,26 @@ int alpha_beta_inner(Board* B, int nb_plies, int alpha, int beta, bool stable)
     int orig_alpha = alpha;
     int orig_beta = beta;
 
-    //if (nb_plies == AB_TABLE_DEPTH) {
+    /* HASH READ */
     if (stable) {
         ABRecord rec = ab_table[nb_plies][B->hash % AB_TABLE_SIZE];
         if (rec.hash == B->hash) {
-          //std::cout << "moo!" << std::endl;
           if ((rec.score > rec.alpha || rec.alpha <= alpha) &&
               (rec.score < rec.beta  || beta <= rec.beta)) {
-            //std::cout << "hit!" << std::endl;
             return rec.score; 
           }
         };
     }
-    //}
 
+    /* GENERATE MOVES */
     MoveList ML;  
     generate_moves(B, &ML);
-    //if (2<=nb_plies) {
     order_moves(B, &ML, ordering_depths[nb_plies]);
-    //}
 
+    /* MAIN LOOP */
     bool is_white = B->next_to_move==Color::white;
-
     int score = is_white ? -KING_POINTS : +KING_POINTS; 
-
     int nb_candidates = MIN(ML.length, branching_factors[nb_plies]);
-
     int nb_triumphs = 0; 
 
     for (int l=0; l!=nb_candidates; ++l) {
@@ -136,12 +134,14 @@ int alpha_beta_inner(Board* B, int nb_plies, int alpha, int beta, bool stable)
         bool skip = false; 
 
         /* scout / late move reduction */
-        if (3<=nb_plies && 1<=l) {
+        if ((MIN_FILTER_DEPTH <=nb_plies && 1<=l) && 
+            (NULL_THRESHOLD<=beta-alpha || (nb_triumphs==0 && !is_capture(m)))) {
             apply_move(B, m);
             int alpha_ = is_white ? alpha : beta-1; 
             int beta_  = is_white ? alpha+1 : beta; 
-            int depth = nb_triumphs!=0 ? nb_plies-1 : 
-                        (5 <= nb_plies ? nb_plies-3 : nb_plies-2); 
+            int depth = nb_plies - 1 - (
+                (nb_triumphs==0 && is_capture(m)) ? LATE_MOVE_REDUCTION : 0
+            );
             int child = alpha_beta_inner(B, depth, alpha_, beta_, stable);
             if (( is_white && child<=alpha) ||
                 (!is_white && beta <=child)) {
@@ -162,10 +162,12 @@ int alpha_beta_inner(Board* B, int nb_plies, int alpha, int beta, bool stable)
             undo_move(B, m);
         }
 
+        /* alpha-beta updates and cutoffs */
         if (is_white) { if (score >= beta ) break; alpha = MAX(alpha, score); } 
         else          { if (score <= alpha) break; beta  = MIN(beta , score); } 
     }
 
+    /* HASH WRITE */
     if (stable) {
         ABRecord* rec = &(ab_table[nb_plies][B->hash % AB_TABLE_SIZE]);
         rec->hash = B->hash;
@@ -183,8 +185,7 @@ typedef struct PVRecord {
     ScoredMove sm;
 } PVRecord;
 #define PV_TABLE_SIZE 10000
-#define PV_TABLE_DEPTH
-PVRecord pv_table[20][PV_TABLE_SIZE]; /* todo: zero out */
+PVRecord pv_table[15][PV_TABLE_SIZE]; /* todo: zero out */
 
 void print_pv(Board* B, int nb_plies, int verbose)
 {
@@ -211,9 +212,8 @@ ScoredMove get_best_move(Board* B, int nb_plies, int alpha, int beta, int verbos
     MoveList ML;  
     generate_moves(B, &ML);
 
-    //if (2<=nb_plies) {
-      order_moves(B, &ML, ordering_depths[nb_plies]);
-    //}
+    // TODO: what if due to recursion, inputted nb_plies is non-positive?!
+    order_moves(B, &ML, ordering_depths[nb_plies]);
 
     bool is_white = B->next_to_move==Color::white;
 
@@ -234,22 +234,24 @@ ScoredMove get_best_move(Board* B, int nb_plies, int alpha, int beta, int verbos
 
         {
             std::cout << "  ";
-            for (int t=0; t!=3-verbose; ++t) {
+            for (int t=0; t!=4-verbose; ++t) {
                 std::cout << "\033[6C";
             }
             print_move(B, m);
-            std::cout << "\033[100D" << std::flush;
+            std::cout << "\033[100D"; //<< std::flush;
         }
 
         bool skip = false; 
 
         /* scout / late move reduction */
-        if (3<=nb_plies && 1<=l) {
+        if ((MIN_FILTER_DEPTH<=nb_plies && 1<=l) && 
+            (NULL_THRESHOLD<=beta-alpha || (nb_triumphs==0 && !is_capture(m)))) {
             apply_move(B, m);
             int alpha_ = is_white ? alpha : beta-1; 
             int beta_  = is_white ? alpha+1 : beta; 
-            int depth = nb_triumphs!=0 ? nb_plies-1 : 
-                        (5 <= nb_plies ? nb_plies-3 : nb_plies-2); 
+            int depth = nb_plies - 1 - (
+                (nb_triumphs==0 && is_capture(m)) ? LATE_MOVE_REDUCTION : 0
+            );
             int child = alpha_beta(B, depth, alpha_, beta_);
             if (( is_white && child<=alpha) ||
                 (!is_white && beta <=child)) {
