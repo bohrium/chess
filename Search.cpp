@@ -3,15 +3,17 @@
 #include <iostream>
 #include <algorithm>
 
-#define QUIESCE_DEPTH 6
+#define QUIESCE_DEPTH 2
 #define STABLE_ORDER_DEPTH 8
 
 #define MIN(X,Y) (((X)<(Y))?(X):(Y))
 #define MAX(X,Y) (((X)>(Y))?(X):(Y))
+#define SUM(X,Y) ((X)+(Y))
 
-#define NULL_THRESHOLD 10
+#define NULL_THRESHOLD  5 // centipawns
 #define MIN_FILTER_DEPTH 3
-#define LATE_MOVE_REDUCTION 3
+#define LATE_MOVE_REDUCTION 2
+#define NULL_MOVE_REDUCTION 2
 
 int alpha_beta_inner(Board* B, int nb_plies, int alpha, int beta, bool stable, bool null_move_okay);
 
@@ -133,8 +135,8 @@ int alpha_beta(Board* B, int nb_plies, int alpha, int beta)
 }
 
                              /*    0   1   2   3   4   5   6   7   8   9  10  11  12 */
-const int branching_factors[] = { -1, 30, 30, 30, 30, 30, 30, 30, 30,  3,  3,  3,  3}; 
-const int ordering_depths[]   = { -1,  0,  0,  1,  2,  3,  3,  3,  3,  5,  5,  5,  5}; 
+const int branching_factors[] = { -1, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30}; 
+const int ordering_depths[]   = { -1,  0,  0,  1,  2,  3,  3,  3,  3,  3,  3,  3,  3}; 
 
 int alpha_beta_inner(Board* B, int nb_plies, int alpha, int beta, bool stable, bool null_move_okay)
 {
@@ -170,16 +172,17 @@ int alpha_beta_inner(Board* B, int nb_plies, int alpha, int beta, bool stable, b
     int nb_triumphs = 0; 
 
     /* null move reduction */
-    int nmr = 0; 
     if (MIN_FILTER_DEPTH<=nb_plies && null_move_okay && 
             (is_white && evaluate(B)>beta || !is_white && evaluate(B)<alpha)){
         apply_null(B);
         int alpha_hi = is_white ? beta-1 : alpha  ; 
         int beta_hi  = is_white ? beta   : alpha+1; 
-        int child = alpha_beta_inner(B, nb_plies-2, alpha_hi, beta_hi, stable, false);
+        int child = alpha_beta_inner(B, nb_plies-1-NULL_MOVE_REDUCTION, alpha_hi, beta_hi, stable, false);
         if (( is_white && beta <=child) ||
             (!is_white && child<=alpha)) {
-            nmr = 2;
+            score = child; 
+            undo_null(B);
+            goto END;
         }
         undo_null(B);
     }
@@ -196,7 +199,7 @@ int alpha_beta_inner(Board* B, int nb_plies, int alpha, int beta, bool stable, b
             apply_move(B, m);
             int alpha_lo = is_white ? alpha : beta-1; 
             int beta_lo = is_white ? alpha+1 : beta; 
-            int depth = nb_plies - 1 - nmr - (
+            int depth = nb_plies - 1 - (
                 (nb_triumphs==0 && is_capture(m)) ? LATE_MOVE_REDUCTION : 0
             );
             int child = alpha_beta_inner(B, depth, alpha_lo, beta_lo, stable, true);
@@ -211,7 +214,7 @@ int alpha_beta_inner(Board* B, int nb_plies, int alpha, int beta, bool stable, b
         /* full search */
         {
             apply_move(B, m);
-            int child = alpha_beta_inner(B, nb_plies-1-nmr, alpha, beta, stable, true);
+            int child = alpha_beta_inner(B, nb_plies-1, alpha, beta, stable, true);
             score = is_white ? MAX(child, score) : MIN(child, score);
             if (child == (is_white ? MAX(child, alpha) : MIN(child, beta))) {
                 nb_triumphs += 1;
@@ -223,6 +226,8 @@ int alpha_beta_inner(Board* B, int nb_plies, int alpha, int beta, bool stable, b
         if (is_white) { if (score >= beta ) break; alpha = MAX(alpha, score); } 
         else          { if (score <= alpha) break; beta  = MIN(beta , score); } 
     }
+
+END:
 
     /* HASH WRITE */
     if (stable) {
@@ -278,16 +283,18 @@ ScoredMove get_best_move(Board* B, int nb_plies, int alpha, int beta, int verbos
     int nb_triumphs = 0; 
 
     /* null move reduction */
-    int nmr = 0; 
     if (MIN_FILTER_DEPTH<=nb_plies && null_move_okay && 
             (is_white && evaluate(B)>beta || !is_white && evaluate(B)<alpha)){
         apply_null(B);
         int alpha_hi = is_white ? beta-1 : alpha  ; 
         int beta_hi  = is_white ? beta   : alpha+1; 
-        int child = alpha_beta_inner(B, nb_plies-2, alpha_hi, beta_hi, true, false);
-        if (( is_white && beta <=child) ||
-            (!is_white && child<=alpha)) {
-            nmr = 2;
+        ScoredMove child = get_best_move(B, nb_plies-1-NULL_MOVE_REDUCTION, alpha_hi, beta_hi, verbose-1, false);
+        if (( is_white && beta <=child.score) ||
+            (!is_white && child.score<=alpha)) {
+            score = child.score;
+            best_move = child.m;
+            undo_null(B);
+            goto END;
         }
         undo_null(B);
     }
@@ -317,7 +324,7 @@ ScoredMove get_best_move(Board* B, int nb_plies, int alpha, int beta, int verbos
             apply_move(B, m);
             int alpha_ = is_white ? alpha : beta-1; 
             int beta_  = is_white ? alpha+1 : beta; 
-            int depth = nb_plies - nmr - 1 - (
+            int depth = nb_plies - 1 - (
                 (nb_triumphs==0 && is_capture(m)) ? LATE_MOVE_REDUCTION : 0
             );
             int child = alpha_beta(B, depth, alpha_, beta_);
@@ -332,8 +339,8 @@ ScoredMove get_best_move(Board* B, int nb_plies, int alpha, int beta, int verbos
         /* full search */
         {
             apply_move(B, m);
-            int child = verbose==0 ? alpha_beta(B, nb_plies-nmr-1, alpha, beta) :
-                                     get_best_move(B, nb_plies-nmr-1, alpha, beta, verbose-1, true).score;
+            int child = verbose==0 ? alpha_beta(B, nb_plies-1, alpha, beta) :
+                                     get_best_move(B, nb_plies-1, alpha, beta, verbose-1, true).score;
             int new_score = is_white ? MAX(child, score) : MIN(child, score);
             if (child == (is_white ? MAX(child, alpha) : MIN(child, beta))) {
                 nb_triumphs += 1;
@@ -349,6 +356,8 @@ ScoredMove get_best_move(Board* B, int nb_plies, int alpha, int beta, int verbos
         if (is_white) { if (score >= beta ) break; alpha = MAX(alpha, score); } 
         else          { if (score <= alpha) break; beta  = MIN(beta , score); } 
     }
+
+END:
 
     pv_table[nb_plies][(B->hash)%PV_TABLE_SIZE] = {B->hash, orig_alpha, orig_beta, {best_move, score}};
     return {best_move, score};
