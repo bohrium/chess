@@ -214,7 +214,7 @@ void apply_move(Board* B, Move M)
 {
     /* note asymmetry with analogous line in undo_move */
     Piece mover = get_piece(B, M.source);
-    //B->hash ^= hash_of(M, mover); 
+    B->hash ^= hash_of(M, mover); 
 
     // fifty move rule
     if ((mover.species == Species::pawn || M.taken.species != Species::empty_species
@@ -263,7 +263,7 @@ void undo_move(Board* B, Move M)
 {
     /* note asymmetry with analogous line in apply_move */
     Piece mover = get_piece(B, M.dest);
-    //B->hash ^= hash_of(M, mover); 
+    B->hash ^= hash_of(M, mover); 
 
     B->plies_since_irreversible.pop_back();
 

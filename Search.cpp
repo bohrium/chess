@@ -98,16 +98,21 @@ int alpha_beta_inner(Board* B, int nb_plies, int alpha, int beta, bool stable)
         else        { return evaluate(B);                  }
     }
 
+    int orig_alpha = alpha;
+    int orig_beta = beta;
+
     //if (nb_plies == AB_TABLE_DEPTH) {
-    //  ABRecord rec = ab_table[B->hash % AB_TABLE_SIZE];
-    //  if (rec.hash == B->hash) {
-    //    std::cout << "moo!" << std::endl;
-    //    if ((rec.score > rec.alpha || rec.alpha <= alpha) &&
-    //        (rec.score < rec.beta  || beta <= rec.beta)) {
-    //      std::cout << "hit!" << std::endl;
-    //      return rec.score; 
-    //    }
-    //  };
+    if (stable) {
+        ABRecord rec = ab_table[nb_plies][B->hash % AB_TABLE_SIZE];
+        if (rec.hash == B->hash) {
+          //std::cout << "moo!" << std::endl;
+          if ((rec.score > rec.alpha || rec.alpha <= alpha) &&
+              (rec.score < rec.beta  || beta <= rec.beta)) {
+            //std::cout << "hit!" << std::endl;
+            return rec.score; 
+          }
+        };
+    }
     //}
 
     MoveList ML;  
@@ -161,18 +166,20 @@ int alpha_beta_inner(Board* B, int nb_plies, int alpha, int beta, bool stable)
         else          { if (score <= alpha) break; beta  = MIN(beta , score); } 
     }
 
-    //if (nb_plies == AB_TABLE_DEPTH) {
-    //  ABRecord* rec = &(ab_table[B->hash % AB_TABLE_SIZE]);
-    //  rec->hash = B->hash;
-    //  rec->alpha = alpha;
-    //  rec->beta = beta;
-    //  rec->score = score;
-    //}
+    if (stable) {
+        ABRecord* rec = &(ab_table[nb_plies][B->hash % AB_TABLE_SIZE]);
+        rec->hash = B->hash;
+        rec->alpha = orig_alpha;
+        rec->beta = orig_beta;
+        rec->score = score;
+    }
     return score;
 }
 
 typedef struct PVRecord {
     unsigned int hash;
+    int alpha;
+    int beta;
     ScoredMove sm;
 } PVRecord;
 #define PV_TABLE_SIZE 10000
@@ -190,6 +197,17 @@ void print_pv(Board* B, int nb_plies, int verbose)
 
 ScoredMove get_best_move(Board* B, int nb_plies, int alpha, int beta, int verbose)
 {
+    PVRecord pvr = pv_table[nb_plies][(B->hash)%PV_TABLE_SIZE];
+    if (pvr.hash == B->hash) {
+        if (pvr.alpha<=alpha && beta<=pvr.beta) { // record's window contains ours 
+            //std::cout << "!\n";
+            return pvr.sm;
+        }
+    }
+
+    int orig_alpha = alpha;
+    int orig_beta = beta;
+
     MoveList ML;  
     generate_moves(B, &ML);
 
@@ -262,7 +280,7 @@ ScoredMove get_best_move(Board* B, int nb_plies, int alpha, int beta, int verbos
         else          { if (score <= alpha) break; beta  = MIN(beta , score); } 
     }
 
-    pv_table[nb_plies][(B->hash)%PV_TABLE_SIZE] = {B->hash, {best_move, score}};
+    pv_table[nb_plies][(B->hash)%PV_TABLE_SIZE] = {B->hash, orig_alpha, orig_beta, {best_move, score}};
     return {best_move, score};
 } 
 
