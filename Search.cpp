@@ -3,7 +3,8 @@
 #include <iostream>
 #include <algorithm>
 
-#define STABLE_DEPTH 6
+#define QUIESCE_DEPTH 6
+#define STABLE_ORDER_DEPTH 8
 
 #define MIN(X,Y) (((X)<(Y))?(X):(Y))
 #define MAX(X,Y) (((X)>(Y))?(X):(Y))
@@ -51,27 +52,68 @@ int stable_eval(Board* B, int max_plies)
     return B->next_to_move==Color::white ? MAX(pass, go) : MIN(pass, go);
 }
 
-void order_moves(Board* B, MoveList* ML, int nb_plies)
+// ensures first k elements of ML coincide with top k moves as determined by
+// search with nb_plies many plies, and that these elements are sorted.  our
+// routine avoids computing all scores exactly via alpha-beta style pruning:
+// we expect special gains for small k
+void order_moves(Board* B, MoveList* ML, int nb_plies, int k)
 {
+    /* TODO: check best-of-k logic! */
+
+    if (4 <= nb_plies) {
+        order_moves(B, ML, 2, 1000);
+    }
+
     int shallow_scores[MAX_NB_MOVES]; 
     int sorted_indices[MAX_NB_MOVES];
+    bool stable = (STABLE_ORDER_DEPTH <= nb_plies); 
+
+    bool is_white = (B->next_to_move==Color::white);
+
+    // worst_of_best_of_k 
+    int wobok = is_white ? +KING_POINTS : -KING_POINTS;
+
     for (int m=0; m!=ML->length; ++m) {
+
+        /* less than king value to avoid king trade */
+        int alpha_ = is_white ? MAX(-KING_POINTS/2, wobok) : -KING_POINTS/2;
+        int beta_  = is_white ? +KING_POINTS/2             : MIN(+KING_POINTS/2, wobok);
         apply_move(B, ML->moves[m]);
-        shallow_scores[m] = alpha_beta_inner(B, nb_plies, -KING_POINTS/2, +KING_POINTS/2, false); /* less than king value to avoid king trade */
+        int score = m==0 ?
+            alpha_beta_inner(B, nb_plies, -KING_POINTS/2, +KING_POINTS/2, stable) :
+            alpha_beta_inner(B, nb_plies, alpha_, beta_, stable);
         undo_move(B, ML->moves[m]);
-        sorted_indices[m] = m;
+
+        if (m < k) {
+            sorted_indices[m] = m;
+            shallow_scores[m] = score; 
+            wobok = is_white ? MIN(score, wobok) : MAX(score, wobok);
+        } else if (is_white && wobok<score || !is_white && score<wobok) {
+            // update to make sure list of best-k moves are maintained
+            int new_wobok = is_white ? +KING_POINTS : -KING_POINTS;
+            bool replaced = false;
+            for (int j=0; j!=k; ++j) { /* by control flow, we may assume k<=m */
+                new_wobok = is_white ? MIN(shallow_scores[sorted_indices[j]], new_wobok) : MAX(shallow_scores[sorted_indices[j]], new_wobok);
+                if (!replaced && shallow_scores[sorted_indices[j]]==wobok) {
+                    //shallow_scores[j] = score; 
+                    sorted_indices[j] = m; /* TODO: put move here!! */
+                    replaced = true;
+                }
+            }
+            wobok = new_wobok;
+        }
     }
-    auto scorer = [shallow_scores, B](int a, int b) {
-        return B->next_to_move==Color::white ?
+    auto scorer = [shallow_scores, is_white](int a, int b) {
+        return is_white ?
             (shallow_scores[a]) > (shallow_scores[b]) :/* white wants bigger scores on left */
             (shallow_scores[a]) < (shallow_scores[b]); /* black wants smaller scores on left */
     };
-    std::sort(sorted_indices, sorted_indices+ML->length, scorer); 
+    std::sort(sorted_indices, sorted_indices+MIN(k,ML->length), scorer); 
     Move sorted_moves[MAX_NB_MOVES]; 
-    for (int m=0; m!=ML->length; ++m) {
+    for (int m=0; m!=MIN(k,ML->length); ++m) {
         sorted_moves[m] = ML->moves[sorted_indices[m]];
     }
-    for (int m=0; m!=ML->length; ++m) {
+    for (int m=0; m!=MIN(k,ML->length); ++m) {
         ML->moves[m] = sorted_moves[m];
     }
 } 
@@ -91,14 +133,14 @@ int alpha_beta(Board* B, int nb_plies, int alpha, int beta)
 }
 
                              /*    0   1   2   3   4   5   6   7   8   9  10  11  12 */
-const int branching_factors[] = { -1, 30, 30, 30, 30, 30, 30,  2,  2,  2,  2,  2,  2}; 
-const int ordering_depths[]   = { -1,  0,  0,  1,  2,  3,  4,  6,  6,  6,  6,  6,  6}; 
+const int branching_factors[] = { -1, 30, 30, 30, 30, 30, 30, 30, 30,  3,  3,  3,  3}; 
+const int ordering_depths[]   = { -1,  0,  0,  1,  2,  3,  3,  3,  3,  5,  5,  5,  5}; 
 
 int alpha_beta_inner(Board* B, int nb_plies, int alpha, int beta, bool stable)
 {
     /* BASE CASE */
     if (nb_plies<=0) {
-        if (stable) { return stable_eval(B, STABLE_DEPTH); }
+        if (stable) { return stable_eval(B, QUIESCE_DEPTH); }
         else        { return evaluate(B);                  }
     }
 
@@ -119,7 +161,7 @@ int alpha_beta_inner(Board* B, int nb_plies, int alpha, int beta, bool stable)
     /* GENERATE MOVES */
     MoveList ML;  
     generate_moves(B, &ML);
-    order_moves(B, &ML, ordering_depths[nb_plies]);
+    order_moves(B, &ML, ordering_depths[nb_plies], branching_factors[nb_plies]);
 
     /* MAIN LOOP */
     bool is_white = B->next_to_move==Color::white;
@@ -213,7 +255,7 @@ ScoredMove get_best_move(Board* B, int nb_plies, int alpha, int beta, int verbos
     generate_moves(B, &ML);
 
     // TODO: what if due to recursion, inputted nb_plies is non-positive?!
-    order_moves(B, &ML, ordering_depths[nb_plies]);
+    order_moves(B, &ML, ordering_depths[nb_plies], branching_factors[nb_plies]);
 
     bool is_white = B->next_to_move==Color::white;
 
