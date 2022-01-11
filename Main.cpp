@@ -4,9 +4,10 @@
 #include <stdlib.h>
 #include <time.h>
 
-#define NB_WHITE_PLIES  9
-#define NB_BLACK_PLIES  9
-#define NB_COMMENTARY_PLIES 9
+/* WARNING: if NB_PLIES too small, also should update verbose in main.c */
+#define NB_WHITE_PLIES 7 
+#define NB_BLACK_PLIES 7
+#define NB_COMMENTARY_PLIES 7
 
 int main(int argc, char** argv)
 {
@@ -17,6 +18,10 @@ int main(int argc, char** argv)
     Board B;
     init_board(&B);
     MoveList ML;
+
+    print_board(&B);
+
+    zero_tables();
 
     //print_board(&B);
     for (int t=0; ; ++t) {

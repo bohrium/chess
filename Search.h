@@ -3,6 +3,7 @@
 
 #include "Board.h"
 
+void zero_tables();
 int alpha_beta(Board* B, int nb_plies, int alpha, int beta);
 //void order_moves(Board* B, MoveList* ML);
 void order_moves(Board* B, MoveList* ML, int nb_plies, int k);

@@ -5,6 +5,9 @@
 
 
 TODO : 
+       resolve illegal and board-corrupting (upon undo?) Ra8(P) first move.
+
+       address possibility of no legal move
 
        implement "get best k" moves for small k using alpha beta cutoffs.
             (implemented, untested)

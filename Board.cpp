@@ -95,7 +95,8 @@ void print_board(Board const* B)
         }
         std::cout << std::endl;
     }
-    std::cout << "\t" << B->plies_since_irreversible.back() << std::endl;
+    std::cout << "\t" << B->plies_since_irreversible.back();
+    std::cout << "\t" << B->hash << std::endl;
 } 
 /*
         White to move
@@ -238,11 +239,11 @@ void apply_move(Board* B, Move M)
         B->plies_since_irreversible.push_back(B->plies_since_irreversible.back() + 1);
     }
 
-    /* check well formed*/
-    if (! (0<=M.source.row && M.source.row<8) && 
-          (0<=M.source.col && M.source.col<8) &&
-          (0<=M.dest.row && M.dest.row<8) &&
-          (0<=M.dest.col && M.dest.col<8)) {std::cout << "!!" << std::flush;}
+    ///* check well formed*/
+    //if (! (0<=M.source.row && M.source.row<8) && 
+    //      (0<=M.source.col && M.source.col<8) &&
+    //      (0<=M.dest.row && M.dest.row<8) &&
+    //      (0<=M.dest.col && M.dest.col<8)) {std::cout << "!!" << std::flush;}
 
     B->next_to_move = flip_color(B->next_to_move);
     B->evaluation_stack.push_back(B->evaluation_stack.back() + evaluation_difference(B, M));
@@ -334,7 +335,7 @@ void generate_moves_for_piece(Board const* B, MoveList* ML, Piece mover, Coordin
     case Species::pawn:   generate_pawn_moves  (B, ML, source); break; 
     case Species::knight: generate_knight_moves(B, ML, source); break; 
     case Species::bishop: generate_bishop_moves(B, ML, source); break; 
-    case Species::rook:   generate_rook_moves  (B, ML, source); break; 
+    //case Species::rook:   generate_rook_moves  (B, ML, source); break; 
     case Species::queen:  generate_queen_moves (B, ML, source); break; 
     case Species::king:   generate_king_moves  (B, ML, source); break; 
     }
