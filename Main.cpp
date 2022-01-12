@@ -5,9 +5,9 @@
 #include <time.h>
 
 /* WARNING: if NB_PLIES too small, also should update verbose in main.c */
-#define NB_WHITE_PLIES 7 
-#define NB_BLACK_PLIES 7
-#define NB_COMMENTARY_PLIES 7
+#define NB_WHITE_PLIES  13
+#define NB_BLACK_PLIES  13
+#define NB_COMMENTARY_PLIES 9
 
 int main(int argc, char** argv)
 {

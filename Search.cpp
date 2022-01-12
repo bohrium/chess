@@ -13,23 +13,30 @@
 #define QUIESCE_DEPTH 4      // plies
 #define STABLE_ORDER_DEPTH 3 // plies
 
-                             /*    0   1   2   3   4   5   6   7   8   9  10  11  12 */
-const int branching_factors[] = { -1, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25}; // nb previous siblings
-const int ordering_depths[]   = { -1,  0,  0,  1,  1,  2,  2,  3,  3,  4,  4,  5,  5}; // plies
+                             /*    0   1   2   3   4   5   6   7   8   9  10  11  12  13  14  15  16  17  18 */
+const int branching_factors[] = { -1, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36}; // nb siblings
+const int ordering_depths[]   = { -1,  0,  0,  1,  1,  2,  2,  3,  3,  4,  4,  5,  5,  6,  6,  7,  7,  8,  8}; // plies
 
 /* REDUCTION PARAMETERS */
 
-#define MIN_FILTER_DEPTH    3 // plies 
+#define MIN_FILTER_DEPTH 3 // plies 
 
 #define ALLOW_AR  1
 #define ALLOW_LMR 1
 #define ALLOW_NMR 1
+#define ALLOW_CSR 1 
 
-#define AR_THRESH  5 // nb previous siblings
-#define AR_AMOUNT  1 // plies 
-#define LMR_THRESH 2 // nb previous siblings
-#define LMR_AMOUNT 2 // plies 
-#define NMR_AMOUNT 2 // plies
+#define AR_THRESH    8 // nb siblings
+#define AR_AMOUNT    1 // plies 
+#define LMR_THRESH   2 // nb siblings
+#define LMR_AMOUNT   2 // plies 
+//#define NMR_THRESH ???
+#define NMR_AMOUNT   2 // plies
+#define CSR_THRESH  50 // centipawns
+#define CSR_AMOUNT   1 // plies
+
+//#define ALLOW_GBR 1
+//#define GBR_AMOUNT 1 // plies  
 
 void zero_tables();
 
@@ -215,11 +222,12 @@ int alpha_beta_inner(Board* B, int nb_plies, int alpha, int beta, bool stable, b
     int nb_candidates = MIN(ML.length, branching_factors[nb_plies]);
     bool any_triumphant = false;  
     bool trigger_lmr = false;  
+    bool trigger_csr = false;  
 
 #if ALLOW_NMR
 /**/{
 /**/    /* null move reduction */
-/**/    int pass = evaluate(B);
+/**/    int pass = evaluate(B); /* TODO: replace by quiescent? */
 /**/    if ((MIN_FILTER_DEPTH<=nb_plies && null_move_okay) && 
 /**/        (is_white && beta<pass || !is_white && pass<alpha)) {
 /**/        apply_null(B);
@@ -238,7 +246,37 @@ int alpha_beta_inner(Board* B, int nb_plies, int alpha, int beta, bool stable, b
 /**/}
 #endif//ALLOW_NMR
 
+#if ALLOW_CSR
+    if (MIN_FILTER_DEPTH<=nb_plies && 2<=ML.length) {
+        /* TODO: think about alpha beta windows for CSR!*/
+        int score_fst, score_snd;
+        {
+        apply_move(B, ML.moves[0]);
+        score_fst = alpha_beta_inner(B, ordering_depths[nb_plies], alpha-CSR_AMOUNT, beta+CSR_AMOUNT, true, true);
+        undo_move(B, ML.moves[0]);
+        }
+        {
+        apply_move(B, ML.moves[1]);
+        score_snd = alpha_beta_inner(B, ordering_depths[nb_plies], alpha-CSR_AMOUNT, beta+CSR_AMOUNT, true, true);
+        undo_move(B, ML.moves[1]);
+        }
+        if (score_snd + CSR_THRESH <= score_fst) {
+            trigger_csr = true;
+        }
+    } else if (1==ML.length) {
+        trigger_csr = true;
+    }
+
+#endif//ALLOW_CSR
+
+
+
     for (int l=0; l!=nb_candidates; ++l) {
+#if ALLOW_CSR
+/**/    if (!trigger_csr&&l==0 || trigger_csr&&l==1) {
+/**/        nb_plies -= CSR_AMOUNT;
+/**/    }
+#endif//ALLOW_CSR
 #if ALLOW_AR
 /**/    if (MIN_FILTER_DEPTH<=nb_plies && l==AR_THRESH ) {
 /**/        nb_plies -= AR_AMOUNT;
@@ -361,11 +399,12 @@ ScoredMove get_best_move(Board* B, int nb_plies, int alpha, int beta, int verbos
     int nb_candidates = MIN(ML.length, branching_factors[nb_plies]);
     bool any_triumphant = false;  
     bool trigger_lmr = false;  
+    bool trigger_csr = false;  
 
 #if ALLOW_NMR
 /**/{
 /**/    /* null move reduction */
-/**/    int pass = evaluate(B);
+/**/    int pass = evaluate(B); /* TODO: replace by quiescent? */
 /**/    if ((MIN_FILTER_DEPTH<=nb_plies && null_move_okay) && 
 /**/        (is_white && beta<pass || !is_white && pass<alpha)) {
 /**/        if (verbose) {
@@ -393,14 +432,41 @@ ScoredMove get_best_move(Board* B, int nb_plies, int alpha, int beta, int verbos
 /**/}
 #endif//ALLOW_NMR
 
+#if ALLOW_CSR
+    if (MIN_FILTER_DEPTH<=nb_plies && 2<=ML.length) {
+        /* TODO: think about alpha beta windows for CSR!*/
+        int score_fst, score_snd;
+        {
+        apply_move(B, ML.moves[0]);
+        score_fst = alpha_beta_inner(B, ordering_depths[nb_plies], alpha-CSR_AMOUNT, beta+CSR_AMOUNT, true, true);
+        undo_move(B, ML.moves[0]);
+        }
+        {
+        apply_move(B, ML.moves[1]);
+        score_snd = alpha_beta_inner(B, ordering_depths[nb_plies], alpha-CSR_AMOUNT, beta+CSR_AMOUNT, true, true);
+        undo_move(B, ML.moves[1]);
+        }
+        if (score_snd + CSR_THRESH <= score_fst) {
+            trigger_csr = true;
+        }
+    } else if (1==ML.length) {
+        trigger_csr = true;
+    }
+#endif//ALLOW_CSR
+
     for (int l=0; l!=nb_candidates; ++l) {
         /* since we later index using nb_plies
          * ( pv_table[orig_nb_plies][(B->hash)%PV_TABLE_SIZE] = ... )
          * we need to keep track of a separate orig_nb_plies.
          * (merit of "const"!) --- could have caused segfault!
          */
+#if ALLOW_CSR
+/**/    if (!trigger_csr&&l==0 || trigger_csr&&l==1) {
+/**/        nb_plies -= CSR_AMOUNT;
+/**/    }
+#endif//ALLOW_CSR
 #if ALLOW_AR
-/**/    if (MIN_FILTER_DEPTH<=nb_plies && l==AR_THRESH ) {
+/**/    if (MIN_FILTER_DEPTH<=nb_plies && l==AR_THRESH) {
 /**/        nb_plies -= AR_AMOUNT;
 /**/    }
 #endif//ALLOW_AR
@@ -412,9 +478,9 @@ ScoredMove get_best_move(Board* B, int nb_plies, int alpha, int beta, int verbos
             break;
         }
 
-        if (verbose) {
+        if (verbose && 6<=nb_plies) {
             std::cout << "  ";
-            for (int t=0; t!=10-nb_plies; ++t) {
+            for (int t=0; t!=12-nb_plies; ++t) {
                 std::cout << "\033[6C";
             }
             print_move(B, m);
@@ -427,9 +493,9 @@ ScoredMove get_best_move(Board* B, int nb_plies, int alpha, int beta, int verbos
 /**/    /* scout / late move reduction */
 /**/    if ((MIN_FILTER_DEPTH <=nb_plies && 1<=l) && 
 /**/        (SCOUT_THRESH<=beta-alpha || (trigger_lmr && !is_capture(m)))) {
-/**/        if (verbose) {
+/**/        if (verbose && 6<=nb_plies) {
 /**/            std::cout << "  ";
-/**/            for (int t=0; t!=1+10-nb_plies; ++t) {
+/**/            for (int t=0; t!=1+12-nb_plies; ++t) {
 /**/                std::cout << "\033[6C";
 /**/            }
 /**/            std::cout << "LO?";
@@ -448,9 +514,9 @@ ScoredMove get_best_move(Board* B, int nb_plies, int alpha, int beta, int verbos
 /**/        undo_move(B, m);
 /**/    }
 /**/    if (skip) { continue; }
-/**/    if (verbose) {
+/**/    if (verbose && 6<=nb_plies) {
 /**/        std::cout << "  ";
-/**/        for (int t=0; t!=1+10-nb_plies; ++t) {
+/**/        for (int t=0; t!=1+12-nb_plies; ++t) {
 /**/            std::cout << "\033[6C";
 /**/        }
 /**/        std::cout << "no-";

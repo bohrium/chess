@@ -6,6 +6,7 @@
 
 TODO : 
        resolve illegal and board-corrupting (upon undo?) Ra8(P) first move.
+           (resolved)
 
        address possibility of no legal move
 
@@ -13,6 +14,7 @@ TODO :
             (implemented, untested)
 
        add alpha/beta cutoffs to stable_eval, too!
+            (implemented)
 
        implement stable node eval (linear greedy search for pass/bestcapture) 
          (implemented.)
@@ -50,14 +52,54 @@ TODO :
 This project has two aims: to practice tree search and to use learning
 techniques to infer and visualize interpretable chess heuristics.
 
+We especially play with **goal based reductions** toward programs that behave
+according to `plans'.  For us, a *goal* is a piece-square element, i.e. an
+element of 'pnbrqk PNBRQK'x[0,8)[0,8) or a small monotonic logical combination
+thereof.  Every several plies, if we are in a quiet position, we select a
+handful of goals to try for, and during search we reduce branches that don't
+seem to be helping us toward these goals.  Four related questions:
+
+    How do we select interesting goals to try for?
+    How do we assess progress toward a goal?
+    How do we bias search toward a goal (reduce away from that goal)? 
+    How do we tell whether a goal-directed search ended up being worthwhile? 
+
+When is a goal interesting?  A sufficient criterion might be to run three
+experiments, as follows (thought this might yield very shallow goals?):
+    
+    A ordinary      search with moderate depth and      narrow width
+    B ordinary      search with shallow  depth and very narrow width
+    C goal-directed search with shallow  depth and very narrow width
+
+We regard A as a gold standard.  If B does not find A's best move but C does
+find A's best move, then the goal might be a good one to consider. 
+
+Another interesting criterion might be to do a simulation where we make a few
+moves alternating with null moves (or perhaps shallow greedy moves, perhaps
+greedy with respect to ordinary evaluation) by the opponent, and we maximize
+for positional rather than total score (perhaps disallow captures?).  The best
+position gotten against a weak (or perhaps even cooperative?) opponent gives us
+positional information to aspire to (but might also lead to too-ambitious
+goals). 
+
+I like the latter approach a bit more, partly because it suggests rather than
+filters candidate goals.  So we start with a board.  We consider the game tree 
+up to depth 6 (but really depth 3, since opponent makes null moves) and find
+a leaf board with greatest positional score.  Comparing this (sparsely updated)
+board with our original board yields a small handful of interesting `changes`
+to try to effect (though sometimes a human might have the goal of maintaining
+status quo, e.g. having a piece stay put?). 
+
+Once we have goals in mind, we might compute  
+
 ### tree search
 We wish to approximate **perfect play**.  Thus, we make no effort to model the
 opponent (by finding Tal moves: incorrect moves whose refutations might be
 difficult for the opponent to find) and we make no effort to model ourselves.
 In other words, we seek a next move that most advantages our side if perfect
 players are to substitute for our opponent and ourselves immediately after we
-make our move.  In other words, we seek to approximate minimax values on an
-enormous gametree whose leaves are labeled with {-1, 0, +1}. 
+make our move.  We seek, in short, to approximate minimax values on an enormous
+gametree whose leaves are labeled with {-1, 0, +1}. 
 
 As a first approximation, we compute minimax values of a constant-depth subtree
 labeled by a hand-crafted evaluation function whose target toset is richer than
@@ -79,6 +121,16 @@ and 4 optimizations:
 *   TODO: memoize {(depth, board) --> eval} during search
 *   TODO: quiescnece search to handle captures (but not (yet) checks)
 *   TODO: zero-window scouting
+
+#### Reductions
+
+We reduce when a position seems too good to be relevant (as judged by null
+move) or too bad to be (as judged by late move in two ways).  We extend when a
+position when it seems substantially better than all of its siblings --- since
+we like to phrase everything in terms of reductions, this means we reduce
+unless we are at a best sibling seems much better than the others.  Thus, we
+have NULL MOVE REDUCTIONS, LATE MOVE REDUCTIONS, and CO-SINGULAR REDUCTIONS. 
+The last of those e.g. helps us evade checks.
 
 #### BFS beam search
 
