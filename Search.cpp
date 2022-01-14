@@ -53,18 +53,20 @@ ScoredMove get_best_move(Board* B, const int depth, int alpha, int beta, bool st
     ~~~~  0.2. Generate Moves  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
     MoveList ML;  
     generate_moves(B, &ML);
-    order_moves(B, &ML, ordering_depths[depth], branching_factors[depth]);
+    int nb_candidates = ML.length; 
+    if (2<=depth) {
+        order_moves(B, &ML, ordering_depths[depth], 6);//branching_factors[depth]);
+        nb_candidates = MIN(ML.length, branching_factors[depth]);
+    }
 
     int score = is_white ? -KING_POINTS : +KING_POINTS; 
     Move best_move;
-    int nb_candidates = MIN(ML.length, branching_factors[depth]);
     bool any_triumphant = false;  
     bool trigger_lmr = false;  
     bool trigger_csr = false;  
 
     /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     ~~~~  0.3. Pre-Loop Processing  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
-
     /*--------  0.3.0. null move reduction  ---------------------------------*/
     #if ALLOW_NMR
     {
@@ -95,17 +97,20 @@ ScoredMove get_best_move(Board* B, const int depth, int alpha, int beta, bool st
         /* TODO: use null window to test score_snd*/
         int score_fst, score_snd;
         {
+            // TODO: avoid this egregious repetition of order_moves()'s work
             apply_move(B, ML.moves[0]);
-            score_fst = get_best_move(B, ordering_depths[depth], alpha-CSR_AMOUNT, beta+CSR_AMOUNT, true, true, 0).score;
+            score_fst = get_best_move(B, ordering_depths[depth], alpha, beta, true, true, 0).score;
             undo_move(B, ML.moves[0]);
         }
+        int alpha_lo = is_white ? score_fst   - CSR_THRESH : score_fst-1 + CSR_THRESH; 
+        int beta_lo  = is_white ? score_fst+1 - CSR_THRESH : score_fst   + CSR_THRESH;
         {
             apply_move(B, ML.moves[1]);
-            score_snd = get_best_move(B, ordering_depths[depth], alpha-CSR_AMOUNT, beta+CSR_AMOUNT, true, true, 0).score;
+            score_snd = get_best_move(B, ordering_depths[depth], alpha_lo, beta_lo, true, true, 0).score;
             undo_move(B, ML.moves[1]);
         }
-        if (( is_white && (score_snd + CSR_THRESH <= score_fst)) || 
-            (!is_white && (score_fst <= score_snd - CSR_THRESH))) {
+        if (( is_white && score_snd<=alpha_lo) || 
+            (!is_white && beta_lo <=score_snd)) {
             trigger_csr = true;
         }
     } else if (1==ML.length) {
@@ -155,11 +160,11 @@ ScoredMove get_best_move(Board* B, const int depth, int alpha, int beta, bool st
         if ((MIN_FILTER_DEPTH <=depth && 1<=l) && 
             (SCOUT_THRESH<=beta-alpha || (trigger_lmr && !is_capture(m)))) {
             apply_move(B, m);
-            int alpha_ = is_white ? alpha : beta-1; 
-            int beta_  = is_white ? alpha+1 : beta; 
+            int alpha_lo = is_white ? alpha : beta-1; 
+            int beta_lo  = is_white ? alpha+1 : beta; 
             int child_depth = depth-reduction;
             if (trigger_lmr && !is_capture(m)) { child_depth -= LMR_AMOUNT; }
-            int child = get_best_move(B, child_depth-1, alpha_, beta_, stable, true, 0).score;
+            int child = get_best_move(B, child_depth-1, alpha_lo, beta_lo, stable, true, 0).score;
             if (( is_white && child<=alpha) ||
                 (!is_white && beta <=child)) {
                 skip = true;
@@ -184,7 +189,8 @@ ScoredMove get_best_move(Board* B, const int depth, int alpha, int beta, bool st
         }
 
         /*--------  0.4.5. alpha-beta updates and cutoffs  ------------------*/
-        /* note: cutoff will never happen at top level (except in king-taking case) */
+        /* note: cutoff will never happen at top level (except in king-taking
+         * case)                                                             */
         if (is_white) { if (score >= beta ) break; alpha = MAX(alpha, score); } 
         else          { if (score <= alpha) break; beta  = MIN(beta , score); } 
     }
@@ -192,7 +198,6 @@ ScoredMove get_best_move(Board* B, const int depth, int alpha, int beta, bool st
 END:
     /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     ~~~~  0.4. Hash Write  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
-
     if (stable || depth) {
         pv_table[stable?1:0][depth][(B->hash)%PV_TABLE_SIZE] = {B->hash, orig_alpha, orig_beta, {best_move, score}};
     }
@@ -244,14 +249,12 @@ int stable_eval(Board* B, int max_plies, int alpha, int beta)
 }
 
 // ensures first k elements of ML coincide with top k moves as determined by
-// search with depth many plies, and that these elements are sorted.  our
-// routine avoids computing all scores exactly via alpha-beta style pruning:
-// we expect special gains for small k
-
+// search with depth many plies, and that these elements are sorted. 
 void order_moves(Board* B, MoveList* ML, int depth, int k)
 {
-    /* TODO: check best-of-k logic! */
-    k = MIN(k, MAX_NB_MOVES);
+    //if (1<=depth) {
+    //    order_moves(B, ML, 0, k);
+    //}
 
     int shallow_scores[MAX_NB_MOVES]; 
     int sorted_indices[MAX_NB_MOVES];
@@ -266,6 +269,7 @@ void order_moves(Board* B, MoveList* ML, int depth, int k)
         shallow_scores[m] = score; 
         sorted_indices[m] = m;
     }
+
     if (is_white) {
         /* black want higher scores on left */
         auto scorer = [shallow_scores](int a, int b){return (shallow_scores[a]) > (shallow_scores[b]);};
@@ -283,8 +287,6 @@ void order_moves(Board* B, MoveList* ML, int depth, int k)
     for (int m=0; m!=MIN(k,ML->length); ++m) {
         ML->moves[m] = sorted_moves[m];
     }
-    //
-    ML->length = MIN(k,ML->length);
 } 
 
 /*=============================================================================
