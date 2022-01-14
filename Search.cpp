@@ -7,40 +7,32 @@
 #define MAX(X,Y) (((X)>(Y))?(X):(Y))
 #define SUM(X,Y) ((X)+(Y))
 
-/* BASIC SEARCH PARAMETERS */
-
-#define SCOUT_THRESH 5       // centipawns
-#define QUIESCE_DEPTH 4      // plies
-#define STABLE_ORDER_DEPTH 3 // plies
-
-                             /*    0   1   2   3   4   5   6   7   8   9  10  11  12  13  14  15  16  17  18 */
-const int branching_factors[] = { -1, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36}; // nb siblings
-const int ordering_depths[]   = { -1,  0,  0,  1,  1,  2,  2,  3,  3,  4,  4,  5,  5,  6,  6,  7,  7,  8,  8}; // plies
-
 /* REDUCTION PARAMETERS */
 
-#define MIN_FILTER_DEPTH 3 // plies 
+#define MIN_FILTER_DEPTH 4 // plies 
 
 #define ALLOW_AR  1
 #define ALLOW_LMR 1
 #define ALLOW_NMR 1
-#define ALLOW_CSR 1 
+#define ALLOW_CSR 0 /* TODO: turn back on */ 
 
-#define AR_THRESH    8 // nb siblings
-#define AR_AMOUNT    1 // plies 
-#define LMR_THRESH   2 // nb siblings
-#define LMR_AMOUNT   2 // plies 
-//#define NMR_THRESH ???
-#define NMR_AMOUNT   2 // plies
-#define CSR_THRESH  50 // centipawns
-#define CSR_AMOUNT   1 // plies
+#define AR_THRESH   6 // nb siblings
+#define AR_AMOUNT   2 // fracplies 
+#define LMR_THRESH  2 // nb siblings
+#define LMR_AMOUNT  4 // fracplies 
+#define NMR_THRESH  0 // centipawns
+#define NMR_AMOUNT  4 // fracplies
+#define CSR_THRESH 50 // centipawns
+#define CSR_AMOUNT  1 // fracplies
+
+
 
 //#define ALLOW_GBR 1
 //#define GBR_AMOUNT 1 // plies  
 
 void zero_tables();
 
-int alpha_beta_inner(Board* B, int nb_plies, int alpha, int beta, bool stable, bool null_move_okay);
+int alpha_beta_inner(Board* B, int nb_fracplies, int alpha, int beta, bool stable, bool null_move_okay);
 
 Move shallow_greedy_move(Board* B)
 {
@@ -63,12 +55,12 @@ Move shallow_greedy_move(Board* B)
     return ML.moves[move_acc]; 
 }
 
-int stable_eval(Board* B, int max_plies, int alpha, int beta)
+int stable_eval(Board* B, int max_fracplies, int alpha, int beta)
 {
     /* TODO: check for taken king at very beginning and during loop */
     /* TODO: implement alpha beta style cutoffs */
 
-    if (max_plies==0) { return evaluate(B); }
+    if (max_fracplies<=0) { return evaluate(B); }
     bool is_white = B->next_to_move==Color::white;
     int pass = evaluate(B);
     if (is_white && pass>=beta || !is_white && pass<alpha) { return pass; } 
@@ -77,36 +69,36 @@ int stable_eval(Board* B, int max_plies, int alpha, int beta)
     if (!is_capture(m)) { return evaluate(B); }
 
     apply_move(B, m);
-    int go = stable_eval(B, max_plies-1, alpha, beta); /* TODO: update alpha beta */ 
+    int go = stable_eval(B, max_fracplies-FRACPLIES_PER_PLY, alpha, beta); /* TODO: update alpha beta */ 
     undo_move(B, m);
     return is_white ? MAX(pass, go) : MIN(pass, go);
 }
 
 // ensures first k elements of ML coincide with top k moves as determined by
-// search with nb_plies many plies, and that these elements are sorted.  our
+// search with nb_fracplies many fracplies, and that these elements are sorted.  our
 // routine avoids computing all scores exactly via alpha-beta style pruning:
 // we expect special gains for small k
 
 #define FANCY_ORDER 0 
-void order_moves(Board* B, MoveList* ML, int nb_plies, int k)
+void order_moves(Board* B, MoveList* ML, int nb_fracplies, int k)
 {
     /* TODO: check best-of-k logic! */
     k = MIN(k, MAX_NB_MOVES);
 
 #if FANCY_ORDER
-    if (3 <= nb_plies) {
+    if (3 <= nb_fracplies) {
         order_moves(B, ML, 1, MAX_NB_MOVES);
     }
 #endif
 
     int shallow_scores[MAX_NB_MOVES]; 
     int sorted_indices[MAX_NB_MOVES];
-    bool stable = (STABLE_ORDER_DEPTH <= nb_plies); 
+    bool stable = (STABLE_ORDER_DEPTH <= nb_fracplies); 
 
     bool is_white = (B->next_to_move==Color::white);
 
 #if FANCY_ORDER
-    if (2 <= nb_plies) {
+    if (2 <= nb_fracplies) {
         // worst_of_best_of_k 
         int wobok = is_white ? +KING_POINTS : -KING_POINTS;
 
@@ -116,8 +108,8 @@ void order_moves(Board* B, MoveList* ML, int nb_plies, int k)
             int beta_  = is_white ? +KING_POINTS/2             : MIN(+KING_POINTS/2, wobok);
             apply_move(B, ML->moves[m]);
             int score = m==0 ?
-                alpha_beta_inner(B, nb_plies, -KING_POINTS/2, +KING_POINTS/2, stable, true) :
-                alpha_beta_inner(B, nb_plies, alpha_, beta_, stable, true);
+                alpha_beta_inner(B, nb_fracplies, -KING_POINTS/2, +KING_POINTS/2, stable, true) :
+                alpha_beta_inner(B, nb_fracplies, alpha_, beta_, stable, true);
             undo_move(B, ML->moves[m]);
 
             shallow_scores[m] = score; 
@@ -150,7 +142,7 @@ void order_moves(Board* B, MoveList* ML, int nb_plies, int k)
 #endif
         for (int m=0; m!=ML->length; ++m) {
             apply_move(B, ML->moves[m]);
-            int score = alpha_beta_inner(B, nb_plies, -KING_POINTS/2, +KING_POINTS/2, stable, true);
+            int score = alpha_beta_inner(B, nb_fracplies, -KING_POINTS/2, +KING_POINTS/2, stable, true);
             undo_move(B, ML->moves[m]);
             shallow_scores[m] = score; 
             sorted_indices[m] = m;
@@ -181,28 +173,29 @@ typedef struct ABRecord {
     int score;
 } ABRecord;
 #define AB_TABLE_SIZE 10000
-ABRecord ab_table[15][AB_TABLE_SIZE]; /* todo: zero out */
+ABRecord ab_table[20][AB_TABLE_SIZE]; /* todo: zero out */
 
-int alpha_beta(Board* B, int nb_plies, int alpha, int beta)
+int alpha_beta(Board* B, int nb_fracplies, int alpha, int beta)
 {
-    return alpha_beta_inner(B, nb_plies, alpha, beta, true, true);
+    return alpha_beta_inner(B, nb_fracplies, alpha, beta, true, true);
 }
 
-int alpha_beta_inner(Board* B, int nb_plies, int alpha, int beta, bool stable, bool null_move_okay)
+int alpha_beta_inner(Board* B, int nb_fracplies, int alpha, int beta, bool stable, bool null_move_okay)
 {
     /* BASE CASE */
-    if (nb_plies<=0) {
+    if (nb_fracplies<=0) {
         if (stable) { return stable_eval(B, QUIESCE_DEPTH, alpha, beta); }
-        else        { return evaluate(B);                   }
+        else        { return evaluate(B);                                }
     }
 
-    int orig_nb_plies = nb_plies;
+    int orig_nb_fracplies = nb_fracplies;
     int orig_alpha = alpha;
     int orig_beta = beta;
+    const int rounded_plies = 1+(orig_nb_fracplies-1)/FRACPLIES_PER_PLY;
 
     /* HASH READ */
     if (stable) {
-        ABRecord rec = ab_table[nb_plies][B->hash % AB_TABLE_SIZE];
+        ABRecord rec = ab_table[rounded_plies][B->hash % AB_TABLE_SIZE];
         if (rec.hash == B->hash) {
           if ((rec.score > rec.alpha || rec.alpha <= alpha) &&
               (rec.score < rec.beta  || beta <= rec.beta)) {
@@ -214,12 +207,12 @@ int alpha_beta_inner(Board* B, int nb_plies, int alpha, int beta, bool stable, b
     /* GENERATE MOVES */
     MoveList ML;  
     generate_moves(B, &ML);
-    order_moves(B, &ML, ordering_depths[nb_plies], branching_factors[nb_plies]);
+    order_moves(B, &ML, FRACPLIES_PER_PLY*ordering_depths[rounded_plies], branching_factors[rounded_plies]);
 
     /* MAIN LOOP */
     bool is_white = B->next_to_move==Color::white;
     int score = is_white ? -KING_POINTS : +KING_POINTS; 
-    int nb_candidates = MIN(ML.length, branching_factors[nb_plies]);
+    int nb_candidates = MIN(ML.length, branching_factors[rounded_plies]);
     bool any_triumphant = false;  
     bool trigger_lmr = false;  
     bool trigger_csr = false;  
@@ -228,15 +221,15 @@ int alpha_beta_inner(Board* B, int nb_plies, int alpha, int beta, bool stable, b
 /**/{
 /**/    /* null move reduction */
 /**/    int pass = evaluate(B); /* TODO: replace by quiescent? */
-/**/    if ((MIN_FILTER_DEPTH<=nb_plies && null_move_okay) && 
+/**/    if ((FRACPLIES_PER_PLY*MIN_FILTER_DEPTH<=nb_fracplies && null_move_okay) && 
 /**/        (is_white && beta<pass || !is_white && pass<alpha)) {
 /**/        apply_null(B);
-/**/        int alpha_hi = is_white ? beta-1 : alpha  ; 
-/**/        int beta_hi  = is_white ? beta   : alpha+1; 
-/**/        int child = alpha_beta_inner(B, nb_plies-1-NMR_AMOUNT, alpha_hi, beta_hi, stable, false);
+/**/        int alpha_hi = is_white ? beta-1+NMR_THRESH : alpha  -NMR_THRESH; 
+/**/        int beta_hi  = is_white ? beta  +NMR_THRESH : alpha+1-NMR_THRESH; 
+/**/        int child = alpha_beta_inner(B, nb_fracplies-FRACPLIES_PER_PLY-NMR_AMOUNT, alpha_hi, beta_hi, stable, false);
 /**/        bool skip = false;
-/**/        if (( is_white && beta <=child) ||
-/**/            (!is_white && child<=alpha)) {
+/**/        if (( is_white && beta +NMR_THRESH<=child) ||
+/**/            (!is_white && child<=alpha-NMR_THRESH)) {
 /**/            score = child; 
 /**/            skip = true;
 /**/        }
@@ -247,41 +240,35 @@ int alpha_beta_inner(Board* B, int nb_plies, int alpha, int beta, bool stable, b
 #endif//ALLOW_NMR
 
 #if ALLOW_CSR
-    if (MIN_FILTER_DEPTH<=nb_plies && 2<=ML.length) {
+    if (FRACPLIES_PER_PLY*MIN_FILTER_DEPTH<=nb_fracplies && 2<=ML.length) {
         /* TODO: think about alpha beta windows for CSR!*/
+        /* TODO: use null window to test score_snd*/
         int score_fst, score_snd;
         {
-        apply_move(B, ML.moves[0]);
-        score_fst = alpha_beta_inner(B, ordering_depths[nb_plies], alpha-CSR_AMOUNT, beta+CSR_AMOUNT, true, true);
-        undo_move(B, ML.moves[0]);
+            apply_move(B, ML.moves[0]);
+            score_fst = alpha_beta_inner(B, FRACPLIES_PER_PLY*ordering_depths[rounded_plies], alpha-CSR_AMOUNT, beta+CSR_AMOUNT, true, true);
+            undo_move(B, ML.moves[0]);
         }
         {
-        apply_move(B, ML.moves[1]);
-        score_snd = alpha_beta_inner(B, ordering_depths[nb_plies], alpha-CSR_AMOUNT, beta+CSR_AMOUNT, true, true);
-        undo_move(B, ML.moves[1]);
+            apply_move(B, ML.moves[1]);
+            score_snd = alpha_beta_inner(B, FRACPLIES_PER_PLY*ordering_depths[rounded_plies], alpha-CSR_AMOUNT, beta+CSR_AMOUNT, true, true);
+            undo_move(B, ML.moves[1]);
         }
-        if (score_snd + CSR_THRESH <= score_fst) {
+        if (( is_white && (score_snd + CSR_THRESH <= score_fst)) || 
+            (!is_white && (score_fst <= score_snd - CSR_THRESH))) {
             trigger_csr = true;
         }
     } else if (1==ML.length) {
         trigger_csr = true;
     }
-
 #endif//ALLOW_CSR
-
-
 
     for (int l=0; l!=nb_candidates; ++l) {
-#if ALLOW_CSR
-/**/    if (!trigger_csr&&l==0 || trigger_csr&&l==1) {
-/**/        nb_plies -= CSR_AMOUNT;
-/**/    }
-#endif//ALLOW_CSR
 #if ALLOW_AR
-/**/    if (MIN_FILTER_DEPTH<=nb_plies && l==AR_THRESH ) {
-/**/        nb_plies -= AR_AMOUNT;
+/**/    if (FRACPLIES_PER_PLY*MIN_FILTER_DEPTH<=nb_fracplies && l==AR_THRESH) {
+/**/        nb_fracplies -= AR_AMOUNT;
 /**/    }
-#endif
+#endif//ALLOW_AR
 
         Move m = ML.moves[l];
         if (m.taken.species == Species::king) { return is_white ? +KING_POINTS : -KING_POINTS;}
@@ -289,12 +276,12 @@ int alpha_beta_inner(Board* B, int nb_plies, int alpha, int beta, bool stable, b
 #if ALLOW_LMR
 /**/    bool skip = false; 
 /**/    /* scout / late move reduction */
-/**/    if ((MIN_FILTER_DEPTH <=nb_plies && 1<=l) && 
+/**/    if ((FRACPLIES_PER_PLY*MIN_FILTER_DEPTH<=nb_fracplies && 1<=l) && 
 /**/        (SCOUT_THRESH<=beta-alpha || (trigger_lmr && !is_capture(m)))) {
 /**/        apply_move(B, m);
 /**/        int alpha_lo = is_white ? alpha : beta-1; 
 /**/        int beta_lo = is_white ? alpha+1 : beta; 
-/**/        int depth = nb_plies - 1;
+/**/        int depth = nb_fracplies - FRACPLIES_PER_PLY;
 /**/        if (trigger_lmr && !is_capture(m)) { depth -= LMR_AMOUNT; }
 /**/        int child = alpha_beta_inner(B, depth, alpha_lo, beta_lo, stable, true);
 /**/        if (( is_white && child<=alpha) ||
@@ -309,11 +296,13 @@ int alpha_beta_inner(Board* B, int nb_plies, int alpha, int beta, bool stable, b
         /* full search */
         {
             apply_move(B, m);
-            int child = alpha_beta_inner(B, nb_plies-1, alpha, beta, stable, true);
+            int depth = nb_fracplies-FRACPLIES_PER_PLY;
+#if ALLOW_CSR
+            if (trigger_csr) { depth += l==0 ? CSR_AMOUNT : -CSR_AMOUNT; } 
+#endif//ALLOW_CSR
+            int child = alpha_beta_inner(B, depth, alpha, beta, stable, true);
             score = is_white ? MAX(child, score) : MIN(child, score);
-            if (child==(is_white ? MAX(child, alpha) : MIN(child, beta))) {
-                any_triumphant = true;
-            }
+            if (is_white&&alpha<=child || !is_white&&beta<=child) { any_triumphant = true; }
             if (l==LMR_THRESH && !any_triumphant) { trigger_lmr = true; }
             undo_move(B, m);
         }
@@ -327,7 +316,7 @@ END:
 
     /* HASH WRITE */
     if (stable) {
-        ABRecord* rec = &(ab_table[orig_nb_plies][B->hash % AB_TABLE_SIZE]);
+        ABRecord* rec = &(ab_table[rounded_plies][B->hash % AB_TABLE_SIZE]);
         rec->hash = B->hash;
         rec->alpha = orig_alpha;
         rec->beta = orig_beta;
@@ -343,7 +332,7 @@ typedef struct PVRecord {
     ScoredMove sm;
 } PVRecord;
 #define PV_TABLE_SIZE 10000
-PVRecord pv_table[15][PV_TABLE_SIZE]; /* todo: zero out */
+PVRecord pv_table[20][PV_TABLE_SIZE]; /* todo: zero out */
 
 void zero_tables()
 {
@@ -367,36 +356,37 @@ void print_pv(Board* B, int nb_plies, int verbose)
     undo_move(B, pvr.sm.m);
 }
 
-ScoredMove get_best_move(Board* B, int nb_plies, int alpha, int beta, int verbose, bool null_move_okay)
+ScoredMove get_best_move(Board* B, int nb_fracplies, int alpha, int beta, int verbose, bool null_move_okay)
 {
-    if (nb_plies < 1) {
-        nb_plies = 1;
+    if (nb_fracplies < 1) {
+        nb_fracplies = 1;
         verbose = 0;
         /* fixes segfault (empirically confirmed) */
     }
 
-    PVRecord pvr = pv_table[nb_plies][(B->hash)%PV_TABLE_SIZE];
+    /* fix several bugs with these three record keepers 
+     * (merit of "const"!) --- could have caused segfault!
+     */
+    int orig_nb_fracplies = nb_fracplies;
+    int orig_alpha = alpha;
+    int orig_beta = beta;
+
+    const int rounded_plies = 1+(orig_nb_fracplies-1)/FRACPLIES_PER_PLY;
+    PVRecord pvr = pv_table[rounded_plies][(B->hash)%PV_TABLE_SIZE];
     if (pvr.hash == B->hash) {
         if (pvr.alpha<=alpha && beta<=pvr.beta) { // record's window contains ours 
             return pvr.sm;
         }
     }
 
-    /* fix several bugs with these three record keepers 
-     * (merit of "const"!) --- could have caused segfault!
-     */
-    int orig_nb_plies = nb_plies;
-    int orig_alpha = alpha;
-    int orig_beta = beta;
-
     MoveList ML;  
     generate_moves(B, &ML);
-    order_moves(B, &ML, ordering_depths[nb_plies], branching_factors[nb_plies]);
+    order_moves(B, &ML, FRACPLIES_PER_PLY*ordering_depths[rounded_plies], branching_factors[rounded_plies]);
 
     bool is_white = B->next_to_move==Color::white;
     int score = is_white ? -KING_POINTS : +KING_POINTS; 
     Move best_move;
-    int nb_candidates = MIN(ML.length, branching_factors[nb_plies]);
+    int nb_candidates = MIN(ML.length, branching_factors[rounded_plies]);
     bool any_triumphant = false;  
     bool trigger_lmr = false;  
     bool trigger_csr = false;  
@@ -405,25 +395,18 @@ ScoredMove get_best_move(Board* B, int nb_plies, int alpha, int beta, int verbos
 /**/{
 /**/    /* null move reduction */
 /**/    int pass = evaluate(B); /* TODO: replace by quiescent? */
-/**/    if ((MIN_FILTER_DEPTH<=nb_plies && null_move_okay) && 
+/**/    if ((FRACPLIES_PER_PLY*MIN_FILTER_DEPTH<=nb_fracplies && null_move_okay) && 
 /**/        (is_white && beta<pass || !is_white && pass<alpha)) {
-/**/        if (verbose) {
-/**/            std::cout << "  ";
-/**/            for (int t=0; t!=1+10-nb_plies; ++t) {
-/**/                std::cout << "\033[6C";
-/**/            }
-/**/            std::cout << "HI?";
-/**/            std::cout << "\033[200D" << std::flush;
-/**/        }
 /**/        apply_null(B);
-/**/        int alpha_hi = is_white ? beta-1 : alpha  ; 
-/**/        int beta_hi  = is_white ? beta   : alpha+1; 
-/**/        ScoredMove child = get_best_move(B, nb_plies-1-NMR_AMOUNT, alpha_hi, beta_hi, verbose-1, false);
+/**/        int alpha_hi = is_white ? beta-1+NMR_THRESH : alpha  -NMR_THRESH; 
+/**/        int beta_hi  = is_white ? beta  +NMR_THRESH : alpha+1-NMR_THRESH; 
+/**/        int depth = nb_fracplies-FRACPLIES_PER_PLY - NMR_AMOUNT;
+/**/        ScoredMove child = get_best_move(B, depth, alpha_hi, beta_hi, verbose-1, false);
 /**/        bool skip = false;
-/**/        if (( is_white && beta <=child.score) ||
-/**/            (!is_white && child.score<=alpha)) {
-/**/            score = child.score;
-/**/            best_move = child.m;
+/**/        if (( is_white && beta +NMR_THRESH<=child.score) ||
+/**/            (!is_white && child.score<=alpha-NMR_THRESH)) {
+/**/            score = child.score; 
+/**/            best_move = child.m; 
 /**/            skip = true;
 /**/        }
 /**/        undo_null(B);
@@ -433,20 +416,22 @@ ScoredMove get_best_move(Board* B, int nb_plies, int alpha, int beta, int verbos
 #endif//ALLOW_NMR
 
 #if ALLOW_CSR
-    if (MIN_FILTER_DEPTH<=nb_plies && 2<=ML.length) {
+    if (FRACPLIES_PER_PLY*MIN_FILTER_DEPTH<=nb_fracplies && 2<=ML.length) {
         /* TODO: think about alpha beta windows for CSR!*/
+        /* TODO: use null window to test score_snd*/
         int score_fst, score_snd;
         {
-        apply_move(B, ML.moves[0]);
-        score_fst = alpha_beta_inner(B, ordering_depths[nb_plies], alpha-CSR_AMOUNT, beta+CSR_AMOUNT, true, true);
-        undo_move(B, ML.moves[0]);
+            apply_move(B, ML.moves[0]);
+            score_fst = alpha_beta_inner(B, FRACPLIES_PER_PLY*ordering_depths[rounded_plies], alpha-CSR_AMOUNT, beta+CSR_AMOUNT, true, true);
+            undo_move(B, ML.moves[0]);
         }
         {
-        apply_move(B, ML.moves[1]);
-        score_snd = alpha_beta_inner(B, ordering_depths[nb_plies], alpha-CSR_AMOUNT, beta+CSR_AMOUNT, true, true);
-        undo_move(B, ML.moves[1]);
+            apply_move(B, ML.moves[1]);
+            score_snd = alpha_beta_inner(B, FRACPLIES_PER_PLY*ordering_depths[rounded_plies], alpha-CSR_AMOUNT, beta+CSR_AMOUNT, true, true);
+            undo_move(B, ML.moves[1]);
         }
-        if (score_snd + CSR_THRESH <= score_fst) {
+        if (( is_white && (score_snd + CSR_THRESH <= score_fst)) || 
+            (!is_white && (score_fst <= score_snd - CSR_THRESH))) {
             trigger_csr = true;
         }
     } else if (1==ML.length) {
@@ -455,19 +440,14 @@ ScoredMove get_best_move(Board* B, int nb_plies, int alpha, int beta, int verbos
 #endif//ALLOW_CSR
 
     for (int l=0; l!=nb_candidates; ++l) {
-        /* since we later index using nb_plies
-         * ( pv_table[orig_nb_plies][(B->hash)%PV_TABLE_SIZE] = ... )
-         * we need to keep track of a separate orig_nb_plies.
+        /* since we later index using nb_fracplies
+         * ( pv_table[orig_nb_fracplies][(B->hash)%PV_TABLE_SIZE] = ... )
+         * we need to keep track of a separate orig_nb_fracplies.
          * (merit of "const"!) --- could have caused segfault!
          */
-#if ALLOW_CSR
-/**/    if (!trigger_csr&&l==0 || trigger_csr&&l==1) {
-/**/        nb_plies -= CSR_AMOUNT;
-/**/    }
-#endif//ALLOW_CSR
 #if ALLOW_AR
-/**/    if (MIN_FILTER_DEPTH<=nb_plies && l==AR_THRESH) {
-/**/        nb_plies -= AR_AMOUNT;
+/**/    if (FRACPLIES_PER_PLY*MIN_FILTER_DEPTH<=nb_fracplies && l==AR_THRESH) {
+/**/        nb_fracplies -= AR_AMOUNT;
 /**/    }
 #endif//ALLOW_AR
 
@@ -478,9 +458,9 @@ ScoredMove get_best_move(Board* B, int nb_plies, int alpha, int beta, int verbos
             break;
         }
 
-        if (verbose && 6<=nb_plies) {
+        if (verbose && 6*FRACPLIES_PER_PLY<=nb_fracplies) {
             std::cout << "  ";
-            for (int t=0; t!=12-nb_plies; ++t) {
+            for (int t=0; t!=12*FRACPLIES_PER_PLY-nb_fracplies; t += FRACPLIES_PER_PLY) {
                 std::cout << "\033[6C";
             }
             print_move(B, m);
@@ -491,20 +471,12 @@ ScoredMove get_best_move(Board* B, int nb_plies, int alpha, int beta, int verbos
 #if ALLOW_LMR
 /**/    bool skip = false; 
 /**/    /* scout / late move reduction */
-/**/    if ((MIN_FILTER_DEPTH <=nb_plies && 1<=l) && 
+/**/    if ((FRACPLIES_PER_PLY*MIN_FILTER_DEPTH <=nb_fracplies && 1<=l) && 
 /**/        (SCOUT_THRESH<=beta-alpha || (trigger_lmr && !is_capture(m)))) {
-/**/        if (verbose && 6<=nb_plies) {
-/**/            std::cout << "  ";
-/**/            for (int t=0; t!=1+12-nb_plies; ++t) {
-/**/                std::cout << "\033[6C";
-/**/            }
-/**/            std::cout << "LO?";
-/**/            std::cout << "\033[200D" << std::flush;
-/**/        }
 /**/        apply_move(B, m);
 /**/        int alpha_ = is_white ? alpha : beta-1; 
 /**/        int beta_  = is_white ? alpha+1 : beta; 
-/**/        int depth = nb_plies - 1;
+/**/        int depth = nb_fracplies-FRACPLIES_PER_PLY;
 /**/        if (trigger_lmr && !is_capture(m)) { depth -= LMR_AMOUNT; }
 /**/        int child = alpha_beta(B, depth, alpha_, beta_);
 /**/        if (( is_white && child<=alpha) ||
@@ -514,25 +486,19 @@ ScoredMove get_best_move(Board* B, int nb_plies, int alpha, int beta, int verbos
 /**/        undo_move(B, m);
 /**/    }
 /**/    if (skip) { continue; }
-/**/    if (verbose && 6<=nb_plies) {
-/**/        std::cout << "  ";
-/**/        for (int t=0; t!=1+12-nb_plies; ++t) {
-/**/            std::cout << "\033[6C";
-/**/        }
-/**/        std::cout << "no-";
-/**/        std::cout << "\033[200D" << std::flush;
-/**/    }
 #endif//ALLOW_LMR
 
         /* full search */
         {
             apply_move(B, m);
-            int child = verbose<=0 ? alpha_beta(B, nb_plies-1, alpha, beta) :
-                                     get_best_move(B, nb_plies-1, alpha, beta, verbose-1, true).score;
+            int depth = nb_fracplies-FRACPLIES_PER_PLY;
+#if ALLOW_CSR
+            if (trigger_csr) { depth += l==0 ? CSR_AMOUNT : -CSR_AMOUNT; } 
+#endif//ALLOW_CSR
+            int child = verbose<=0 ? alpha_beta(B, depth, alpha, beta) :
+                                     get_best_move(B, depth, alpha, beta, verbose-1, true).score;
             int new_score = is_white ? MAX(child, score) : MIN(child, score);
-            if (child==(is_white ? MAX(child, alpha) : MIN(child, beta))) {
-                any_triumphant = true;
-            }
+            if (is_white&&alpha<=child || !is_white&&beta<=child) { any_triumphant = true; }
             if (l==LMR_THRESH && !any_triumphant) { trigger_lmr = true; }
             if (new_score != score) {
                 score = new_score; 
@@ -548,12 +514,12 @@ ScoredMove get_best_move(Board* B, int nb_plies, int alpha, int beta, int verbos
 
 END:
 
-    /* since we changed nb_plies above
-     * ( if (MIN_FILTER_DEPTH<=nb_plies && l==AR_THRESH ) ... )
-     * we need to index into pv_table using the original nb_plies.
+    /* since we changed nb_fracplies above
+     * ( if (MIN_FILTER_DEPTH<=nb_fracplies && l==AR_THRESH ) ... )
+     * we need to index into pv_table using the original nb_fracplies.
      * (merit of "const"!) --- could have caused segfault!
      */
-    pv_table[orig_nb_plies][(B->hash)%PV_TABLE_SIZE] = {B->hash, orig_alpha, orig_beta, {best_move, score}};
+    pv_table[rounded_plies][(B->hash)%PV_TABLE_SIZE] = {B->hash, orig_alpha, orig_beta, {best_move, score}};
     return {best_move, score};
 } 
 

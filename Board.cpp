@@ -448,61 +448,60 @@ void generate_king_moves (Board const* B, MoveList* ML, Coordinate source)
 
 int KING_POINTS = 10000; /* should exceed twice the total remaining value */ 
               /* p    n    b     r    q    k      */
-int points[] = {100, 325, 350, 475, 900, KING_POINTS};
-/* note: pawn, bishop, rook placements are asymmetrical*/
-//int _X=-40,_x=-15,_o=+15,_O=+40; 
+int points[] = {100, 313, 334, 500, 900, KING_POINTS};
+/* note: pawn and rook placements are asymmetrical*/
 int XX=-89,_X=-34,xx=-13,_x=-5,_o=+5,oo=+13,_O=+34,OO=+89; 
 
 int piece_placement[][8][8] = {
-    /*pawn*/ {
+    /*pawn*/ { /* push pawns and control the center */
         { 0, 0, 0, 0, 0, 0, 0, 0},
         {OO,OO,OO,OO,OO,OO,OO,OO},
         { 0,_O,_O,_O,_O,_O,_O, 0},
+        { 0, 0,oo,oo,oo,oo, 0, 0},
         { 0, 0, 0,oo,oo, 0, 0, 0},
-        { 0, 0, 0,_o,_o, 0, 0, 0},
-        { 0, 0,xx, 0, 0,xx, 0, 0},
-        { 0, 0, 0,xx,xx, 0, 0, 0},
-        { 0, 0, 0, 0, 0, 0, 0, 0}, 
-    },
-    /*knight*/ { 
-        {XX,xx,xx,xx,xx,xx,xx,XX},
-        {xx,_x, 0, 0, 0, 0,_x,xx},
-        {xx, 0, 0,_o,_o, 0, 0,xx},
-        {xx, 0,_o,oo,oo,_o, 0,xx},
-        {xx, 0,_o,oo,oo,_o, 0,xx},
-        {xx, 0, 0,_o,_o, 0, 0,xx},
-        {xx,_x, 0, 0, 0, 0,_x,xx},
-        {XX,xx,xx,xx,xx,xx,xx,XX},
-    },
-    /*bishop*/ {
-        {_X,XX,_X,_X,_X,_X,XX,_X},
-        {XX,_x,xx,xx,xx,xx,_x,XX},
-        {_X,xx, 0, 0, 0, 0,xx,_X},
-        {_X,xx, 0, 0, 0, 0,xx,_X},
-        {_X,xx, 0, 0, 0, 0,xx,_X},
-        {_X,xx, 0, 0, 0, 0,xx,_X},
-        {XX,_x,xx,xx,xx,xx,_x,XX},
-        {_X,XX,_X,_X,_X,_X,XX,_X},
-    },
-    /*rook*/ {
-        { 0, 0, 0, 0, 0, 0, 0, 0},
-        { 0,_o,_o,_o,_o,_o,_o, 0},
-        { 0, 0, 0, 0, 0, 0, 0, 0},
-        { 0, 0, 0, 0, 0, 0, 0, 0},
-        { 0, 0, 0, 0, 0, 0, 0, 0},
         { 0, 0, 0, 0, 0, 0, 0, 0},
         { 0, 0, 0, 0, 0, 0, 0, 0},
         { 0, 0, 0, 0, 0, 0, 0, 0}, 
     },
-    /*queen*/ {
+    /*knight*/ { /* a knight on the rim is dim*/ 
+        {XX,xx,xx,xx,xx,xx,xx,XX},
         {xx,_x,_x, 0, 0,_x,_x,xx},
-        {_x, 0, 0, 0, 0, 0, 0,_x},
-        {_x, 0, 0, 0, 0, 0, 0,_x},
+        {xx,_x, 0, 0, 0, 0,_x,xx},
+        {xx, 0, 0, 0, 0, 0, 0,xx},
+        {xx, 0, 0, 0, 0, 0, 0,xx},
+        {xx,_x, 0, 0, 0, 0,_x,xx},
+        {xx,_x,_x, 0, 0,_x,_x,xx},
+        {XX,xx,xx,xx,xx,xx,xx,XX},
+    },
+    /*bishop*/ { /* bishops love long diagonals */
+        {xx, 0, 0, 0, 0, 0, 0,xx},
+        { 0,oo, 0, 0, 0, 0,oo, 0},
+        { 0, 0,_O, 0, 0,_O, 0, 0},
+        { 0, 0, 0,_O,_O, 0, 0, 0},
+        { 0, 0, 0,_O,_O, 0, 0, 0},
+        { 0, 0,_O, 0, 0,_O, 0, 0},
+        { 0,oo, 0, 0, 0, 0,oo, 0},
+        {xx, 0, 0, 0, 0, 0, 0,xx},
+    },
+    /*rook*/ { /* rooks love 7th ranks */
+        { 0, 0, 0, 0, 0, 0, 0, 0},
+        {oo,oo,oo,oo,oo,oo,oo,oo},
         { 0, 0, 0, 0, 0, 0, 0, 0},
         { 0, 0, 0, 0, 0, 0, 0, 0},
-        {_x, 0, 0, 0, 0, 0, 0,_x},
-        {_x, 0, 0, 0, 0, 0, 0,_x},
-        {xx,_x,_x, 0, 0,_x,_x,xx},
+        { 0, 0, 0, 0, 0, 0, 0, 0},
+        { 0, 0, 0, 0, 0, 0, 0, 0},
+        { 0, 0, 0, 0, 0, 0, 0, 0},
+        { 0, 0, 0, 0, 0, 0, 0, 0}, 
+    },
+    /*queen*/ { /* centralize the queen */
+        { 0, 0, 0, 0, 0, 0, 0, 0},
+        { 0, 0, 0, 0, 0, 0, 0, 0},
+        { 0, 0,oo,oo,oo,oo, 0, 0},
+        { 0, 0,oo,oo,oo,oo, 0, 0},
+        { 0, 0,oo,oo,oo,oo, 0, 0},
+        { 0, 0,oo,oo,oo,oo, 0, 0},
+        { 0, 0, 0, 0, 0, 0, 0, 0},
+        { 0, 0, 0, 0, 0, 0, 0, 0},
     },
     /*king*/ { /* TODO: fill in */
         { 0, 0, 0, 0, 0, 0, 0, 0},
