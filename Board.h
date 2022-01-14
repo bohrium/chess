@@ -74,7 +74,7 @@ struct Board {
     int nb_rooks_on_semi_files[2]; 
     int nb_rooks_on_open_files[2]; 
 };
-
+Board copy_board(Board B);
 
 extern Species init_row[];
 

@@ -3,6 +3,16 @@
 
 #define NB_PLIES_TIL_DRAW 20
 
+Board copy_board(Board B)
+{
+    Board rtrn = B; 
+    rtrn.evaluation_stack = B.evaluation_stack; 
+    rtrn.plies_since_irreversible = B.plies_since_irreversible; 
+    return rtrn;
+}
+
+
+
 Color flip_color(Color c)
 {
     return c==Color::white ? Color::black : Color::white; 
@@ -335,7 +345,7 @@ void generate_moves_for_piece(Board const* B, MoveList* ML, Piece mover, Coordin
     case Species::pawn:   generate_pawn_moves  (B, ML, source); break; 
     case Species::knight: generate_knight_moves(B, ML, source); break; 
     case Species::bishop: generate_bishop_moves(B, ML, source); break; 
-    //case Species::rook:   generate_rook_moves  (B, ML, source); break; 
+    case Species::rook:   generate_rook_moves  (B, ML, source); break; 
     case Species::queen:  generate_queen_moves (B, ML, source); break; 
     case Species::king:   generate_king_moves  (B, ML, source); break; 
     }
@@ -460,7 +470,7 @@ int piece_placement[][8][8] = {
         { 0, 0,oo,oo,oo,oo, 0, 0},
         { 0, 0, 0,_o,_o, 0, 0, 0},
         { 0, 0, 0, 0, 0, 0, 0, 0},
-        { 0, 0, 0,_x,_x, 0, 0, 0},
+        { 0, 0, 0, 0, 0, 0, 0, 0},
         { 0, 0, 0, 0, 0, 0, 0, 0}, 
     },
     /*knight*/ { /* a knight on the rim is dim*/ 

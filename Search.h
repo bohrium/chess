@@ -40,6 +40,7 @@ struct ScoredMove {
     int score;
 };
 void zero_tables();
+ScoredMove get_best_move_multithreaded(Board* B, int depth, int alpha, int beta, int layers);
 ScoredMove get_best_move(Board* B, int depth, int alpha, int beta, bool stable, bool null_move_okay, int verbose);
 void print_pv(Board* B, int depth, int verbose); 
 

@@ -1,8 +1,8 @@
 all:
-	g++ --std=c++11 Main.cpp Board.cpp Search.cpp -o main.o 
+	g++ -pthread --std=c++11 Main.cpp Board.cpp Search.cpp -o main.o 
 
 grind:
-	g++ -g --std=c++11 Main.cpp Board.cpp Search.cpp -o main.o 
+	g++ -pthread -g --std=c++11 Main.cpp Board.cpp Search.cpp -o main.o 
 	valgrind --leak-check=yes ./main.o
 
 profile:

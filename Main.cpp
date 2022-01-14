@@ -3,11 +3,12 @@
 #include <iostream>
 #include <stdlib.h>
 #include <time.h>
+#include <thread>
 
 /* WARNING: if NB_PLIES too small, also should update verbose in main.c */
-#define NB_WHITE_PLIES      12
-#define NB_BLACK_PLIES      12
-#define NB_COMMENTARY_PLIES 12
+#define NB_WHITE_PLIES       10
+#define NB_BLACK_PLIES       10
+#define NB_COMMENTARY_PLIES  10
 
 int main(int argc, char** argv)
 {
@@ -25,15 +26,20 @@ int main(int argc, char** argv)
 
     //print_board(&B);
     for (int t=0; ; ++t) {
-        std::cout << std::endl;
+        //std::cout << std::endl;
         print_board(&B);
-        std::cout << "\033[16A" << std::flush; /* go up clear */
+        std::cout << "\033[15A" << std::flush; /* go up clear */
+        //std::cout << "\033[16A" << std::flush; /* go up clear */
 
         std::cout << std::endl;
         int alpha=-KING_POINTS/2, beta=+KING_POINTS/2;
         int nb_plies = t%2==0 ? NB_WHITE_PLIES : NB_BLACK_PLIES; 
-        int verbose  = 3;
-        ScoredMove sm = get_best_move(&B, nb_plies, alpha, beta, true, true, verbose);
+        int verbose  = 4;
+        int layers   = 2;
+        std::cout << "\033[20B" << std::flush;
+        ScoredMove sm = get_best_move_multithreaded(&B, nb_plies, alpha, beta, layers);
+        //ScoredMove sm = get_best_move(&B, nb_plies, -KING_POINTS/2, +KING_POINTS/2, true, true, verbose); 
+        std::cout << "\033[20A" << std::flush;
 
         std::cout << (t%2==0 ? 'W' : 'B');
         std::cout << " plays "; print_pv(&B, nb_plies, verbose);
