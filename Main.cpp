@@ -5,9 +5,9 @@
 #include <time.h>
 
 /* WARNING: if NB_PLIES too small, also should update verbose in main.c */
-#define NB_WHITE_PLIES      9 
-#define NB_BLACK_PLIES      8 
-#define NB_COMMENTARY_PLIES 9 
+#define NB_WHITE_PLIES      12
+#define NB_BLACK_PLIES      11
+#define NB_COMMENTARY_PLIES 12
 
 int main(int argc, char** argv)
 {
@@ -28,14 +28,13 @@ int main(int argc, char** argv)
         std::cout << std::endl;
         int alpha=-KING_POINTS/2, beta=+KING_POINTS/2;
         int nb_plies = t%2==0 ? NB_WHITE_PLIES : NB_BLACK_PLIES; 
-        int nb_fracplies = FRACPLIES_PER_PLY * nb_plies;
         int verbose  = 3;
-        ScoredMove sm = get_best_move(&B, nb_fracplies, alpha, beta, verbose, true);
+        ScoredMove sm = get_best_move(&B, nb_plies, alpha, beta, verbose, true);
 
         std::cout << (t%2==0 ? 'W' : 'B');
         std::cout << " plays "; print_pv(&B, nb_plies, verbose);
         std::cout << "\033[0;34m"; /* blue */
-        std::cout << " " << alpha_beta(&B, FRACPLIES_PER_PLY*NB_COMMENTARY_PLIES, -KING_POINTS/2, +KING_POINTS/2);  
+        std::cout << " " << alpha_beta(&B, NB_COMMENTARY_PLIES, -KING_POINTS/2, +KING_POINTS/2);  
         std::cout << "            ";
         std::cout << "\033[0;33m" << std::endl; /* yellow */
 

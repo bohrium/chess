@@ -458,9 +458,9 @@ int piece_placement[][8][8] = {
         {OO,OO,OO,OO,OO,OO,OO,OO},
         { 0,_O,_O,_O,_O,_O,_O, 0},
         { 0, 0,oo,oo,oo,oo, 0, 0},
-        { 0, 0, 0,oo,oo, 0, 0, 0},
+        { 0, 0, 0,_o,_o, 0, 0, 0},
         { 0, 0, 0, 0, 0, 0, 0, 0},
-        { 0, 0, 0, 0, 0, 0, 0, 0},
+        { 0, 0, 0,_x,_x, 0, 0, 0},
         { 0, 0, 0, 0, 0, 0, 0, 0}, 
     },
     /*knight*/ { /* a knight on the rim is dim*/ 
@@ -474,18 +474,18 @@ int piece_placement[][8][8] = {
         {XX,xx,xx,xx,xx,xx,xx,XX},
     },
     /*bishop*/ { /* bishops love long diagonals */
-        {xx, 0, 0, 0, 0, 0, 0,xx},
-        { 0,oo, 0, 0, 0, 0,oo, 0},
-        { 0, 0,_O, 0, 0,_O, 0, 0},
-        { 0, 0, 0,_O,_O, 0, 0, 0},
-        { 0, 0, 0,_O,_O, 0, 0, 0},
-        { 0, 0,_O, 0, 0,_O, 0, 0},
-        { 0,oo, 0, 0, 0, 0,oo, 0},
-        {xx, 0, 0, 0, 0, 0, 0,xx},
+        {_x,_x,_x,_x,_x,_x,_x,_x},
+        {_x,oo, 0, 0, 0, 0,oo,_x},
+        {_x, 0,oo, 0, 0,oo, 0,_x},
+        {_x, 0, 0,oo,oo, 0, 0,_x},
+        {_x, 0, 0,oo,oo, 0, 0,_x},
+        {_x, 0,oo, 0, 0,oo, 0,_x},
+        {_x,oo, 0, 0, 0, 0,oo,_x},
+        {_x,_x,_x,_x,_x,_x,_x,xx},
     },
     /*rook*/ { /* rooks love 7th ranks */
         { 0, 0, 0, 0, 0, 0, 0, 0},
-        {oo,oo,oo,oo,oo,oo,oo,oo},
+        {_o,_o,_o,_o,_o,_o,_o,_o},
         { 0, 0, 0, 0, 0, 0, 0, 0},
         { 0, 0, 0, 0, 0, 0, 0, 0},
         { 0, 0, 0, 0, 0, 0, 0, 0},
@@ -496,10 +496,10 @@ int piece_placement[][8][8] = {
     /*queen*/ { /* centralize the queen */
         { 0, 0, 0, 0, 0, 0, 0, 0},
         { 0, 0, 0, 0, 0, 0, 0, 0},
-        { 0, 0,oo,oo,oo,oo, 0, 0},
-        { 0, 0,oo,oo,oo,oo, 0, 0},
-        { 0, 0,oo,oo,oo,oo, 0, 0},
-        { 0, 0,oo,oo,oo,oo, 0, 0},
+        { 0, 0, 0,_o,_o, 0, 0, 0},
+        { 0, 0,_o,_o,_o,_o, 0, 0},
+        { 0, 0,_o,_o,_o,_o, 0, 0},
+        { 0, 0, 0,_o,_o, 0, 0, 0},
         { 0, 0, 0, 0, 0, 0, 0, 0},
         { 0, 0, 0, 0, 0, 0, 0, 0},
     },
@@ -521,7 +521,7 @@ int king_tropism(Board* B)
         quadrant_by_coor[B->king_loc[0].row][B->king_loc[0].col],
         quadrant_by_coor[B->king_loc[1].row][B->king_loc[1].col],
     };
-    return 15 * (
+    return 34 * (
         B->nb_pieces_by_quadrant[1][quad[0]] /* white pieces near black king */
       - B->nb_pieces_by_quadrant[0][quad[1]] /* black pieces near white king */
     );
@@ -539,13 +539,13 @@ int bishop_adjustment(Board* B)
       + (B->nb_pawns_by_square_parity[0][1] + B->nb_pawns_by_square_parity[1][1])
       * (B->nb_bishops_by_square_parity[1][1] - B->nb_bishops_by_square_parity[0][1])
     );
-    return 25 * net_pairs - 10 * net_pawnblocks; 
+    return 34 * net_pairs -  5 * net_pawnblocks; 
 }
 
 /* TODO: IMPLEMENT! */
 int weak_square_malus(Board* B)
 {
-    //return (-10) * ( B->nb_weak_squares[1] - B->nb_weak_squares[0] );
+    //return (-5) * ( B->nb_weak_squares[1] - B->nb_weak_squares[0] );
     return 0;
 }
 int knight_outpost(Board* B)
@@ -557,8 +557,9 @@ int knight_outpost(Board* B)
     //);
     return 0;
 }
-    int nb_rooks_on_semi_files[2]; 
-    int nb_rooks_on_open_files[2]; 
+
+//int nb_rooks_on_semi_files[2]; 
+//int nb_rooks_on_open_files[2]; 
 
 int rook_placement(Board* B)
 {
