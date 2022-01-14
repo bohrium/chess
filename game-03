@@ -1,126 +1,104 @@
-Played Pd4( ) 36            
-Played Pd5( ) 0              
-Played Nc3( ) 15             
-Played Bg4( ) 0                    
-Played Ph3( ) 15                   
-Played Bf5( ) 0                    
-Played Pe3( ) 13                   
-Played Pe6( ) -2                   
-Played Bb5( ) 16                   
-Played Pc6( ) 2                    
-Played Be2( ) 16                   
-Played Bd6( ) 0                     
-Played Nf3( ) 15                    
-Played Nf6( ) 1                     
-Played Ng5( ) 1                     
-Played Ph6( ) -28                   
-Played Nf3( ) -12                   
-Played Nd7( ) -28                   
-Played Bd2( ) -12                   
-Played Rg8( ) -27                   
-Played Nh4( ) -10                   
-Played Be4( ) -27                   
-Played Pa3( ) -12                   
-Played Pg6( ) -33                   
-Played Rf1( ) -17                   
-Played Ph5( ) -43                   
-Played Pg3( ) -10                   
-Played Qb6( ) -38                   
-Played Bf3( ) -7                    
-Played Bf3(B) -7                    
-Played Nf3(B) 8                     
-Played Qb2(P) -142                  
-Played Rb1( ) -82                   
-Played Qa3(P) -79                   
-Played Rb7(P) -77                   
-Played Qa6( ) -116                  
-Played Rb2( ) -72                   
-Played Qc8( ) -87                   
-Played Rh1( ) -72                   
-Played Pc5( ) -110                  
-Played Nb5( ) -95                   
-Played Be7( ) -118                  
-Played Pc5(P) -115                  
-Played Bc5(P) -130                  
-Played Ng5( ) -117                  
-Played Pe5( ) -138                  
-Played Ra2( ) -122                  
-Played Pa6( ) -156                  
-Played Qa1( ) -141                  
-Played Qb7( ) -161                  
-Played Nc3( ) -125                  
-Played Pd4( ) -267                  
-Played Rf1( ) -267                  
-Played Pc3(N) -332                  
-Played Qc3(P) -299                  
-Played Qb1( ) -799                  
-Played Ke2( ) -799                  
-Played Qa2(R) -804                  
-Played Ra1( ) -799                  
-Played Qd5( ) -827                  
-Played Pf3( ) -799                  
-Played Bd6( ) -845                  
-Played Pe4( ) -812                  
-Played Qc5( ) -812                  
-Played Qd3( ) -799                  
-Played Rg7( ) -812                  
-Played Ph4( ) -799                  
-Played Qc6( ) -827                  
-Played Pf4( ) -794                  
-Played Pf4(P) -967                  
-Played Pf4(P) -829                  
-Played Nc5( ) -839                  
-Played Qc3( ) -816                  
-Played Ke7( ) -957                  
-Played Ke1( ) -801                  
-Played Qc7( ) -831                  
-Played Pe5( ) -608                  
-Played Be5(P) -635                  
-Played Pe5(B) -608                  
-Played Ng4( ) -648                  
-Played Ra5( ) -528                  
-Played Rc8( ) -633                  
-Played Nf3( ) -574                  
-Played Kd7( ) -661                  
-Played Kd1( ) -597                  
-Played Nf2( ) -636                  
-Played Kc1( ) -607                  
-Played Nd3( ) -783                  
-Played Pd3(N) -638                  
-Played Qb6( ) -776                  
-Played Rd5( ) -328                  
-Played Ke6( ) -328                  
-Played Qc8(R) -323                  
-Played Ke7( ) -189                  
-Played Bg5( ) 330                   
-Played Pf6( ) 451                   
-Played Rd7( ) 763                   
-Played Ke6( ) 820                   
-Played Rb7( ) 894                   
-Played Kd5( ) 799                   
-Played Qc4( ) 10000                 
-Played  c4(P) 10000                 
-Played Rb6(Q) 694                   
-Played Pg5(B) 662                   
-Played Rd6( ) 789                   
-Played Kc5( ) 789                   
-Played Ng5(P) 794                   
-Played Kb5( ) 777                   
-Played Kd2( ) 810                   
-Played Pa5( ) 795                   
-Played Pe6( ) 815                   
-Played Pa4( ) 802                   
-Played Pe7( ) 835                   
-Played Re7(P) 835                   
-Played Rf6( ) 835                   
-Played Ng4( ) 822                   
-Played Rg6(P) 837                   
-Played Pa3( ) 835                   
-Played Ne4( ) 840                   
-Played Pa2( ) 761                   
-Played Nc3( ) 848                   
-Played Kc5( ) 835                   
-Played Ra6( ) 850                   
-Played Ne5( ) 846                   
-Played Ne4( ) 863                   
-Segmentation fault (core dumped) 
+Welcome!
+W plays Pe4( )Pf6( )Pf4( )Pe6( ) 18            
+B plays Pd6( )Nc3( )Pe5( )Qh5( ) 18            
+W plays Pd4( )Nf6( )Nc3( )Pe5( ) 8            
+B plays Ph5( )Ne2( )Ph4( )Nc3( ) 23            
+W plays Nf3( )Bg4( )Ph3( )Bf3(N) 23            
+B plays Bg4( )Be2( )Nf6( )Ph3( ) 15            
+W plays Be2( )Ph4( )Kd2( )Pe5( ) 26            
+B plays Ph4( )Kd2( )Ph3( )Pe5( ) 26            
+W plays Nc3( )Ph3( )Pg3( )Nc6( ) 23            
+B plays Nd7( )Ng5( )Be2(B)Qe2(B) 23            
+W plays Ng5( )Be2(B)Qe2(B)Pe6( ) 23            
+B plays Be2(B)Qe2(B)Pe5( )Qc4( ) 44            
+W plays Qe2(B)Pe5( )Qc4( )Pd4(P) 33            
+B plays Pe6( )Qf3( )Nf6( )Pd5( ) 49            
+W plays Pd5( )Pe5( )Qg4( )Be7( ) 41            
+B plays Pd5(P)Pd5(P)Be7( )Kd1( ) 50            
+W plays Pd5(P)Be7( )Qe4( )Pb6( ) 34            
+B plays Be7( )Kd1( )Pb6( )Be3( ) 29            
+W plays Kd1( )Kf8( )Ne4( )Bg5(N) 44            
+B plays Ne5( )Ne4( )Pf5( )Nc5( ) 44            
+W plays Ne4( )Pf5( )Nc5( )Ng4( ) 54            
+B plays Pf5( )Nc5( )Qb8( )Ne6( ) 50            
+W plays Nc5( )Qb8( )Ne6( )Rh7( ) 68            
+B plays Qc8( )Ne6( )Pg6( )Nb5( ) 68            
+W plays Ne6( )Rh7( )Nb5( )Bd8( ) 68            
+B plays Rh7( )Nb5( )Bd8( )Nd4( ) 68            
+W plays Nb5( )Bd8( )Pf4( )Nd7( ) 208            
+B plays Bd8( )Bf4( )Qb8( )Be5(N) 172            
+W plays Bf4( )Pa6( )Nd4( )Ng4( ) 236            
+B plays Pa6( )Nd4( )Nd7( ) 214            
+W plays Nd4( )Pg6( )Be5(N)Pe5(B) 249            
+B plays Ng6( )Nc7(P)Kd7( )Na8(R) 223            
+W plays Nc7(P)Kf7( )Qe8( )Kf6( ) 351            
+B plays Kf7( )Qe8( )Kf6( )Qg8(N) 433            
+W plays Qe8( )Kf6( )Na8(R)Ne7( ) 433            
+B plays Kf6( )Na8(R)Ne7( )Bd6(P) 495            
+W plays Na8(R)Ne7( )Bd6(P)Qa8(N) 550            
+B plays Ne7( )Bg5( )Kg5(B)Nc7( ) 579            
+W plays Bd6(P)Qa8(N)Be7(N)Ne7(B) 494            
+B plays Qa8(N)Be7(N)Ne7(B)Ne6( ) 494            
+W plays Be7(N)Ne7(B)Ne6( )Nd5(P) 494            
+B plays Ne7(B)Pd6( )Nc6( )Qe6( ) 494            
+W plays Pd6( )Nc6( )Qe6( )Kg5( ) 568            
+B plays Ng6( )Qe6( )Kg5( )Qg8( ) 605            
+W plays Qe6( )Kg5( )Qg8( )Rh8( ) 605            
+B plays Kg5( )Qg8( )Rh8( )Qg7(P) 622            
+W plays Qg8( )Rh8( )Qg7(P)Bb6( ) 604            
+B plays Rh8( )Qg7(P)Bb6( )Pf4( ) 638            
+W plays Qg7(P)Pb5( )Nf3( )Kh5( ) 617            
+B plays Pb5( )Nf3( )Kh5( )Pa3( ) 604            
+W plays Ne6( )Kh5( )Nf4( )Nf4(N) 770            
+B plays Kh5( )Nf4( )Nf4(N)Qh8(R) 670            
+W plays Nf4( )Nf4(N)Qh8(R)Kg6( ) 670            
+B plays Nf4(N)Qh8(R)Kg5( )Qf8( ) 640            
+W plays Qh8(R)Kg5( )Qg7( )Kh5( ) 640            
+B plays Kg4( )Qg8( )Kh5( )Rg1( ) 736            
+W plays Qg8( )Kh5( )Rg1( )Pa5( ) 752            
+B plays Kh5( )Rg1( )Qd5( )Qd5(Q) 752            
+W plays Rg1( )Qd5( )Qd5(Q)Nd5(Q) 781            
+B plays Qd5( )Qd5(Q)Nd5(Q)Pc3( ) 736            
+W plays Qd5(Q)Nd5(Q)Pa4( )Bb6( ) 734            
+B plays Nd5(Q)Rb1( )Bb6( )Ke1( ) 729            
+W plays Re1( )Bf6( )Kc1( )Bg5( ) 720            
+B plays Bf6( )Rb1( )Bd4( )Rf1( ) 695            
+W plays Rb1( )Bd4( )Pd7( )Nf4( ) 695            
+B plays Bd4( )Pd7( )Nf4( )Pc3( ) 670            
+W plays Pd7( )Nf4( )Pg3( )Nh3( ) 670            
+B plays Nf4( )Pg3( )Nh3( )Pf4( ) 675            
+W plays Pg3( )Nh3( )Pf4( )Pg3(P) 675            
+B plays Nh3( )Pf4( )Nf2( )Kc1( ) 675            
+W plays Pf4( )Nf2( )Kc1( )Pg3(P) 675            
+B plays Pg3(P)Pg3(P)Nf2( )Kc1( ) 675            
+W plays Pg3(P)Kg4( )Pc3( )Bf2( ) 685            
+B plays Kg4( )Pc3( )Bf2( )Re6( ) 617            
+W plays Pc3( )Bf2( )Re6( )Bg3(P) 617            
+B plays Bf2( )Re6( )Bg3(P)Ra6(P) 617            
+W plays Re6( )Kg3(P)Rg6( )Kf4(P) 617            
+B plays Kg3(P)Pa3( )Nf4(P)Ra6(P) 617            
+W plays Ra6(P)Nf4(P)Ra5( )Pb4( ) 633            
+        Black to move               
+           a b c d e f g h|         
+        8 | | | | | | | | |         
+        7 | | | |P| | | | |         
+        6 |R| | | | | | | |         
+        5 | |p| | | |p| | |         
+        4 | | | | | |P| | |         
+        3 | | |P| | | |k|n|         
+        2 |P|P| | | |b| | |         
+        1 | |R| |K| | | | |         
+           ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾          
+        0.1.0.0.0.1.0.0. 1.1.0.3.
+        1.1.1.1.0.1.0.0. 2.0.5.1.
+        0       3723629007    
+                              
+                              
+                              
+                              
+                              
+                              
+      Pb4( )                  
+        Rc1( )
+Segmentation fault (core dumped)
+
