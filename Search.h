@@ -3,6 +3,8 @@
 
 #include "Board.h"
 
+#define MAX_VERBOSE 4
+
 /* BASIC SEARCH PARAMETERS */
 
 #define SCOUT_THRESH 5       // centipawns
@@ -37,14 +39,12 @@ const int ordering_depths[]   = { -1,  0,  0,  1,  1,  2,  2,  3,  3,  4,  4,  5
 /* SEARCH METHODS */
 
 void zero_tables();
-int alpha_beta(Board* B, const int depth, int alpha, int beta);
-void order_moves(Board* B, MoveList* ML, int nb_fracplies, int k);
 
 struct ScoredMove {
     Move m;
     int score;
 };
-ScoredMove get_best_move(Board* B, const int depth, int alpha, int beta, int verbose, bool null_move_okay);
-void print_pv(Board* B, int depth, int verbose);
+ScoredMove get_best_move(Board* B, int depth, int alpha, int beta, bool stable, bool null_move_okay, int verbose);
+void print_pv(Board* B, int depth, int verbose); 
 
 #endif//SEARCH_H

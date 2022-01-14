@@ -91,6 +91,7 @@ struct Move { // a standard move (no promotion, en passant, or castling)
     Coordinate source, dest; 
     Piece taken;
 };
+const Move unk_move = {{0,0}, {0,0}, empty_piece};
 bool is_capture(Move m);
 
 void apply_move(Board* B, Move M);

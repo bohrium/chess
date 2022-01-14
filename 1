@@ -5,9 +5,9 @@
 #include <time.h>
 
 /* WARNING: if NB_PLIES too small, also should update verbose in main.c */
-#define NB_WHITE_PLIES      11
+#define NB_WHITE_PLIES      12
 #define NB_BLACK_PLIES      11
-#define NB_COMMENTARY_PLIES 11
+#define NB_COMMENTARY_PLIES 12
 
 int main(int argc, char** argv)
 {
@@ -28,7 +28,7 @@ int main(int argc, char** argv)
         std::cout << std::endl;
         int alpha=-KING_POINTS/2, beta=+KING_POINTS/2;
         int nb_plies = t%2==0 ? NB_WHITE_PLIES : NB_BLACK_PLIES; 
-        int verbose  = 3;
+        int verbose  = 4;
         ScoredMove sm = get_best_move(&B, nb_plies, alpha, beta, true, true, verbose);
 
         std::cout << (t%2==0 ? 'W' : 'B');
