@@ -23,6 +23,16 @@ PVRecord pv_table[2][20][PV_TABLE_SIZE];
 ====  0. SEARCH FUNCTION  =====================================================
 =============================================================================*/
 
+#define BARK(STMNT)                                     \
+    if (0<verbose) {                                    \
+        std::cout << "  ";                              \
+        for (int t=0; t!=MAX_VERBOSE-verbose; ++t) {    \
+            std::cout << "\033[6C";                     \
+        }                                               \
+        STMNT;                                          \
+        std::cout << "\033[200D" << std::flush;         \
+    }                                                    
+
 ScoredMove get_best_move(Board* B, const int depth, int alpha, int beta, bool stable, bool null_move_okay, int verbose)
 {
     /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -55,6 +65,7 @@ ScoredMove get_best_move(Board* B, const int depth, int alpha, int beta, bool st
     generate_moves(B, &ML);
     int nb_candidates = ML.length; 
     if (2<=depth) {
+        BARK(std::cout<<"Sorting Moves      ");
         order_moves(B, &ML, ordering_depths[depth], 6);//branching_factors[depth]);
         nb_candidates = MIN(ML.length, branching_factors[depth]);
     }
@@ -73,6 +84,7 @@ ScoredMove get_best_move(Board* B, const int depth, int alpha, int beta, bool st
         int pass = evaluate(B); /* TODO: replace by quiescent? */
         if ((MIN_FILTER_DEPTH<=depth && null_move_okay) && 
             (is_white && beta<pass || !is_white && pass<alpha)) {
+            BARK(std::cout<<"Trying Null      ");
             apply_null(B);
             int alpha_hi = is_white ? beta-1+NMR_THRESH : alpha  -NMR_THRESH; 
             int beta_hi  = is_white ? beta  +NMR_THRESH : alpha+1-NMR_THRESH; 
@@ -93,8 +105,7 @@ ScoredMove get_best_move(Board* B, const int depth, int alpha, int beta, bool st
     /*--------  0.3.1. co-singular reduction  -------------------------------*/
     #if ALLOW_CSR
     if (MIN_FILTER_DEPTH<=depth && 2<=ML.length) {
-        /* TODO: think about alpha beta windows for CSR!*/
-        /* TODO: use null window to test score_snd*/
+        BARK(std::cout<<"Trying Singular      ");
         int score_fst, score_snd;
         {
             // TODO: avoid this egregious repetition of order_moves()'s work
@@ -143,15 +154,7 @@ ScoredMove get_best_move(Board* B, const int depth, int alpha, int beta, bool st
         #endif//ALLOW_AR
 
         /*--------  0.4.2. display move under consideration  ----------------*/
-        if (0<verbose) {
-            std::cout << "  ";
-            for (int t=0; t!=MAX_VERBOSE-verbose; ++t) {
-                std::cout << "\033[6C";
-            }
-            print_move(B, m);
-            std::cout << "            ";
-            std::cout << "\033[200D" << std::flush;
-        }
+        BARK(print_move(B,m);std::cout<<"            ");
 
         /*--------  0.4.3. late move reduction  -----------------------------*/
         #if ALLOW_LMR
