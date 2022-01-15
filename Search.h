@@ -39,9 +39,19 @@ struct ScoredMove {
     Move m;
     int score;
 };
-void zero_tables();
-ScoredMove get_best_move_multithreaded(Board* B, int depth, int alpha, int beta, int layers);
-ScoredMove get_best_move(Board* B, int depth, int alpha, int beta, bool stable, bool null_move_okay, int verbose);
-void print_pv(Board* B, int depth, int verbose); 
+
+typedef struct PVRecord {
+    unsigned int hash;
+    int alpha;
+    int beta;
+    ScoredMove sm;
+} PVRecord;
+#define PV_TABLE_SIZE 5000
+typedef PVRecord PVTable[20][PV_TABLE_SIZE]; 
+
+void zero_table(PVTable table);
+ScoredMove get_best_move_multithreaded(Board* B, int depth, int alpha, int beta, int layers, PVTable parent);
+ScoredMove get_best_move(Board* B, int depth, int alpha, int beta, bool stable, bool null_move_okay, int verbose, PVTable parent);
+void print_pv(Board* B, int depth, int verbose, PVTable table); 
 
 #endif//SEARCH_H

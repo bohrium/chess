@@ -87,11 +87,17 @@ bool read_board(Board* B, char const* string);
 
 inline Piece get_piece(Board const* B, Coordinate coor);
  
+enum MoveType {
+    ordinary =0,
+    promotion_to_queen=1,
+    extra_legal=-1,
+};
 struct Move { // a standard move (no promotion, en passant, or castling)
     Coordinate source, dest; 
     Piece taken;
+    MoveType type; 
 };
-const Move unk_move = {{0,0}, {0,0}, empty_piece};
+const Move unk_move = {{0,0}, {0,0}, empty_piece, MoveType::extra_legal};
 bool is_capture(Move m);
 
 void apply_move(Board* B, Move M);
