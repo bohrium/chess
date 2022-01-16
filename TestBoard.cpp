@@ -15,6 +15,11 @@ int main(int argc, char** argv)
     undo_move(&B, M);
     print_board(&B);
 
+    //apply_move(&B,Move{{1,0},{0,0},empty_piece,MoveType::promote_to_queen});
+    //undo_move (&B,Move{{1,0},{0,0},empty_piece,MoveType::promote_to_queen});
+    //apply_move(&B,Move{{1,0},{0,0},empty_piece,MoveType::promote_to_queen});
+
+
     return 0;
 }
 

@@ -1,50 +1,5 @@
 # chess
 
-
-     vvv
-
-
-TODO :
-       unite alpha_beta_inner() and get_best_move() functions
-
-       multithreading 
-
-       implement pawn promotion to queen (don't enrich Move type)
-
-       add and tune terms for:
-
-         miscellaneous 
-           `piece-square tables`                (implemented, un-tuned)
-           `bishop pair`                        (implemented, un-tuned)
-           `"random" mobility term via hash`
-
-         king safety
-           `attackers in same quadrant as king` (implemented, un-tuned)
-           `attackers xray king neighborhood`   ()
-
-         pawn structure
-           `pawn connectivity`                  (implemented, un-tuned)
-           `weak squares`                       
-           `passed pawns`                       
-
-         piece-pawn interactions 
-           `bishops-pawn malus`                 (implemented, un-tuned)
-           `knights on outposts`               
-           `rooks on open files`
-           `queen infiltration`
-
-       weariness and contempt parameters for draw handling 
-
-       make sure hash includes who-is-to-move data!
-           (resolved, clunkily)
-
-       address possibility of no legal move
-
-       design goal-based reductions
-
-     ^^^
-
-
 ## overview 
 This project has two aims: to practice tree search and to use learning
 techniques to infer and visualize interpretable chess heuristics.
@@ -101,98 +56,157 @@ The last of those e.g. helps us evade checks.
 
 ### evaluation heuristic
 
-Our heuristic decomposes as:
+Our heuristic decomposes into five themes: king attacks, pawn structure,
+piece-pawn interactions, piece-piece interactions, and material.  We set these
+by intuition, so we use a very coarse set of weights: 5, 13, 34, 89 centipawns. 
 
-    score = king-safety + pawns + pawn-piece + material + (midgame)(placement)
+    score =   king-xray + king-tropism
+            + pawn-connectivity + weak-squares + passed-pawns 
+            + bishop-pawn + knight-outpost + rook-open-files + king-shelter
+            + loose-pieces + double-attacked-squares + bishop-pair 
+            + material+ piece-square
 
-Each term is quadratic in our one-hot board representation.  The expressions
-`material`, `midgame`, and `placement` are in fact linear and thus especially
-straightforward to implement difference evaluation for.  The `king-safety` is
-a rank-64 bilinear arising from a sparsely-updated factor and a sparse factor. 
-The `pawns` term likewise is a rank-15 bilinear arising from sparsely-updated
-factors.    
+Most terms are quadratic in our one-hot board representation.  All arise by 
+combining factors sparsely updated in each move --- a boon to fast computation.
 
-The `king-safety` term adds -25 for each potentially-blocked attack by an
-enemy piece to the king's square or a square a king-move away.  By
-*potentially-blocked attack*, we mean that we ignore occlusions.  For example,
-we add (-25)(2+2+1+2) = -175 to white's score in the following board (left),
-based on attacks from the queen, bishop, knight, and rook.
+The `king-xray` term adds `+13` for each potentially-blocked attack by an
+friendly piece to the enemy king's square or a square a king-move away.  By
+*potentially-blocked attack*, we mean that we ignore occlusions.  In the
+following board (left), for instance, we add (+13)(2+2+1+2+2) to white's score
+(based on attacks from QBNNR) and (+13)(2+2+2) to black's score (based on
+attacks from qrr).
 
-       king-safety example         pawn island example  
-    [ ][ ][ ][ ][ ][ ][k][ ]    [ ][ ][ ][ ][ ][ ][k][ ]
-    [p][p][p][ ][ ][p][p][p]    [ ][ ][p][ ][ ][ ][p][ ]
-    [ ][ ][ ][ ][ ][ ][ ][ ]    [ ][ ][ ][p][ ][p][ ][ ]
-    [ ][ ][ ][ ][p][N][ ][ ]    [ ][ ][ ][ ][p][ ][ ][ ]
+The `king-tropism` term adds `+34` for each friendly piece in the same quadrant
+as the enemy king. 
+
+       king attacks                pawn structure       
+    [q][ ][ ][ ][ ][ ][k][ ]    [ ][ ][ ][ ][ ][ ][k][ ]
+    [r][p][p][ ][ ][p][p][p]    [ ][ ][p][ ][ ][ ][p][ ]
+    [ ][ ][ ][ ][ ][ ][ ][ ]    [ ][ ][ ][p][ ][p][p][ ]
+    [ ][ ][ ][ ][p][N][N][ ]    [ ][ ][ ][ ][p][ ][ ][ ]
     [ ][ ][Q][ ][P][ ][ ][ ]    [ ][P][ ][P][P][ ][ ][ ]
     [ ][P][ ][ ][ ][P][ ][ ]    [ ][P][ ][ ][ ][ ][P][ ]
-    [P][B][P][ ][ ][ ][P][P]    [ ][ ][ ][ ][ ][ ][P][P]
+    [r][B][P][ ][ ][ ][P][P]    [ ][ ][ ][ ][ ][ ][P][P]
     [ ][K][ ][ ][ ][ ][ ][R]    [ ][K][ ][ ][ ][ ][ ][ ]
 
-The `pawns` term incentivizes pawn connectivity and penalizes doubled pawns.
-That is: if a pair of adjacent columns contain a,b many white pawns, then we
-add (+25 ab) in connectivity score.  And if a column contains b many white
-pawns, we add (-20 a^2) in doubled pawn score.  For example, in the above
-board (right), we add (+25)(+1)+(-20)(+4+1+1+4+1) = -195 to white's score and
-we add (+25)(+1+1+1+1)+(-20)(-1-1-1-1-1) = 0 to black's score.  Even though
-white has two more pawns than black, the `pawns` term suggests that the 
-players' pawn structures are roughly equal.
+To obtain `pawn-connectivity`, we add `+34` for each pair of adjacent columns
+both containing white pawns.  For example, in the above board (right), we add
+34 to white's score and we add 136 to black's score.  Even though white has two
+more pawns than black, the `pawns` term suggests that the players' pawn
+structures are roughly equal.
 
-The `pawn-piece` adjustment penalizes bishops of the same square parity as many
-of their own side's pawns (-10 per pawn-bishop pair of same color and same
-square parity; +10 per pawn-bishop pair of same color and different square
-parity), rewards knights on outposts (+50 per knight protected by friendly
-pawn on a square weak for the opponent), and rewards rooks on open files
-(+50 per rook on a file with neither friendly nor enemy pawns). 
+A square is *weak* when it is neither behind a friendly pawn nor horizontally
+adjacent to a square in front of a friendly pawn.  The `weak-squares` penalty
+adds `-13` for each weak square.
 
-We count `material` using Fischer's estimates: p,n,b,r,q = 100,300,325,500,900.
-The `placement` term adjusts these values based on piece location (hence
-without loss absorbs the `material` term) using values simplified from those of
-Tomasz Michniewski --- see [this wonderful
+A pawn is *passed* when it is on a square weak for the enemy.  We add 
+`+34` for each passed pawn.
+
+The pawn-piece adjustments penalize bishops of the same square parity as many
+of their own side's pawns (`-13` per pawn-bishop pair of same color and same
+square parity), reward knights on outposts (`+89` per knight protected by
+friendly pawn on a square weak for the opponent), reward rooks on open files
+(`+34` per rook on a file with neither friendly nor enemy pawns), and rewards
+each friendly pawn one king-move away in front of the king (`+34`).
+
+The `loose-pieces` term adds `-13` for each friendly piece on a square attacked
+by no friendly pieces.  The `double-attacked-squares` term adds `+13` for each
+square attacked by at least two friendly pieces.  We add another `+34` for each
+opposite-colored bishop pair.
+**NOTE**: `loose-pieces` and `double-attacked-squares` are NOT YET IMPLEMENTED. 
+
+We value `material` according to p,n,b,r,q = 100,313,334,500,900.  The
+`placement` term adjusts these values based on piece location (hence without
+loss absorbs the `material` term) using values simplified from those of Tomasz
+Michniewski --- see [this wonderful
 article](https://www.chessprogramming.org/Simplified_Evaluation_Function).
-Specifically, it grants -40,-15,+15,+40 for horrible,bad,good,great (=,-,+,#)
-squares:  
+Roughly, it grants -89,-34,-13,-5,+5,+13,+34,+89 for horrible,bad,good,great
+(==,=,--,-,+,++,#,##) squares:  
 
              pawns                       knights
-    [ ][ ][ ][ ][ ][ ][ ][ ]    [=][=][=][=][=][=][=][=]
-    [#][#][#][#][#][#][#][#]    [=][-][ ][ ][ ][ ][-][=]
-    [ ][+][+][+][+][+][+][ ]    [=][ ][ ][+][+][ ][ ][=]
-    [ ][ ][ ][+][+][ ][ ][ ]    [=][ ][+][+][+][+][ ][=]
-    [ ][ ][ ][ ][ ][ ][ ][ ]    [=][ ][+][+][+][+][ ][=]
-    [ ][ ][-][ ][ ][-][ ][ ]    [=][ ][ ][+][+][ ][ ][=]
-    [ ][ ][ ][-][-][ ][ ][ ]    [=][-][ ][ ][ ][ ][-][=]
-    [ ][ ][ ][ ][ ][ ][ ][ ]    [=][=][=][=][=][=][=][=]
+    |  |  |  |  |  |  |  |  |   |==|--|--|--|--|--|--|==|
+    |##|##|##|##|##|##|##|##|   |--|- |- |  |  |- |- |--|
+    |  |# |# |# |# |# |# |  |   |--|- |  |+ |+ |  |- |--|
+    |  |  |  |++|++|  |  |  |   |--|  |+ |# |# |+ |  |--|
+    |  |  |  |+ |+ |  |  |  |   |--|  |+ |# |# |+ |  |--|
+    |  |  |  |  |  |  |  |  |   |--|- |  |+ |+ |  |- |--|
+    |  |  |  |  |  |  |  |  |   |--|- |- |  |  |- |- |--|
+    |  |  |  |  |  |  |  |  |   |==|--|--|--|--|--|--|==|
 
              bishops                     rooks           
-    [=][=][=][=][=][=][=][=]    [ ][ ][ ][ ][ ][ ][ ][ ]
-    [=][-][-][-][-][-][-][=]    [ ][+][+][+][+][+][+][ ]
-    [=][-][-][ ][ ][-][-][=]    [ ][ ][ ][ ][ ][ ][ ][ ]
-    [=][-][-][ ][ ][-][-][=]    [ ][ ][ ][ ][ ][ ][ ][ ]
-    [=][-][ ][ ][ ][ ][-][=]    [ ][ ][ ][ ][ ][ ][ ][ ]
-    [=][ ][ ][ ][ ][ ][ ][=]    [ ][ ][ ][ ][ ][ ][ ][ ]
-    [=][-][-][-][-][-][-][=]    [ ][ ][ ][ ][ ][ ][ ][ ]
-    [=][=][=][=][=][=][=][=]    [ ][ ][ ][ ][ ][ ][ ][ ]
+    |- |- |- |- |- |- |- |- |   |  |  |  |  |  |  |  |  |
+    |- |++|  |  |  |  |++|- |   |+ |+ |+ |+ |+ |+ |+ |+ |
+    |- |  |++|  |  |++|  |- |   |  |  |  |  |  |  |  |  |
+    |- |  |  |++|++|  |  |- |   |  |  |  |  |  |  |  |  |
+    |- |  |  |++|++|  |  |- |   |  |  |  |  |  |  |  |  |
+    |- |  |++|  |  |++|  |- |   |  |  |  |  |  |  |  |  |
+    |- |++|  |  |  |  |++|- |   |  |  |  |  |  |  |  |  |
+    |- |- |- |- |- |- |- |- |   |  |  |  |  |  |  |  |  |
 
              queens                      kings          
-    [-][-][-][ ][ ][-][-][-]    [=][=][=][=][=][=][=][=]
-    [-][ ][ ][ ][ ][ ][ ][-]    [=][=][=][=][=][=][=][=]
-    [-][ ][ ][ ][ ][ ][ ][-]    [=][=][=][=][=][=][=][=]
-    [ ][ ][ ][ ][ ][ ][ ][ ]    [=][=][=][=][=][=][=][=]
-    [ ][ ][ ][ ][ ][ ][ ][ ]    [-][=][=][=][=][=][=][-]
-    [-][ ][ ][ ][ ][ ][ ][-]    [-][-][-][-][-][-][-][-]
-    [-][ ][ ][ ][ ][ ][ ][-]    [+][+][ ][ ][ ][ ][+][+]
-    [-][-][-][ ][ ][-][-][-]    [+][#][ ][ ][ ][ ][#][+]
+    |  |  |  |  |  |  |  |  |   |  |  |  |  |  |  |  |  |
+    |  |  |  |  |  |  |  |  |   |  |  |  |  |  |  |  |  |
+    |  |  |  |+ |+ |  |  |  |   |  |  |  |  |  |  |  |  |
+    |  |  |+ |+ |+ |+ |  |  |   |  |  |  |  |  |  |  |  |
+    |  |  |+ |+ |+ |+ |  |  |   |  |  |  |  |  |  |  |  |
+    |  |  |  |+ |+ |  |  |  |   |  |  |  |  |  |  |  |  |
+    |  |  |  |  |  |  |  |  |   |  |  |  |  |  |  |  |  |
+    |  |  |  |  |  |  |  |  |   |  |  |  |  |  |  |  |  |
 
-The `midgame` coefficient starts at 1.0 and decreases to 0.0 as the game
-progresses.  It equals the piece density: (number of pieces of either
-color)/32.  Thus, the `placement` term diminishes in influence as we approach
-the end game.  Note that bishops' `placement` coefficients are entirely
-non-positive.  Thus, bishops grow in value as the board opens up.
 
-### linear svm
+
+
+
+## linear svm
+
+
+
+
 
     
-## issues
-trouble profiling... try gprof on caen machines?
+## TODO
+     vvv
 
-want to tune heuristic... get Matthew S to look at TestEvalRuy and TestEvalSicilian (and make a middlegame and endgame
-testeval too)? 
+
+TODO :
+       unite alpha_beta_inner() and get_best_move() functions
+
+       multithreading 
+           (implemented)
+
+       implement pawn promotion to queen (don't enrich Move type)
+           (implemented, seemingly FAILs testing)
+
+       add and tune terms for:
+
+         miscellaneous 
+           `piece-square tables`                (implemented, un-tuned)
+           `bishop pair`                        (implemented, un-tuned)
+           `"random" mobility term via hash`
+
+         king safety
+           `attackers in same quadrant as king` (implemented, un-tuned)
+           `attackers xray king neighborhood`   ()
+
+         pawn structure
+           `pawn connectivity`                  (implemented, un-tuned)
+           `weak squares`                       
+           `passed pawns`                       
+
+         piece-pawn interactions 
+           `bishops-pawn malus`                 (implemented, un-tuned)
+           `knights on outposts`               
+           `rooks on open files`
+
+       weariness and contempt parameters for draw handling 
+
+       make sure hash includes who-is-to-move data!
+           (resolved, clunkily)
+
+       address possibility of no legal move
+
+       design goal-based reductions
+
+     ^^^
+
+

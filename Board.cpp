@@ -47,6 +47,15 @@ void init_board(Board* B)
         B->grid[6][c] = {Color::white, Species::pawn};
         B->grid[7][c] = {Color::white, init_row[c]};
     }
+    //B->grid[0][0] = empty_piece; 
+    //B->grid[0][1] = empty_piece; 
+    //B->grid[0][2] = empty_piece; 
+    //B->grid[0][3] = empty_piece; 
+    //B->grid[1][0] = {Color::white, Species::pawn}; 
+    //B->grid[1][1] = empty_piece; 
+    //B->grid[1][2] = empty_piece; 
+    //B->grid[1][3] = empty_piece; 
+
     B->evaluation_stack.push_back(0); /* initial evaluation */ 
     B->hash = 0;
 
@@ -221,16 +230,17 @@ int parity(Coordinate rc)
     return (rc.row + rc.col)%2;
 }
 
+#define TO_MOVE_HASH 271828
 void apply_null(Board* B)
 {
     B->next_to_move = flip_color(B->next_to_move);
-    B->hash ^= 271828;
+    B->hash ^= TO_MOVE_HASH;
     /* todo: change side-to-move hash */
 }
 void undo_null(Board* B)
 {
     B->next_to_move = flip_color(B->next_to_move);
-    B->hash ^= 271828;
+    B->hash ^= TO_MOVE_HASH;
     /* todo: change side-to-move hash */
 }
 
@@ -239,7 +249,7 @@ void apply_move(Board* B, Move M)
     /* note asymmetry with analogous line in undo_move */
     Piece mover = get_piece(B, M.source);
     B->hash ^= hash_of(M, mover); 
-    B->hash ^= 271828;
+    B->hash ^= TO_MOVE_HASH;
 
     // fifty move rule
     if ((mover.species == Species::pawn || M.taken.species != Species::empty_species
@@ -255,10 +265,16 @@ void apply_move(Board* B, Move M)
     //      (0<=M.dest.row && M.dest.row<8) &&
     //      (0<=M.dest.col && M.dest.col<8)) {std::cout << "!!" << std::flush;}
 
-    B->next_to_move = flip_color(B->next_to_move);
     B->evaluation_stack.push_back(B->evaluation_stack.back() + evaluation_difference(B, M));
-    B->grid[M.dest.row][M.dest.col] = B->grid[M.source.row][M.source.col];
+    if (M.type==MoveType::promote_to_queen) {
+        B->grid[M.dest.row][M.dest.col] = Piece{B->next_to_move, Species::queen};
+    } else {
+        B->grid[M.dest.row][M.dest.col] = B->grid[M.source.row][M.source.col];
+    }
+    /* order matters! */
     B->grid[M.source.row][M.source.col] = empty_piece;
+    B->next_to_move = flip_color(B->next_to_move);
+
 
     if (mover.species == Species::king) {
         B->king_loc[mover.color] = M.dest;
@@ -284,18 +300,24 @@ void apply_move(Board* B, Move M)
         }
     }
 }
+
 void undo_move(Board* B, Move M)
 {
     /* note asymmetry with analogous line in apply_move */
     Piece mover = get_piece(B, M.dest);
     B->hash ^= hash_of(M, mover); 
-    B->hash ^= 271828;
+    B->hash ^= TO_MOVE_HASH;
 
     B->plies_since_irreversible.pop_back();
 
-    B->next_to_move = flip_color(B->next_to_move);
     B->evaluation_stack.pop_back();
-    B->grid[M.source.row][M.source.col] = B->grid[M.dest.row][M.dest.col];
+    /* order matters! */
+    B->next_to_move = flip_color(B->next_to_move);
+    if (M.type==MoveType::promote_to_queen) {
+        B->grid[M.source.row][M.source.col] = Piece{B->next_to_move, Species::pawn};
+    } else {
+        B->grid[M.source.row][M.source.col] = B->grid[M.dest.row][M.dest.col];
+    } 
     B->grid[M.dest.row][M.dest.col] = M.taken;
 
     if (mover.species == Species::king) {
@@ -368,24 +390,44 @@ void generate_moves(Board const* B, MoveList* ML)
 
 bool add_move_color_guard(Board const* B, MoveList* ML, Coordinate source, Coordinate dest, Color needed_color)
 {
-    if (is_valid(dest) && get_piece(B, dest).color == needed_color) {
-        ML->moves[ML->length++] = {source, dest, get_piece(B, dest)}; 
+    Piece taken = get_piece(B, dest);
+    if (is_valid(dest) && taken.color == needed_color) {
+        ML->moves[ML->length++] = {source, dest, taken, MoveType::ordinary}; 
         return true;
     }
     return false;
 } 
+
+bool add_pawn_move_color_guard(Board const* B, MoveList* ML, Coordinate source, Coordinate dest, Color needed_color)
+{
+    Piece taken = get_piece(B, dest);
+    if (is_valid(dest) && taken.color == needed_color) {
+        Move m = {source, dest, taken, MoveType::ordinary};
+        /* CAUTION: row "0" is farthest from white's camp */
+        Piece mover = get_piece(B, source);
+        if (mover.color==Color::white && dest.row==0 || 
+            mover.color==Color::black && dest.row==7) {
+            m.type = MoveType::promote_to_queen;
+            //std::cout << "yo!" << std::endl;
+        } 
+        ML->moves[ML->length++] = m; 
+        return true;
+    }
+    return false;
+}
+
 void generate_pawn_moves  (Board const* B, MoveList* ML, Coordinate source)
 {
     int row=source.row, col=source.col;
     int direction = B->next_to_move==Color::white ? -1 : +1;
     int start = B->next_to_move==Color::white ? 6 : 1;
     Coordinate dest = {row+direction, col}; 
-    if (add_move_color_guard(B, ML, source, {row+direction, col}, Color::empty_color) &&
+    if (add_pawn_move_color_guard(B, ML, source, {row+direction, col}, Color::empty_color) &&
         row == start) {
         add_move_color_guard(B, ML, source, {row+2*direction, col}, Color::empty_color);
     }
-    add_move_color_guard(B, ML, source, {row+direction, col+1}, flip_color(B->next_to_move));
-    add_move_color_guard(B, ML, source, {row+direction, col-1}, flip_color(B->next_to_move));
+    add_pawn_move_color_guard(B, ML, source, {row+direction, col+1}, flip_color(B->next_to_move));
+    add_pawn_move_color_guard(B, ML, source, {row+direction, col-1}, flip_color(B->next_to_move));
 }
 void generate_knight_moves(Board const* B, MoveList* ML, Coordinate source)
 {
@@ -476,10 +518,10 @@ int piece_placement[][8][8] = {
     /*knight*/ { /* a knight on the rim is dim*/ 
         {XX,xx,xx,xx,xx,xx,xx,XX},
         {xx,_x,_x, 0, 0,_x,_x,xx},
-        {xx,_x, 0, 0, 0, 0,_x,xx},
-        {xx, 0, 0, 0, 0, 0, 0,xx},
-        {xx, 0, 0, 0, 0, 0, 0,xx},
-        {xx,_x, 0, 0, 0, 0,_x,xx},
+        {xx,_x, 0,_o,_o, 0,_x,xx},
+        {xx, 0,_o,_O,_O,_o, 0,xx},
+        {xx, 0,_o,_O,_O,_o, 0,xx},
+        {xx,_x, 0,_o,_o, 0,_x,xx},
         {xx,_x,_x, 0, 0,_x,_x,xx},
         {XX,xx,xx,xx,xx,xx,xx,XX},
     },
@@ -491,7 +533,7 @@ int piece_placement[][8][8] = {
         {_x, 0, 0,oo,oo, 0, 0,_x},
         {_x, 0,oo, 0, 0,oo, 0,_x},
         {_x,oo, 0, 0, 0, 0,oo,_x},
-        {_x,_x,_x,_x,_x,_x,_x,xx},
+        {_x,_x,_x,_x,_x,_x,_x,_x},
     },
     /*rook*/ { /* rooks love 7th ranks */
         { 0, 0, 0, 0, 0, 0, 0, 0},
@@ -740,20 +782,36 @@ int evaluation_difference(Board* B, Move m) /*TODO: constify*/ // assumes m has 
 
     /* material */ 
     if (is_capture(m)) {
-        material = sign * points[m.taken.species];
+        material = sign * (points[m.taken.species] +
+                piece_placement[m.taken.species][m.dest.row][m.dest.col]);
     }
-
-    /* placement */ 
-    if (mover.color==Color::white) {
-        placement = sign * ( 
-            piece_placement[mover.species][m.dest.row][m.dest.col] -
-            piece_placement[mover.species][m.source.row][m.source.col] 
-        );
+    if (m.type==promote_to_queen) {
+        material += sign * (points[Species::queen]-points[Species::pawn]);
+        //std::cout << points[Species::queen]-points[Species::pawn] << std::endl;
+        if (mover.color==Color::white) {
+            placement = sign * ( 
+                piece_placement[Species::queen][m.dest.row][m.dest.col] -
+                piece_placement[Species::pawn][m.source.row][m.source.col] 
+            );
+        } else {
+            placement = sign * ( 
+                piece_placement[Species::queen][7-m.dest.row][m.dest.col] -
+                piece_placement[Species::pawn][7-m.source.row][m.source.col] 
+            );
+        }
     } else {
-        placement = sign * ( 
-            piece_placement[mover.species][7-m.dest.row][m.dest.col] -
-            piece_placement[mover.species][7-m.source.row][m.source.col] 
-        );
+        /* placement */ 
+        if (mover.color==Color::white) {
+            placement = sign * ( 
+                piece_placement[mover.species][m.dest.row][m.dest.col] -
+                piece_placement[mover.species][m.source.row][m.source.col] 
+            );
+        } else {
+            placement = sign * ( 
+                piece_placement[mover.species][7-m.dest.row][m.dest.col] -
+                piece_placement[mover.species][7-m.source.row][m.source.col] 
+            );
+        }
     }
 
     return material + placement;

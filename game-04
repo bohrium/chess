@@ -1,0 +1,51 @@
+Welcome!
+W plays Nf3( )Nf6( )Pd4( )Pd5( ) 10            
+B plays Nf6( ) 3             
+W plays Pd4( )Pd5( )Nc3( )Qd6( ) 8            
+B plays Pd5( )Bg5( ) 5             
+W plays Ph3( )Kd7( ) 5             
+B plays Ph6( )Nc3( ) 0             
+W plays Nc3( )Nc6( )Bf4( ) 13            
+B plays Nc6( )Bf4( ) 0             
+W plays Bf4( )Bf5( )Nb5( ) 3            
+B plays Bf5( )Nb5( ) 0             
+W plays Nb5( )Nb4( )Bc7(P) 87            
+B plays Nb4( )Bc7(P) 87             
+W plays Nc7(P)Kd7( )Na8(R)Qa8(N) 243            
+B plays Kd7( ) 282                  
+W plays Ne5( )Kc7(N)Nf7(P)Kd7( ) 406            
+B plays Kc7(N)Nf7(P)Kd7( )Nd8(Q) 406            
+W plays Nf7(P)Kd7( )Nd8(Q)Bc2(P) 406            
+B plays Kd7( )Nd8(Q)Bc2(P) 406            
+W plays Nd8(Q)Bc2(P)Qd2( ) 406            
+B plays Bc2(P)Qd2( ) 308            
+W plays Qd2( )Pe5( )Be5(P)Ne4( ) 618            
+B plays Pe5( )Nb7(P) 510            
+W plays Nf7( )Ne4( )Qc1( )Pf4(B) 700            
+B plays Pf4(B)Nh8(R)Ne4( )Qf4(P) 700            
+W plays Nh8(R)Bd6( )Nf7( )Ne4( ) 658            
+B plays Ne4( )Qf4(P)Pg5( ) 716            
+W plays Qf4(P)Pg5( )Qf5( )Kc7( ) 888            
+B plays Pa6( )Nf7( ) 888            
+B plays Re8( )Ra6(P)Pc3( ) 1876                  
+  Ph5( )White to move                 
+  Qb1( )   a b c d e f g h|              
+	8 | | | | |r| | | |         
+  Qc1( )7 | | | | |k| | | |              
+  Na6( )6 |p| | |n| | | | |         
+  Qc1( )5 | |p|Q| |P| | | |              
+  Bh3(P)4 | |P|p|P| | | | |         
+  Rg1( )3 | | | | | |P| |P|              
+	2 | |P| | | | |P| |         
+  Rh2( )1 |R| | | |K| | |R|              
+	   ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾          
+  Rg1( )1.1.1.0.0.0.0.0. 3.2.1.0.        
+  Bf5( )0.2.0.1.1.1.1.1. 1.1.4.5.
+  Rg1( )1       3584588462               
+  Nd3( )                        
+  Rg1( )                                 
+
+  Rg1( )                                 
+  Ba4( )                        
+Segmentation fault (core dumped)lar      
+

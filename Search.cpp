@@ -53,12 +53,6 @@ ScoredMove get_best_move_multithreaded(Board* B, const int depth, int alpha, int
     MoveList ML; 
     generate_moves(B, &ML);
     ML.length = MIN(ML.length, 36);
-    PVTable* my_pv_tables[36];
-    for (int t=0; t!=ML.length; ++t) {
-        my_pv_tables[t] = (PVTable*)malloc(2*20*PV_TABLE_SIZE * sizeof(PVRecord));
-        zero_table(*(my_pv_tables[t]));
-    }
-
     order_moves(B, &ML, ordering_depths[depth], 6, parent);
     ScoredMove sms[MAX_NB_MOVES];
 
@@ -83,6 +77,13 @@ ScoredMove get_best_move_multithreaded(Board* B, const int depth, int alpha, int
 
         if (is_white) { if (sms[l].score >= beta ) goto END; alpha = MAX(alpha, sms[l].score); } 
         else          { if (sms[l].score <= alpha) goto END; beta  = MIN(beta , sms[l].score); } 
+    }
+
+    PVTable* my_pv_tables[36];
+    for (int t=0; t!=ML.length; ++t) {
+        my_pv_tables[t] = (PVTable*)malloc(2*20*PV_TABLE_SIZE * sizeof(PVRecord));
+        //zero_table(*(my_pv_tables[t]));
+        update_table(*(my_pv_tables[t]), parent);
     }
 
     {
@@ -266,6 +267,7 @@ ScoredMove get_best_move(Board* B, const int depth, int alpha, int beta, bool st
                 skip = true;
             }
             undo_move(B, m);
+            /* TODO: update best move here! */
         }
         if (skip) { continue; }
         #endif//ALLOW_LMR
@@ -274,6 +276,9 @@ ScoredMove get_best_move(Board* B, const int depth, int alpha, int beta, bool st
         {
             apply_move(B, m);
             int child = get_best_move(B, depth-1-reduction, alpha, beta, stable, true, verbose-1, parent).score;
+            undo_move(B, m);
+            //print_move(B, m);
+            //std::cout << " " << child << std::endl;
             int new_score = is_white ? MAX(child, score) : MIN(child, score);
             if (is_white&&alpha<=child || !is_white&&beta<=child) { any_triumphant = true; }
             if (l==LMR_THRESH && !any_triumphant) { trigger_lmr = true; }
@@ -281,7 +286,6 @@ ScoredMove get_best_move(Board* B, const int depth, int alpha, int beta, bool st
                 score = new_score; 
                 best_move = m;
             }
-            undo_move(B, m);
         }
 
         /*--------  0.4.5. alpha-beta updates and cutoffs  ------------------*/

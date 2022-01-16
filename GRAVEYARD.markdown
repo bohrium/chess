@@ -64,3 +64,13 @@ status quo, e.g. having a piece stay put?).
 Once we have goals in mind, we might compute  
 
 
+
+
+
+The `midgame` coefficient starts at 1.0 and decreases to 0.0 as the game
+progresses.  It equals the piece density: (number of pieces of either
+color)/32.  Thus, the `placement` term diminishes in influence as we approach
+the end game.  Note that bishops' `placement` coefficients are entirely
+non-positive.  Thus, bishops grow in value as the board opens up.
+
+

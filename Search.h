@@ -46,7 +46,7 @@ typedef struct PVRecord {
     int beta;
     ScoredMove sm;
 } PVRecord;
-#define PV_TABLE_SIZE 5000
+#define PV_TABLE_SIZE 1000
 typedef PVRecord PVTable[20][PV_TABLE_SIZE]; 
 
 void zero_table(PVTable table);

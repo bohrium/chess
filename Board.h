@@ -89,7 +89,7 @@ inline Piece get_piece(Board const* B, Coordinate coor);
  
 enum MoveType {
     ordinary =0,
-    promotion_to_queen=1,
+    promote_to_queen=1,
     extra_legal=-1,
 };
 struct Move { // a standard move (no promotion, en passant, or castling)
