@@ -7,7 +7,7 @@
 
 /* BASIC SEARCH PARAMETERS */
 
-#define SCOUT_THRESH       5 // centipawns
+#define SCOUT_THRESH       6 // centipawns
 #define QUIESCE_DEPTH      4 // plies    
 #define STABLE_ORDER_DEPTH 3 // plies
 

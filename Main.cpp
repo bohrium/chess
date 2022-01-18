@@ -6,9 +6,9 @@
 #include <thread>
 
 /* WARNING: if NB_PLIES too small, also should update verbose in main.c */
-#define NB_WHITE_PLIES        10
-#define NB_BLACK_PLIES        9
-#define NB_COMMENTARY_PLIES   9
+#define NB_WHITE_PLIES       9  
+#define NB_BLACK_PLIES       9
+#define NB_COMMENTARY_PLIES  9
 
 
 int main(int argc, char** argv)
@@ -23,21 +23,6 @@ int main(int argc, char** argv)
     PVTable pv_table;
     zero_table(pv_table);
     
-    //MoveList ML;
-    //generate_moves(&B, &ML);
-    //for (int l=0; l!=ML.length; ++l) {
-    //    Move m = ML.moves[l];
-    //    print_move(&B, m);
-    //    apply_move(&B, m);
-    //    int score = get_best_move(&B, 0, -KING_POINTS/2, KING_POINTS/2, true, true, 0, pv_table).score;
-    //    int score_ = evaluate(&B);
-    //    undo_move (&B, m);
-    //    std::cout << " " << score << " " << score_ << std::endl;
-    //}
-    //ScoredMove sm = get_best_move(&B, 1, -KING_POINTS/2, KING_POINTS/2, true, true, 0, pv_table);
-    //print_move(&B, sm.m);
-    //std::cout << " " << sm.score << std::endl;
-
     for (int t=0; ; ++t) {
         print_board(&B);
         //char c; std::cin >> c;
@@ -47,9 +32,9 @@ int main(int argc, char** argv)
         int alpha=-KING_POINTS/2, beta=+KING_POINTS/2;
         int nb_plies = t%2==0 ? NB_WHITE_PLIES : NB_BLACK_PLIES; 
         int verbose  = 3;
-        int layers   = 2;
-        std::cout << "\033[20B" << std::flush;
-
+        int layers   = 3;
+        for (int k=0; k!=20; ++k) { std::cout << std::endl; }
+        //std::cout << "\033[20B" << std::flush;
         ScoredMove sm = get_best_move_multithreaded(&B, nb_plies, alpha, beta, layers, pv_table);
         //ScoredMove sm = get_best_move(&B, nb_plies, alpha, beta, true, true, verbose, pv_table); 
         std::cout << "\033[20A" << std::flush;

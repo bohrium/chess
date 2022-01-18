@@ -56,7 +56,7 @@ struct Board {
      * for the enemy is a weak square of ours also attacked by an enemy pawn.
      */ 
     int nb_pawns_by_file[2][8];
-    int most_initial_pawn_rank[2][8]; 
+    int least_advanced_pawn[2][8]; 
     bool attacked_by_pawn[2][8][8];
     bool weak_squares[2][8][8];
     bool outposts[2][8][8];
@@ -71,8 +71,9 @@ struct Board {
     int nb_knights_on_outposts[2]; 
 
     // ROOK TERMS
-    int nb_rooks_on_semi_files[2]; 
-    int nb_rooks_on_open_files[2]; 
+    //int nb_rooks_on_semi_files[2]; 
+    //int nb_rooks_on_open_files[2]; 
+    int nb_rooks_by_file[2][8];
 };
 Board copy_board(Board B);
 

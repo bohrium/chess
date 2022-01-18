@@ -103,7 +103,7 @@ A pawn is *passed* when it is on a square weak for the enemy.  We add
 `+34` for each passed pawn.
 
 The pawn-piece adjustments penalize bishops of the same square parity as many
-of their own side's pawns (`-13` per pawn-bishop pair of same color and same
+of their own side's pawns (`-5` per pawn-bishop pair of same color and same
 square parity), reward knights on outposts (`+89` per knight protected by
 friendly pawn on a square weak for the opponent), reward rooks on open files
 (`+34` per rook on a file with neither friendly nor enemy pawns), and rewards
@@ -127,8 +127,8 @@ Roughly, it grants -89,-34,-13,-5,+5,+13,+34,+89 for horrible,bad,good,great
     |  |  |  |  |  |  |  |  |   |==|--|--|--|--|--|--|==|
     |##|##|##|##|##|##|##|##|   |--|- |- |  |  |- |- |--|
     |  |# |# |# |# |# |# |  |   |--|- |  |+ |+ |  |- |--|
-    |  |  |  |++|++|  |  |  |   |--|  |+ |# |# |+ |  |--|
-    |  |  |  |+ |+ |  |  |  |   |--|  |+ |# |# |+ |  |--|
+    |  |  |  |++|++|  |  |  |   |--|  |+ |+ |+ |+ |  |--|
+    |  |  |  |+ |+ |  |  |  |   |--|  |+ |+ |+ |+ |  |--|
     |  |  |  |  |  |  |  |  |   |--|- |  |+ |+ |  |- |--|
     |  |  |  |  |  |  |  |  |   |--|- |- |  |  |- |- |--|
     |  |  |  |  |  |  |  |  |   |==|--|--|--|--|--|--|==|

@@ -28,6 +28,7 @@ int stable_eval(Board* B, int max_plies, int alpha, int beta);
         std::cout << "\033[200D" << std::flush;         \
     }                                                    
 
+#define THREADS_WIDTH 12
 #define ELDERS 2
 #define COYOUTHS AR_THRESH 
 ScoredMove get_best_move_multithreaded(Board* B, const int depth, int alpha, int beta, int layers, PVTable parent)
@@ -82,13 +83,12 @@ ScoredMove get_best_move_multithreaded(Board* B, const int depth, int alpha, int
     PVTable* my_pv_tables[36];
     for (int t=0; t!=ML.length; ++t) {
         my_pv_tables[t] = (PVTable*)malloc(2*20*PV_TABLE_SIZE * sizeof(PVRecord));
-        //zero_table(*(my_pv_tables[t]));
         update_table(*(my_pv_tables[t]), parent);
     }
 
-    {
+    for (int L=ELDERS; L<ML.length; L+=THREADS_WIDTH) {
         std::vector<std::thread> threads;
-        for (int l=ELDERS; l<ML.length; ++l) {
+        for (int l=L; l<ML.length && l<L+THREADS_WIDTH; ++l) {
             Board by_val = copy_board(*B);
             threads.push_back(
                 std::thread([&best, is_white, &ML,&sms,l,alpha,beta,depth,layers, &my_pv_tables](Board by_val){
@@ -97,7 +97,7 @@ ScoredMove get_best_move_multithreaded(Board* B, const int depth, int alpha, int
                   int reduced_depth = depth-1; /* assume cosingular is triggered */
                   if (1 <= l) { reduced_depth -= 1; }
                   if (COYOUTHS <= l) { reduced_depth -= 1; }
-                  sms[l] = {m, get_best_move_multithreaded(&by_val, reduced_depth, alpha, beta, layers-2,  *(my_pv_tables[l])).score};
+                  sms[l] = {m, get_best_move_multithreaded(&by_val, reduced_depth, alpha, beta, layers-3,  *(my_pv_tables[l])).score};
                   undo_move(&by_val, m);
                   if ( is_white && best.score < sms[l].score ||
                       !is_white && sms[l].score < best.score) {
@@ -105,13 +105,15 @@ ScoredMove get_best_move_multithreaded(Board* B, const int depth, int alpha, int
                   }
                 }, copy_board(*B)));
         }
-        for (int l=ML.length-1; l>=ELDERS; --l) {
+        //for (int l=ML.length-1; l>=ELDERS; --l) {
+        for (int l=L; l<ML.length && l<L+THREADS_WIDTH; ++l) {
             for (int i=0; i!=5-layers; ++i) { std::cout << "  "; }
             std::cout << "waiting on "; print_move(B, ML.moves[l]); std::cout << std::flush; 
             std::cout << "\n\033[100D" << std::flush;
-            threads[l-ELDERS].join();
+            threads[l-L].join();
             std::cout << "\033[1A                              \n\033[1A" << std::flush;
             update_table(parent, *(my_pv_tables[l]));
+            free(my_pv_tables[l]);
         }
     }
 
@@ -119,9 +121,6 @@ END:
 
     if (stable) {
         parent[depth][(B->hash)%PV_TABLE_SIZE] = {B->hash, orig_alpha, orig_beta, best};
-    }
-    for (int t=0; t!=ML.length; ++t) {
-        free(my_pv_tables[t]);
     }
 
     return best;
@@ -203,16 +202,20 @@ ScoredMove get_best_move(Board* B, const int depth, int alpha, int beta, bool st
         int score_fst, score_snd;
         {
             // TODO: avoid this egregious repetition of order_moves()'s work
+            //std::cout << "{CSRa" << std::flush;
             apply_move(B, ML.moves[0]);
             score_fst = get_best_move(B, ordering_depths[depth], alpha, beta, true, true, 0, parent).score;
             undo_move(B, ML.moves[0]);
+            //std::cout << "CSRa}" << std::flush;
         }
         int alpha_lo = is_white ? score_fst   - CSR_THRESH : score_fst-1 + CSR_THRESH; 
         int beta_lo  = is_white ? score_fst+1 - CSR_THRESH : score_fst   + CSR_THRESH;
         {
+            //std::cout << "{CSRb" << std::flush;
             apply_move(B, ML.moves[1]);
             score_snd = get_best_move(B, ordering_depths[depth], alpha_lo, beta_lo, true, true, 0, parent).score;
             undo_move(B, ML.moves[1]);
+            //std::cout << "CSRb}" << std::flush;
         }
         if (( is_white && score_snd<=alpha_lo) || 
             (!is_white && beta_lo <=score_snd)) {
@@ -256,6 +259,7 @@ ScoredMove get_best_move(Board* B, const int depth, int alpha, int beta, bool st
         /* scout / late move reduction */
         if ((MIN_FILTER_DEPTH <=depth && 1<=l) && 
             (SCOUT_THRESH<=beta-alpha || (trigger_lmr && !is_capture(m)))) {
+            //std::cout << "{LMR" << std::flush;
             apply_move(B, m);
             int alpha_lo = is_white ? alpha : beta-1; 
             int beta_lo  = is_white ? alpha+1 : beta; 
@@ -267,6 +271,7 @@ ScoredMove get_best_move(Board* B, const int depth, int alpha, int beta, bool st
                 skip = true;
             }
             undo_move(B, m);
+            //std::cout << "LMR}" << std::flush;
             /* TODO: update best move here! */
         }
         if (skip) { continue; }
@@ -274,9 +279,11 @@ ScoredMove get_best_move(Board* B, const int depth, int alpha, int beta, bool st
 
         /*--------  0.4.4. full search  -------------------------------------*/
         {
+            //std::cout << "{FS" << std::flush;
             apply_move(B, m);
             int child = get_best_move(B, depth-1-reduction, alpha, beta, stable, true, verbose-1, parent).score;
             undo_move(B, m);
+            //std::cout << "FS}" << std::flush;
             //print_move(B, m);
             //std::cout << " " << child << std::endl;
             int new_score = is_white ? MAX(child, score) : MIN(child, score);
@@ -319,9 +326,13 @@ Move shallow_greedy_move(Board* B)
 
     int score_acc = -KING_POINTS/2; 
     for (int m=0; m!=ML.length; ++m) {
+
+        //std::cout << "{GR" << std::flush;
         apply_move(B, ML.moves[m]);
         int score = sign * evaluate(B);
         undo_move(B, ML.moves[m]);
+        //std::cout << "GR}" << std::flush;
+
         score_acc = MAX(score_acc, score);
         if (score_acc == score) { move_acc = m; }
     }
@@ -342,9 +353,11 @@ int stable_eval(Board* B, int max_plies, int alpha, int beta)
     Move m = shallow_greedy_move(B);
     if (!is_capture(m)) { return evaluate(B); }
 
+    //std::cout << "{ST" << std::flush;
     apply_move(B, m);
     int go = stable_eval(B, max_plies-1, alpha, beta); /* TODO: update alpha beta */ 
     undo_move(B, m);
+    //std::cout << "ST}" << std::flush;
     return is_white ? MAX(pass, go) : MIN(pass, go);
 }
 
@@ -425,7 +438,7 @@ void print_pv(Board* B, int depth, int verbose, PVTable parent)
     PVRecord pvr;
     int dd;
     for (dd=0; ; ++dd) {
-        if (depth-dd<=MIN_FILTER_DEPTH) { return; } 
+        if (depth-dd<=0) { return; } 
         pvr = parent[depth-dd][(B->hash)%PV_TABLE_SIZE];
         if (B->hash == pvr.hash) { break; } 
     }
