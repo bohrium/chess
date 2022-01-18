@@ -47,20 +47,19 @@ struct Board {
     int nb_xrays[2][8][8];
 
     // PAWN STRUCTURE
-    /*     (--- caution:   rank == 7-row   ---)
-     * For us, a "weak square" (from white's perspective) is a square in ranks
-     * 2,3,4 (of 01234567) and files b,c,d,e,f,g (of abcdefgh) such that no
-     * friendly pawn in either of the two adjacent files has strictly lesser
-     * rank.  For example, if three consecutive pawns advance, then the square
-     * in front of the middle pawn's initial square becomes weak.  An "outpost"
-     * for the enemy is a weak square of ours also attacked by an enemy pawn.
+    /*     (--- CAUTION:   rank == 7-row   ---)
+     * For us, a "weak square" (for white) is a square such that {no friendly
+     * pawn in either of the two adjacent files has strictly lesser rank} AND
+     * {no friendly pawn of the same file has lesser-or-equal rank}.  An
+     * "outpost" for the enemy is a weak square of ours also attacked by an
+     * enemy pawn.
      */ 
     int nb_pawns_by_file[2][8];
-    int least_advanced_pawn[2][8]; 
-    bool attacked_by_pawn[2][8][8];
-    bool weak_squares[2][8][8];
-    bool outposts[2][8][8];
-    int nb_weak_squares[2];
+    int least_advanced[2][8]; 
+    int attacks_by_pawn[2][8][8];
+    //bool weak_squares[2][8][8];
+    //bool outposts[2][8][8];
+    //int nb_weak_squares[2];
 
     // BISHOP TERMS
     int nb_pawns_by_square_parity[2][2];
@@ -71,8 +70,6 @@ struct Board {
     int nb_knights_on_outposts[2]; 
 
     // ROOK TERMS
-    //int nb_rooks_on_semi_files[2]; 
-    //int nb_rooks_on_open_files[2]; 
     int nb_rooks_by_file[2][8];
 };
 Board copy_board(Board B);

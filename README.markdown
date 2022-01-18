@@ -56,15 +56,24 @@ The last of those e.g. helps us evade checks.
 
 ### evaluation heuristic
 
-Our heuristic decomposes into five themes: king attacks, pawn structure,
-piece-pawn interactions, piece-piece interactions, and material.  We set these
-by intuition, so we use a very coarse set of weights: 5, 13, 34, 89 centipawns. 
+We partition the six species of chess-person into *pawns*, *pieces*, and
+*kings*.  Knights, bishops, rooks, and queens are pieces, but pawns and kings
+aren't.  The classical board evaluation is linear in population counts:
+it grants 100,300,300,500,900,infinity points for the pnbrqk.  Our heuristic
+supplements this term by several others in order to treat five themes: 
+**king attacks**,
+**pawn structure** (determined entirely by pawn locations), 
+**material** (determined entirely by population counts), 
+**piece-pawn interactions**, and
+**piece harmony** (determined entirely by piece locations).
+Since we set these by intuition, we use a very coarse set of weights: 5, 13,
+34, 89 centipawns. 
 
-    score =   king-xray + king-tropism
+    score =   king-xray + king-tropism + king-shelter
             + pawn-connectivity + weak-squares + passed-pawns 
-            + bishop-pawn + knight-outpost + rook-open-files + king-shelter
-            + loose-pieces + double-attacked-squares + bishop-pair 
-            + material+ piece-square
+            + material-linear + bishop-pair + redundant-majors + cramped-rook
+            + cramped-bishop + knight-outpost + opened-rook
+            + loose-pieces + protected-passage + piece-square 
 
 Most terms are quadratic in our one-hot board representation.  All arise by 
 combining factors sparsely updated in each move --- a boon to fast computation.
@@ -77,51 +86,73 @@ following board (left), for instance, we add (+13)(2+2+1+2+2) to white's score
 attacks from qrr).
 
 The `king-tropism` term adds `+34` for each friendly piece in the same quadrant
-as the enemy king. 
-
+as the enemy king.  The `king-shelter` term adds `+13` for each friendly
+pawn in front of and a king-move away from the king.  In the example below,
+white gets 68 in tropism score to black's 34.  White gets 13 in shelter score
+to black's 39. 
+ 
        king attacks                pawn structure       
     [q][ ][ ][ ][ ][ ][k][ ]    [ ][ ][ ][ ][ ][ ][k][ ]
     [r][p][p][ ][ ][p][p][p]    [ ][ ][p][ ][ ][ ][p][ ]
     [ ][ ][ ][ ][ ][ ][ ][ ]    [ ][ ][ ][p][ ][p][p][ ]
     [ ][ ][ ][ ][p][N][N][ ]    [ ][ ][ ][ ][p][ ][ ][ ]
-    [ ][ ][Q][ ][P][ ][ ][ ]    [ ][P][ ][P][P][ ][ ][ ]
-    [ ][P][ ][ ][ ][P][ ][ ]    [ ][P][ ][ ][ ][ ][P][ ]
+    [ ][ ][ ][ ][P][ ][ ][ ]    [ ][P][ ][P][P][ ][ ][ ]
+    [ ][P][Q][ ][ ][P][ ][ ]    [ ][P][ ][ ][ ][ ][P][ ]
     [r][B][P][ ][ ][ ][P][P]    [ ][ ][ ][ ][ ][ ][P][P]
     [ ][K][ ][ ][ ][ ][ ][R]    [ ][K][ ][ ][ ][ ][ ][ ]
 
-To obtain `pawn-connectivity`, we add `+34` for each pair of adjacent columns
-both containing white pawns.  For example, in the above board (right), we add
-34 to white's score and we add 136 to black's score.  Even though white has two
-more pawns than black, the `pawns` term suggests that the players' pawn
-structures are roughly equal.
+To obtain `pawn-connectivity`, we add `-34` for each pair of adjacent columns
+not both containing white pawns.  For example, in the above board (right), we
+add -34x7 to white's score and we add -34x3 to black's score.  Even though
+white has one more pawn than black, the `pawn-connectivity` term suggests that
+the players' pawn structures are roughly equal.
 
 A square is *weak* when it is neither behind a friendly pawn nor horizontally
-adjacent to a square in front of a friendly pawn.  The `weak-squares` penalty
-adds `-13` for each weak square.
+adjacent to a square in front of a friendly pawn.  If a weak square is
+additionally attacked by an enemy pawn AND in front of a friendly pawn, it is
+an *outpost* for the enemy.  The `weak-squares` penalty adds `-13` for each
+enemy outpost and `-5` for each remaining weak square.  The `passed-pawn` term
+grants `+34` for each friendly pawn on a square weak for the enemy.  In the
+example board above, black has 8+2+1+2+3+2+1+2 weak squares; of these, none are
+outposts for white and none are passed pawns for white.  White has
+3+4+3+3+3+3+4+4 weak squares; of these, 0+1+0+0+0+0+0+0 are outposts for black
+and none are passed pawns for black.  So this paragraph's terms award 105 to
+white and 138 to black.   
 
-A pawn is *passed* when it is on a square weak for the enemy.  We add 
-`+34` for each passed pawn.
+The `cramped-bishop` term penalize bishops of the same square parity as many of
+their own side's pawns (`-5` per pawn-bishop pair of same color and same square
+parity).  The `knight-outpost` term rewards knights on outposts (`+89` per) or
+non-outpost weak squares (`+34` per).  The `opened-rook` terms grants `+34` for
+each rook on an *open file* (a file with neither friendly nor enemy pawns) and
+`+13` for each rook on a *semi-open file* (a file with enemy but not friendly
+pawns).
 
-The pawn-piece adjustments penalize bishops of the same square parity as many
-of their own side's pawns (`-5` per pawn-bishop pair of same color and same
-square parity), reward knights on outposts (`+89` per knight protected by
-friendly pawn on a square weak for the opponent), reward rooks on open files
-(`+34` per rook on a file with neither friendly nor enemy pawns), and rewards
-each friendly pawn one king-move away in front of the king (`+34`).
+We value `material-linear ` according to p,n,b,r,q =
+100,300+13,300+34,600-34,1000.  The `bishop-pair` correction grants `+34` for
+each pair of friendly bishops on oppositely-colored squares.  The
+`cramped-rook` correction exacts a penalty `-13` for each friendly rook-pawn
+pair.  And the `redundant-majors` correction exacts a penalty `-13` for each
+friendly rook-rook, rook-queen, or queen-queen pair.  Note that at the game's
+start, the rrq contribute 2x(600-34 - 8x13)+1000-9x13 = 1807, consistent with a
+more familiar evaluation of r,q=450,900.  Meanwhile, if we also keep in mind
+the cramped-bishop term (under the piece-pawn interactions), the nnbb at the
+game's start contribute 2x(300+13 + 300+34) + 34 - 8x5 = 1288, consistent with
+a more familiar evaluation of nn,bb=600,700.  These adjustments are based
+roughly on Larry Kaufman's [inspiring essay on evaluating material
+imbalances](https://www.chess.com/article/view/the-evaluation-of-material-imbalances-by-im-larry-kaufman).
 
 The `loose-pieces` term adds `-13` for each friendly piece on a square attacked
-by no friendly pieces.  The `double-attacked-squares` term adds `+13` for each
-square attacked by at least two friendly pieces.  We add another `+34` for each
-opposite-colored bishop pair.
-**NOTE**: `loose-pieces` and `double-attacked-squares` are NOT YET IMPLEMENTED. 
+by no friendly pieces.  The `protected-passage` term adds `+13` for each
+square attacked by at least two friendly pieces.
+**NOTE**: `loose-pieces` and `protected-passage` are **NOT YET IMPLEMENTED**. 
 
-We value `material` according to p,n,b,r,q = 100,313,334,500,900.  The
-`placement` term adjusts these values based on piece location (hence without
-loss absorbs the `material` term) using values simplified from those of Tomasz
-Michniewski --- see [this wonderful
-article](https://www.chessprogramming.org/Simplified_Evaluation_Function).
-Roughly, it grants -89,-34,-13,-5,+5,+13,+34,+89 for horrible,bad,good,great
-(==,=,--,-,+,++,#,##) squares:  
+The `piece-square` adjustment incentivizes piece placements known to be good
+on average independent of other pieces's placements (hence, btw,
+without loss absorbs the `material` term) using values simplified from those of
+Tomasz Michniewski's [instructive article on piece-square
+tables](https://www.chessprogramming.org/Simplified_Evaluation_Function).
+Roughly, we grant -89,-34,-13,-5,+5,+13,+34,+89 for 
+(==,=,--,-,+,++,#,##) squares ranging from horrible through great: 
 
              pawns                       knights
     |  |  |  |  |  |  |  |  |   |==|--|--|--|--|--|--|==|
@@ -170,6 +201,10 @@ Roughly, it grants -89,-34,-13,-5,+5,+13,+34,+89 for horrible,bad,good,great
 
 TODO :
        unite alpha_beta_inner() and get_best_move() functions
+            (implemented)
+
+       address possibility of no legal move, e.g. in stable_eval.
+       this seems to be giving segfaults
 
        multithreading 
            (implemented)
@@ -186,24 +221,22 @@ TODO :
 
          king safety
            `attackers in same quadrant as king` (implemented, un-tuned)
-           `attackers xray king neighborhood`   ()
+           `attackers xray king neighborhood`     
 
          pawn structure
            `pawn connectivity`                  (implemented, un-tuned)
-           `weak squares`                       
+           `weak squares`                       (implemented, un-tuned, very slow)
            `passed pawns`                       
 
          piece-pawn interactions 
            `bishops-pawn malus`                 (implemented, un-tuned)
-           `knights on outposts`               
-           `rooks on open files`
+           `knights on outposts`                (implemented, un-tuned, very slow)
+           `rooks on open files`                (implemented, un-tuned)
 
        weariness and contempt parameters for draw handling 
 
        make sure hash includes who-is-to-move data!
            (resolved, clunkily)
-
-       address possibility of no legal move
 
        design goal-based reductions
 
