@@ -7,6 +7,7 @@ int king_tropism(Board const* B);
 int king_shelter(Board const* B);
 int pawn_connectivity(Board const* B);
 int bishop_adjustment(Board const* B); 
+int redundant_majors(Board const* B); 
 //int knight_outpost(Board const* B); 
 int rook_placement(Board const* B);
 int weak_square_malus(Board const* B); 
@@ -47,6 +48,10 @@ void init_board(Board* B)
 {
     B->next_to_move = Color::white;
     B->plies_since_irreversible.push_back(0);
+
+    B->nb_majors[0] = 3;
+    B->nb_majors[1] = 3;
+
     for (int r=0; r!=8; ++r) {
         for (int c=0; c!=8; ++c) {
             B->grid[r][c] = empty_piece;
@@ -147,6 +152,7 @@ void print_board(Board const* B)
               << " " << king_shelter(B)
               << " " << pawn_connectivity(B)
               << " " << bishop_adjustment(B) 
+              << " " << redundant_majors(B) 
               << " " << rook_placement(B)
               << " " << weak_square_malus(B); 
     std::cout << std::endl;
@@ -349,6 +355,8 @@ void apply_move(Board* B, Move M)
             B->nb_pawns_by_file[mover.color][M.dest.col] += 1;
             if (  M.dest.col != 0) { B->attacks_by_pawn[mover.color][  M.dest.row-sign][  M.dest.col-1] += 1; }
             if (  M.dest.col != 7) { B->attacks_by_pawn[mover.color][  M.dest.row-sign][  M.dest.col+1] += 1; }
+        } else {
+            B->nb_majors[mover.color] += 1;
         }
         //if (!is_capture(M) && M.source.row == B->least_advanced[mover.color][M.source.col]) {
         //    B->least_advanced[mover.color][M.source.col] = M.dest.row;
@@ -377,6 +385,9 @@ void apply_move(Board* B, Move M)
             B->nb_bishops_by_square_parity[M.taken.color][parity(M.dest)] -= 1;
         break; case Species::rook:
             B->nb_rooks_by_file[M.taken.color][M.dest.col] -= 1;
+            B->nb_majors[M.taken.color] -= 1;
+        break; case Species::queen:
+            B->nb_majors[M.taken.color] -= 1;
         }
         B->nb_pieces_by_quadrant[M.taken.color][quadrant_by_coor[M.dest.row][M.dest.col]] -= 1; 
     }
@@ -417,6 +428,8 @@ void undo_move(Board* B, Move M)
             B->nb_pawns_by_file[mover.color][M.dest.col] -= 1;
             if (  M.dest.col != 0) { B->attacks_by_pawn[mover.color][  M.dest.row-sign][  M.dest.col-1] -= 1; }
             if (  M.dest.col != 7) { B->attacks_by_pawn[mover.color][  M.dest.row-sign][  M.dest.col+1] -= 1; }
+        } else {
+            B->nb_majors[mover.color] -= 1;
         }
         //if (!is_capture(M) && M.dest.row == B->least_advanced[mover.color][M.dest.col]) {
         //    B->least_advanced[mover.color][M.dest.col] = M.source.row;
@@ -446,6 +459,9 @@ void undo_move(Board* B, Move M)
             B->nb_bishops_by_square_parity[M.taken.color][parity(M.dest)] += 1;
         break; case Species::rook:
             B->nb_rooks_by_file[M.taken.color][M.dest.col] += 1;
+            B->nb_majors[M.taken.color] += 1;
+        break; case Species::queen:
+            B->nb_majors[M.taken.color] += 1;
         }
         B->nb_pieces_by_quadrant[M.taken.color][quadrant_by_coor[M.dest.row][M.dest.col]] += 1; 
     }
@@ -604,8 +620,8 @@ void generate_king_moves (Board const* B, MoveList* ML, Coordinate source)
 
 
 int KING_POINTS = 100000; /* should exceed twice the total remaining value */ 
-             /* p    n       b       r       q        k             */
-int points[] = {100, 300+13, 300+34, 600-34, 1000-34, KING_POINTS};
+             /* p    n       b       r    q     k             */
+int points[] = {100, 300+34, 300+34, 600, 1000, KING_POINTS};
 
 /* note: pawn, knight, and rook placements are asymmetrical*/
 int XX=-89,_X=-34,xx=-13,_x=-5,_o=+5,oo=+13,_O=+34,OO=+89; 
@@ -622,24 +638,24 @@ int piece_placement[][8][8] = {
         { 0, 0, 0, 0, 0, 0, 0, 0}, 
     },
     /*knight*/ { /* a knight on the rim is dim*/ 
-        {XX,xx,xx,xx,xx,xx,xx,XX},
-        {xx,_x,_x,_x,_x,_x,_x,xx},
-        {xx,_x, 0, 0, 0, 0,_x,xx},
-        {xx,_x, 0,_O,_O, 0,_x,xx},
-        {xx,_x, 0,oo,oo, 0,_x,xx},
-        {xx,_x, 0, 0, 0, 0,_x,xx},
-        {xx,_x,_x,_x,_x,_x,_x,xx},
-        {XX,xx,xx,xx,xx,xx,xx,XX},
+        {XX,_X,_X,_X,_X,_X,_X,XX},
+        {_X,xx,_x,_x,_x,_x,xx,_X},
+        {_X,_x, 0, 0, 0, 0,_x,_X},
+        {_X,_x, 0,_O,_O, 0,_x,_X},
+        {_X,_x, 0,oo,oo, 0,_x,_X},
+        {_X,_x, 0, 0, 0, 0,_x,_X},
+        {_X,xx,_x,_x,_x,_x,xx,_X},
+        {XX,_X,_X,_X,_X,_X,_X,XX},
     },
     /*bishop*/ { /* bishops love long diagonals */
-        {_x,_x,_x,_x,_x,_x,_x,_x},
-        {_x,oo, 0, 0, 0, 0,oo,_x},
-        {_x, 0,oo, 0, 0,oo, 0,_x},
-        {_x, 0, 0,oo,oo, 0, 0,_x},
-        {_x, 0, 0,oo,oo, 0, 0,_x},
-        {_x, 0,oo, 0, 0,oo, 0,_x},
-        {_x,oo, 0, 0, 0, 0,oo,_x},
-        {_x,_x,_x,_x,_x,_x,_x,_x},
+        {xx,xx,xx,xx,xx,xx,xx,xx},
+        {xx,oo, 0, 0, 0, 0,oo,xx},
+        {xx, 0,oo, 0, 0,oo, 0,xx},
+        {xx, 0, 0,oo,oo, 0, 0,xx},
+        {xx, 0, 0,oo,oo, 0, 0,xx},
+        {xx, 0,oo, 0, 0,oo, 0,xx},
+        {xx,oo, 0, 0, 0, 0,oo,xx},
+        {xx,xx,xx,xx,xx,xx,xx,xx},
     },
     /*rook*/ { /* rooks love 7th ranks */
         { 0, 0, 0, 0, 0, 0, 0, 0},
@@ -763,6 +779,13 @@ int weak_square_malus(Board const* B)
     }
     return acc;
 }
+int redundant_majors(Board const* B)
+{
+    return 34 * (- B->nb_majors[1]*(B->nb_majors[1]-1)/2
+                 + B->nb_majors[0]*(B->nb_majors[0]-1)/2);
+}
+
+
 int rook_placement(Board const* B)
 {
     auto bonus = [B](Color c, int file){
@@ -812,6 +835,7 @@ int evaluate(Board* B) /* todo: constify type signature */
          + king_shelter(B)
          + pawn_connectivity(B)
          + bishop_adjustment(B) 
+         + redundant_majors(B)
          + rook_placement(B) 
          + weak_square_malus(B);
 }

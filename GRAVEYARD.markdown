@@ -74,3 +74,11 @@ the end game.  Note that bishops' `placement` coefficients are entirely
 non-positive.  Thus, bishops grow in value as the board opens up.
 
 
+
+
+The `loose-pieces` term adds `-13` for each friendly piece on a square attacked
+by no friendly pieces.  The `protected-passage` term adds `+13` for each
+square attacked by at least two friendly pieces.
+**NOTE**: `loose-pieces` and `protected-passage` are **NOT YET IMPLEMENTED**. 
+
+

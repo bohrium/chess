@@ -56,16 +56,16 @@ The last of those e.g. helps us evade checks.
 
 ### evaluation heuristic
 
-We partition the six species of chess-person into *pawns*, *pieces*, and
-*kings*.  Knights, bishops, rooks, and queens are pieces, but pawns and kings
-aren't.  The classical board evaluation is linear in population counts:
-it grants 100,300,300,500,900,infinity points for the pnbrqk.  Our heuristic
+We partition the six species of chess-person or *chess-stone* into *pawns*,
+*pieces*, and *kings*.  Knights, bishops, rooks, and queens are pieces, but
+pawns and kings aren't.  The classical board evaluation is linear in population
+counts: it grants 100,300,300,500,900 points for the pnbrq.  Our heuristic
 supplements this term by several others in order to treat five themes: 
 **king attacks**,
 **pawn structure** (determined entirely by pawn locations), 
 **material** (determined entirely by population counts), 
 **piece-pawn interactions**, and
-**piece harmony** (determined entirely by piece locations).
+**ideal squares**.
 Since we set these by intuition, we use a very coarse set of weights: 5, 13,
 34, 89 centipawns. 
 
@@ -73,7 +73,7 @@ Since we set these by intuition, we use a very coarse set of weights: 5, 13,
             + pawn-connectivity + weak-squares + passed-pawns 
             + material-linear + bishop-pair + redundant-majors + cramped-rook
             + cramped-bishop + knight-outpost + opened-rook
-            + loose-pieces + protected-passage + piece-square 
+            + piece-square 
 
 Most terms are quadratic in our one-hot board representation.  All arise by 
 combining factors sparsely updated in each move --- a boon to fast computation.
@@ -133,18 +133,13 @@ each pair of friendly bishops on oppositely-colored squares.  The
 `cramped-rook` correction exacts a penalty `-13` for each friendly rook-pawn
 pair.  And the `redundant-majors` correction exacts a penalty `-13` for each
 friendly rook-rook, rook-queen, or queen-queen pair.  Note that at the game's
-start, the rrq contribute 2x(600-34 - 8x13)+1000-9x13 = 1807, consistent with a
-more familiar evaluation of r,q=450,900.  Meanwhile, if we also keep in mind
+start, the rrq contribute 2x(600 - 8x13)+1000-3x34 = 1890, consistent with a
+more familiar evaluation of r,q=500,900.  Meanwhile, if we also keep in mind
 the cramped-bishop term (under the piece-pawn interactions), the nnbb at the
 game's start contribute 2x(300+13 + 300+34) + 34 - 8x5 = 1288, consistent with
 a more familiar evaluation of nn,bb=600,700.  These adjustments are based
 roughly on Larry Kaufman's [inspiring essay on evaluating material
 imbalances](https://www.chess.com/article/view/the-evaluation-of-material-imbalances-by-im-larry-kaufman).
-
-The `loose-pieces` term adds `-13` for each friendly piece on a square attacked
-by no friendly pieces.  The `protected-passage` term adds `+13` for each
-square attacked by at least two friendly pieces.
-**NOTE**: `loose-pieces` and `protected-passage` are **NOT YET IMPLEMENTED**. 
 
 The `piece-square` adjustment incentivizes piece placements known to be good
 on average independent of other pieces's placements (hence, btw,
@@ -156,17 +151,17 @@ Roughly, we grant -89,-34,-13,-5,+5,+13,+34,+89 for
 
              pawns                       knights
     |  |  |  |  |  |  |  |  |   |==|--|--|--|--|--|--|==|
-    |##|##|##|##|##|##|##|##|   |--|- |- |  |  |- |- |--|
-    |  |# |# |# |# |# |# |  |   |--|- |  |+ |+ |  |- |--|
-    |  |  |  |++|++|  |  |  |   |--|  |+ |+ |+ |+ |  |--|
-    |  |  |  |+ |+ |  |  |  |   |--|  |+ |+ |+ |+ |  |--|
-    |  |  |  |  |  |  |  |  |   |--|- |  |+ |+ |  |- |--|
-    |  |  |  |  |  |  |  |  |   |--|- |- |  |  |- |- |--|
+    |##|##|##|##|##|##|##|##|   |--|- |- |- |- |- |- |--|
+    |  |# |# |# |# |# |# |  |   |--|- |  |  |  |  |- |--|
+    |  |  |  |++|++|  |  |  |   |--|- |  |# |# |  |- |--|
+    |  |  |  |+ |+ |  |  |  |   |--|- |  |++|++|  |- |--|
+    |  |  |  |  |  |  |  |  |   |--|- |  |  |  |  |- |--|
+    |  |  |  |  |  |  |  |  |   |--|- |- |- |- |- |- |--|
     |  |  |  |  |  |  |  |  |   |==|--|--|--|--|--|--|==|
 
              bishops                     rooks           
     |- |- |- |- |- |- |- |- |   |  |  |  |  |  |  |  |  |
-    |- |++|  |  |  |  |++|- |   |+ |+ |+ |+ |+ |+ |+ |+ |
+    |- |++|  |  |  |  |++|- |   |+ |++|++|++|++|++|++|+ |
     |- |  |++|  |  |++|  |- |   |  |  |  |  |  |  |  |  |
     |- |  |  |++|++|  |  |- |   |  |  |  |  |  |  |  |  |
     |- |  |  |++|++|  |  |- |   |  |  |  |  |  |  |  |  |
@@ -176,12 +171,12 @@ Roughly, we grant -89,-34,-13,-5,+5,+13,+34,+89 for
 
              queens                      kings          
     |  |  |  |  |  |  |  |  |   |  |  |  |  |  |  |  |  |
-    |  |  |  |  |  |  |  |  |   |  |  |  |  |  |  |  |  |
     |  |  |  |+ |+ |  |  |  |   |  |  |  |  |  |  |  |  |
-    |  |  |+ |+ |+ |+ |  |  |   |  |  |  |  |  |  |  |  |
-    |  |  |+ |+ |+ |+ |  |  |   |  |  |  |  |  |  |  |  |
+    |  |  |+ |++|++|+ |  |  |   |  |  |  |+ |+ |  |  |  |
+    |  |+ |++|# |# |++|+ |  |   |  |  |+ |++|++|+ |  |  |
+    |  |+ |++|# |# |++|+ |  |   |  |  |+ |++|++|+ |  |  |
+    |  |  |+ |++|++|+ |  |  |   |  |  |  |+ |+ |  |  |  |
     |  |  |  |+ |+ |  |  |  |   |  |  |  |  |  |  |  |  |
-    |  |  |  |  |  |  |  |  |   |  |  |  |  |  |  |  |  |
     |  |  |  |  |  |  |  |  |   |  |  |  |  |  |  |  |  |
 
 

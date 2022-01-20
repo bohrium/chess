@@ -69,8 +69,9 @@ struct Board {
     int nb_knights_on_weak_squares[2]; 
     int nb_knights_on_outposts[2]; 
 
-    // ROOK TERMS
+    // MAJOR TERMS
     int nb_rooks_by_file[2][8];
+    int nb_majors[2];
 };
 Board copy_board(Board B);
 
