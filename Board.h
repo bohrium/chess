@@ -73,6 +73,11 @@ void init_board(Board* B);
 void print_board(Board const* B);
 bool read_board(Board* B, char const* string);
 
+extern unsigned int hash_by_piece[3][7];
+extern unsigned int hash_by_square[8][8];
+extern int quintant_by_coor[8][8];
+int quintant_from(Coordinate rc);
+
 // A chess position can have at most 332 possible next moves:
 // Consider a board with 9 queens, 2 rooks, 2 bishops, 2 knights, 1 king
 #define MAX_NB_MOVES (9*4*7 + 2*2*7 + 2*2*7 + 2*8 + 1*8) 
@@ -81,18 +86,7 @@ struct MoveList {
     Move moves[MAX_NB_MOVES];
 };
 void print_move(Board const* B, Move M);
-
 void print_movelist(Board const* B, MoveList* ML);
-
-
-void change_piece(Board* B, Coordinate rc, Piece p, bool is_add);
-void add_eval_diff(Board* B, Coordinate rc, Piece p, bool is_add);
-
-void apply_move(Board* B, Move M);
-void undo_move(Board* B, Move M);
-
-void apply_null(Board* B);
-void undo_null(Board* B);
 
 void generate_pawn_moves  (Board const* B, MoveList* ML, Coordinate source);
 void generate_knight_moves(Board const* B, MoveList* ML, Coordinate source);
@@ -102,25 +96,19 @@ void generate_queen_moves (Board const* B, MoveList* ML, Coordinate source);
 void generate_king_moves  (Board const* B, MoveList* ML, Coordinate source);
 void generate_moves(Board const* B, MoveList* ML);
 
-extern int points[];
+void change_piece(Board* B, Coordinate rc, Piece p, bool is_add);
+
+void apply_move(Board* B, Move M);
+void undo_move(Board* B, Move M);
+
+void apply_null(Board* B);
+void undo_null(Board* B);
+
 extern int KING_POINTS;
 int evaluate(Board* B);
-void add_evaluation_difference(Board* B, Move m);
+void add_eval_diff(Board* B, Coordinate rc, Piece p, bool is_add);
 
-//int king_tropism(Board const* B);
-//int king_shelter(Board const* B);
-//int pawn_connectivity(Board const* B);
-//int bishop_adjustment(Board const* B); 
-//int redundant_majors(Board const* B); 
-////int knight_outpost(Board const* B); 
-//int opened_rook(Board const* B);
-//int weak_square_malus(Board const* B); 
-
-extern unsigned int hash_by_piece[3][7];
-extern unsigned int hash_by_square[8][8];
-extern int quintant_by_coor[8][8];
-
-/* REQUIRES: assumes nb_pawns_by_file is correct! */
-void update_least_advanced(Board* B, Color side, int col);
+///* REQUIRES: assumes nb_pawns_by_file is correct! */
+//void update_least_advanced(Board* B, Color side, int col);
 
 #endif//BOARD_H

@@ -7,10 +7,11 @@
 #include <thread>
 
 /* WARNING: if NB_PLIES too small, also should update verbose in main.c */
-#define NB_WHITE_PLIES      11  
-#define NB_BLACK_PLIES      11
-#define NB_COMMENTARY_PLIES 11
+#define NB_WHITE_PLIES      15  
+#define NB_BLACK_PLIES      15
+#define NB_COMMENTARY_PLIES 15 
 
+PVTable pv_table;
 
 int main(int argc, char** argv)
 {
@@ -21,7 +22,6 @@ int main(int argc, char** argv)
     Board B;
     init_board(&B);
 
-    PVTable pv_table;
     zero_table(pv_table);
     
     for (int t=0; ; ++t) {
@@ -32,17 +32,16 @@ int main(int argc, char** argv)
         std::cout << std::endl;
         int alpha=-KING_POINTS/2, beta=+KING_POINTS/2;
         int nb_plies = t%2==0 ? NB_WHITE_PLIES : NB_BLACK_PLIES; 
-        int verbose  = 3;
         int layers   = 3;
         for (int k=0; k!=20; ++k) { std::cout << std::endl; }
         //std::cout << "\033[20B" << std::flush;
         //ScoredMove sm = get_best_move_multithreaded(&B, nb_plies, alpha, beta, layers, pv_table);
-        ScoredMove sm = get_best_move(&B, nb_plies, alpha, beta, true, true, verbose, pv_table); 
+        ScoredMove sm = get_best_move(&B, nb_plies, alpha, beta, true, true, MAX_VERBOSE, pv_table); 
         std::cout << "\033[20A" << std::flush;
 
         std::cout << (t%2==0 ? 'W' : 'B');
         std::cout << " plays (height " << ANSI_GREEN << sm.height << ANSI_YELLOW << ") ";
-        print_pv(&B, nb_plies, verbose, pv_table);
+        print_pv(&B, nb_plies, MAX_VERBOSE, pv_table);
         std::cout << " " << ANSI_RED << get_best_move(&B, NB_COMMENTARY_PLIES, -KING_POINTS/2, +KING_POINTS/2, true, true, 0, pv_table).score << ANSI_YELLOW; 
         std::cout << "            " << std::endl;
 

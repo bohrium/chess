@@ -138,164 +138,6 @@ void undo_move(Board* B, Move m)
     change_piece(B, m.source, mover, true);
 }
 
-//void apply_move(Board* B, Move M)
-//{
-//    /* note asymmetry with analogous line in undo_move */
-//    Piece mover = get_piece(B, M.source);
-//    B->hash ^= hash_of(M, mover); 
-//    B->hash ^= TO_MOVE_HASH;
-//    int sign = mover.color==Color::white ? +1 : -1;
-//
-//    // fifty move rule
-//    if ((mover.species == Species::pawn || M.taken.species != Species::empty_species
-//                && B->plies_since_irreversible.back() < NB_PLIES_TIL_DRAW )) {
-//        B->plies_since_irreversible.push_back(0);
-//    } else {
-//        B->plies_since_irreversible.push_back(B->plies_since_irreversible.back() + 1);
-//    }
-//
-//    ///* check well formed*/
-//    //if (! (0<=M.source.row && M.source.row<8) && 
-//    //      (0<=M.source.col && M.source.col<8) &&
-//    //      (0<=M.dest.row && M.dest.row<8) &&
-//    //      (0<=M.dest.col && M.dest.col<8)) {std::cout << "!!" << std::flush;}
-//
-//    add_evaluation_difference(B,M);
-//    //B->evaluation_stack.push_back(B->evaluation_stack.back() + evaluation_difference(B, M));
-//    if (M.type == MoveType::promote_to_queen) {
-//        B->grid[M.dest.row][M.dest.col] = Piece{B->next_to_move, Species::queen};
-//    } else {
-//        B->grid[M.dest.row][M.dest.col] = B->grid[M.source.row][M.source.col];
-//    }
-//    /* order matters! */
-//    B->grid[M.source.row][M.source.col] = empty_piece;
-//    B->next_to_move = flip_color(B->next_to_move);
-//
-//
-//    switch (mover.species) {
-//    break; case Species::pawn:
-//        //std::cout << "\n[" << M.source.row << M.source.col << M.dest.row << M.dest.col << M.type << std::flush;
-//        B->nb_pawns_by_parity[mover.color][parity(M.source)] -= 1;
-//        B->nb_pawns_by_file[mover.color][M.source.col] -= 1;
-//        if (M.source.col != 0) { B->attacks_by_pawn[mover.color][M.source.row-sign][M.source.col-1] -= 1; }
-//        if (M.source.col != 7) { B->attacks_by_pawn[mover.color][M.source.row-sign][M.source.col+1] -= 1; }
-//        if (M.type != MoveType::promote_to_queen) {
-//            B->nb_pawns_by_parity[mover.color][parity(M.dest)] += 1;
-//            B->nb_pawns_by_file[mover.color][M.dest.col] += 1;
-//            if (  M.dest.col != 0) { B->attacks_by_pawn[mover.color][  M.dest.row-sign][  M.dest.col-1] += 1; }
-//            if (  M.dest.col != 7) { B->attacks_by_pawn[mover.color][  M.dest.row-sign][  M.dest.col+1] += 1; }
-//        } else {
-//            B->nb_majors[mover.color] += 1;
-//        }
-//        //if (!is_capture(M) && M.source.row == B->least_advanced[mover.color][M.source.col]) {
-//        //    B->least_advanced[mover.color][M.source.col] = M.dest.row;
-//        //} else {
-//            update_least_advanced(B, mover.color, M.source.col);
-//            update_least_advanced(B, mover.color, M.dest.col);
-//        //}
-//    break; case Species::rook:
-//        B->nb_rooks_by_file[mover.color][M.source.col] -= 1;
-//        B->nb_rooks_by_file[mover.color][M.dest.col] += 1;
-//    break; case Species::king:
-//        B->king_loc[mover.color] = M.dest;
-//    }
-//    B->nb_pieces_by_quintant[mover.color][quintant_by_coor[M.source.row][M.source.col]] -= 1; 
-//    B->nb_pieces_by_quintant[mover.color][quintant_by_coor[M.dest.row][M.dest.col]] += 1; 
-//
-//    if (is_capture(M)) {
-//        switch (M.taken.species) {
-//        break; case Species::pawn:
-//            B->nb_pawns_by_file[M.taken.color][M.dest.col] -= 1;
-//            B->nb_pawns_by_parity[M.taken.color][parity(M.dest)] -= 1;
-//            if (M.dest.col != 0) { B->attacks_by_pawn[mover.color][M.dest.row + sign][M.dest.col-1] -= 1; }
-//            if (M.dest.col != 7) { B->attacks_by_pawn[mover.color][M.dest.row + sign][M.dest.col+1] -= 1; }
-//            update_least_advanced(B, M.taken.color, M.dest.col);
-//        break; case Species::bishop:
-//            B->nb_bishops_by_parity[M.taken.color][parity(M.dest)] -= 1;
-//        break; case Species::rook:
-//            B->nb_rooks_by_file[M.taken.color][M.dest.col] -= 1;
-//            B->nb_majors[M.taken.color] -= 1;
-//        break; case Species::queen:
-//            B->nb_majors[M.taken.color] -= 1;
-//        }
-//        B->nb_pieces_by_quintant[M.taken.color][quintant_by_coor[M.dest.row][M.dest.col]] -= 1; 
-//    }
-//}
-//
-//void undo_move(Board* B, Move M)
-//{
-//    /* note asymmetry with analogous lines in apply_move */
-//    Piece mover = get_piece(B, M.dest);
-//    if ( M.type==MoveType::promote_to_queen ) { /* CAUTION! */
-//        mover.species = Species::pawn;
-//    }
-//    B->hash ^= hash_of(M, mover); 
-//    B->hash ^= TO_MOVE_HASH;
-//    int sign = mover.color==Color::white ? +1 : -1;
-//
-//    B->plies_since_irreversible.pop_back();
-//
-//    B->evaluation_stack.pop_back();
-//    /* order matters! */
-//    B->next_to_move = flip_color(B->next_to_move);
-//    if (M.type == MoveType::promote_to_queen) {
-//        B->grid[M.source.row][M.source.col] = Piece{B->next_to_move, Species::pawn};
-//    } else {
-//        B->grid[M.source.row][M.source.col] = B->grid[M.dest.row][M.dest.col];
-//    } 
-//    B->grid[M.dest.row][M.dest.col] = M.taken;
-//
-//    switch (mover.species) {
-//    break; case Species::pawn:
-//        //std::cout << "\n " << M.source.row << M.source.col << M.dest.row << M.dest.col << M.type <<"]" <<std::flush;
-//        B->nb_pawns_by_parity[mover.color][parity(M.source)] += 1;
-//        B->nb_pawns_by_file[mover.color][M.source.col] += 1;
-//        if (M.source.col != 0) { B->attacks_by_pawn[mover.color][M.source.row-sign][M.source.col-1] += 1; }
-//        if (M.source.col != 7) { B->attacks_by_pawn[mover.color][M.source.row-sign][M.source.col+1] += 1; }
-//        if (M.type != MoveType::promote_to_queen) {
-//            B->nb_pawns_by_parity[mover.color][parity(M.dest)] -= 1;
-//            B->nb_pawns_by_file[mover.color][M.dest.col] -= 1;
-//            if (  M.dest.col != 0) { B->attacks_by_pawn[mover.color][  M.dest.row-sign][  M.dest.col-1] -= 1; }
-//            if (  M.dest.col != 7) { B->attacks_by_pawn[mover.color][  M.dest.row-sign][  M.dest.col+1] -= 1; }
-//        } else {
-//            B->nb_majors[mover.color] -= 1;
-//        }
-//        //if (!is_capture(M) && M.dest.row == B->least_advanced[mover.color][M.dest.col]) {
-//        //    B->least_advanced[mover.color][M.dest.col] = M.source.row;
-//        //} else {
-//        update_least_advanced(B, mover.color, M.source.col);
-//        update_least_advanced(B, mover.color, M.dest.col);
-//        //}
-//    break; case Species::rook:
-//        B->nb_rooks_by_file[mover.color][M.source.col] += 1;
-//        B->nb_rooks_by_file[mover.color][M.dest.col] -= 1;
-//    break; case Species::king:
-//        B->king_loc[mover.color] = M.source;
-//    }
-//
-//    B->nb_pieces_by_quintant[mover.color][quintant_by_coor[M.source.row][M.source.col]] += 1; 
-//    B->nb_pieces_by_quintant[mover.color][quintant_by_coor[M.dest.row][M.dest.col]] -= 1; 
-//
-//    if (is_capture(M)) {
-//        switch (M.taken.species) {
-//        break; case Species::pawn:
-//            B->nb_pawns_by_file[M.taken.color][M.dest.col] += 1;
-//            B->nb_pawns_by_parity[M.taken.color][parity(M.dest)] += 1;
-//            if (M.dest.col != 0) { B->attacks_by_pawn[mover.color][M.dest.row + sign][M.dest.col-1] += 1; }
-//            if (M.dest.col != 7) { B->attacks_by_pawn[mover.color][M.dest.row + sign][M.dest.col+1] += 1; }
-//            update_least_advanced(B, M.taken.color, M.dest.col);
-//        break; case Species::bishop:
-//            B->nb_bishops_by_parity[M.taken.color][parity(M.dest)] += 1;
-//        break; case Species::rook:
-//            B->nb_rooks_by_file[M.taken.color][M.dest.col] += 1;
-//            B->nb_majors[M.taken.color] += 1;
-//        break; case Species::queen:
-//            B->nb_majors[M.taken.color] += 1;
-//        }
-//        B->nb_pieces_by_quintant[M.taken.color][quintant_by_coor[M.dest.row][M.dest.col]] += 1; 
-//    }
-//}
-
 void print_move(Board const* B, Move M)
 {
     char mover = species_names[get_piece(B, M.source).species];
@@ -448,4 +290,64 @@ void generate_king_moves (Board const* B, MoveList* ML, Coordinate source)
 }
 
 
+
+int quintant_from(Coordinate rc)
+{
+    return quintant_by_coor[rc.row][rc.col];
+}
+
+void change_piece(Board* B, Coordinate rc, Piece p, bool is_add)
+{
+    int const sign = p.color==Color::white ? +1 : -1;
+    Color const self = p.color; 
+    Color const them = flip_color(p.color);
+    int const r=rc.row;
+    int const c=rc.col;
+
+    int const sign_d = is_add ? +1 : -1;
+
+    /* hash (TODO: EXCEPT to-move-color, 50 move rule, etc: extra state) */
+    B->hash ^= hash_by_piece[self][p.species] * hash_by_square[r][c];
+
+    /* update grid */
+    if (is_add) { B->grid[r][c] = p; }
+    else        { B->grid[r][c] = empty_piece; }
+
+    if (p.species != Species::pawn && p.species != Species::king) {
+        int pq = quintant_from(rc);
+        int kq = quintant_from(B->king_locs[them].back());
+        B->nb_pieces_by_quintant[self][pq] += sign_d; 
+        { /* king-xrays */
+            /* TODO */
+        }
+        { /* loose pieces */
+        }
+    }
+
+    /* update piece-square counts and pawn structure terms */
+    switch (p.species) {
+    break; case Species::pawn:
+        B->nb_pawns_by_parity[self][parity(rc)] += sign_d;
+        B->nb_pawns_by_file[self][c] += sign_d;
+        update_least_advanced(B, self, c);
+        { /* weak-squares, posted-knight */
+            if (c != 0) { B->attacks_by_pawn[self][r-sign][c-1] += sign_d; }
+            if (c != 7) { B->attacks_by_pawn[self][r-sign][c+1] += sign_d; }
+            /* TODO; note that order of operations might depend on is_add */
+        }
+        { /* king x-rays */
+        }
+        { /* loose pieces */
+        }
+    //break; case Species::knight:
+    break; case Species::bishop:
+        B->nb_pawns_by_parity[self][parity(rc)] += sign_d;
+    break; case Species::rook:
+        B->nb_rooks_by_file[self][c] += sign_d;
+        B->nb_majors[self] += sign_d;
+    break; case Species::queen:
+        B->nb_majors[self] += sign_d;
+    //break; case Species::king: 
+    }
+}
 

@@ -16,15 +16,15 @@ int stable_eval(Board* B, int max_plies, int alpha, int beta);
 ====  0. SEARCH FUNCTION  =====================================================
 =============================================================================*/
 
-#define BARK(STMNT)                                     \
-    if (0<verbose) {                                    \
-        std::cout << "  ";                              \
-        for (int t=0; t!=MAX_VERBOSE-verbose; ++t) {    \
-            std::cout << "\033[6C";                     \
+/* important to parenthesize macro args!  one hour bug traced to this */
+#define BARK(VERBOSE,STMNT)                             \
+    if (0<(VERBOSE)) {                                  \
+        for (int t=0; t!=MAX_VERBOSE-(VERBOSE); ++t) {  \
+            std::cout << "\033[9C";                     \
         }                                               \
-        STMNT;                                          \
-        std::cout << "                        ";        \
-        std::cout << "\033[200D" << std::flush;         \
+        {STMNT;}                                        \
+        std::cout << "                  ";              \
+        std::cout << "\033[100D" << std::flush;         \
     }                                                    
 
 
@@ -60,8 +60,9 @@ ScoredMove get_best_move(Board* B, const int depth, int alpha, int beta, bool st
     generate_moves(B, &ML);
     int nb_candidates = ML.length; 
     if (2<=depth) {
-        BARK(std::cout<<"Sorting Moves      ");
+        BARK(verbose,std::cout << "\033[3D" << ANSI_BLUE << ".$." << ANSI_YELLOW);
         order_moves(B, &ML, ordering_depths[depth], 6, parent);//branching_factors[depth]);
+        BARK(verbose,std::cout << "\033[3D" << ANSI_BLUE << "   " << ANSI_YELLOW);
         nb_candidates = MIN(ML.length, branching_factors[depth]);
     }
 
@@ -81,11 +82,11 @@ ScoredMove get_best_move(Board* B, const int depth, int alpha, int beta, bool st
         int pass = evaluate(B); /* TODO: replace by quiescent? */
         if ((MIN_FILTER_DEPTH<=depth && null_move_okay) && 
             (is_white && beta<pass || !is_white && pass<alpha)) {
-            BARK(std::cout<<"Null?");
+            BARK(verbose,std::cout << "\033[3D" << ANSI_GREEN << ".n." << ANSI_YELLOW);
             apply_null(B);
             int alpha_hi = is_white ? beta-1+NMR_THRESH : alpha  -NMR_THRESH; 
             int beta_hi  = is_white ? beta  +NMR_THRESH : alpha+1-NMR_THRESH; 
-            ScoredMove child = get_best_move(B, depth-1-NMR_AMOUNT, alpha_hi, beta_hi, stable, false, 0, parent);
+            ScoredMove child = get_best_move(B, depth-1-NMR_AMOUNT, alpha_hi, beta_hi, stable, false, verbose, parent);
             bool skip = false;
             if (( is_white && beta +NMR_THRESH<=child.score) ||
                 (!is_white && child.score<=alpha-NMR_THRESH)) {
@@ -93,6 +94,7 @@ ScoredMove get_best_move(Board* B, const int depth, int alpha, int beta, bool st
                 skip = true;
             }
             undo_null(B);
+            BARK(verbose,std::cout << "\033[3D" << ANSI_GREEN << "   " << ANSI_YELLOW);
             if (skip) { goto END; }
         }
     }
@@ -124,7 +126,7 @@ ScoredMove get_best_move(Board* B, const int depth, int alpha, int beta, bool st
         //#endif//ALLOW_AR 
 
         /*--------  0.4.2. display move under consideration  ----------------*/
-        BARK(print_move(B,m));
+        BARK(verbose,print_move(B,m));
 
         /*--------  0.4.3. late move reduction  -----------------------------*/
         #if ALLOW_LMR
@@ -133,6 +135,7 @@ ScoredMove get_best_move(Board* B, const int depth, int alpha, int beta, bool st
         if ((MIN_FILTER_DEPTH <=depth && 1<=l) && 
             (SCOUT_THRESH<=beta-alpha || (trigger_lmr && !is_capture(m)))) {
             //(SCOUT_THRESH<=beta-alpha || (trigger_lmr && !is_capture(m)) || (AR_THRESH<=l))) {
+            BARK(verbose-1,std::cout << "\033[3D" << ANSI_RED << ".l." << ANSI_YELLOW);
             apply_move(B, m);
             int alpha_lo = is_white ? alpha : beta-1; 
             int beta_lo  = is_white ? alpha+1 : beta; 
@@ -141,12 +144,13 @@ ScoredMove get_best_move(Board* B, const int depth, int alpha, int beta, bool st
 
             if (trigger_lmr && !is_capture(m)) { child_depth -= LMR_AMOUNT; }
 
-            int child = get_best_move(B, child_depth-1, alpha_lo, beta_lo, stable, true, 0, parent).score;
+            int child = get_best_move(B, child_depth-1, alpha_lo, beta_lo, stable, true, verbose-1, parent).score;
             if ( is_white && child<=alpha ||
                 !is_white && beta <=child) {
                 skip = true;
             }
             undo_move(B, m);
+            BARK(verbose-1,std::cout << "\033[3D" << ANSI_RED << "   " << ANSI_YELLOW);
         }
         if (skip) { continue; }
         #endif//ALLOW_LMR
@@ -188,11 +192,12 @@ ScoredMove get_best_move(Board* B, const int depth, int alpha, int beta, bool st
     if (MIN_FILTER_DEPTH<=depth && 2<=ML.length &&
         ( is_white && next_best.score + CSR_THRESH < best.score ||    
          !is_white && next_best.score - CSR_THRESH > best.score)) {
-        BARK(print_move(B,best.m);std::cout<<"Singular");
-
+        BARK(verbose,print_move(B,best.m));
+        BARK(verbose-1,std::cout << "\033[3D" << ANSI_BLUE << ".!." << ANSI_YELLOW);
         apply_move(B, best.m);
-        ScoredMove child = get_best_move(B, depth-1, alpha, beta, true, true, 0, parent);
+        ScoredMove child = get_best_move(B, depth-1, alpha, beta, true, true, verbose-1, parent);
         undo_move(B, best.m);
+        BARK(verbose-1,std::cout << "\033[3D" << ANSI_BLUE << "   " << ANSI_YELLOW);
 
         best = {best.m, child.score, child.height+1}; 
     }
