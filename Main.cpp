@@ -1,6 +1,6 @@
 #include "Board.h"
 #include "Search.h"
-#include "Display.h"
+#include "Helpers.h"
 #include <iostream>
 #include <stdlib.h>
 #include <time.h>

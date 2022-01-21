@@ -6,24 +6,32 @@
 
 #define NB_PLIES_TIL_DRAW 20
 
+struct DisaggregatedScore {
+    int material;
+    int king_safety;
+    int pawn_structure;
+    int cozy_squares;
+};
+
 struct Board {
     Color next_to_move;
     Piece grid[8][8];
-    std::vector<int> evaluation_stack;
     std::vector<int> plies_since_irreversible;
     unsigned int hash;
 
+    std::vector<DisaggregatedScore> evaluation_stack;
+
     // KING SAFETY TERMS
-    /* We define four quadrants (0123) representing black's queenside, black's
+    /* We define four quintants (0123) representing black's queenside, black's
      * kingside, white's queenside, white's kingside.  We say that a piece
      * "xray attacks" a square if, in the absence of all occluding material and
      * inhibiting pins, that piece would attack that square.  A king is less
-     * safe when enemy pieces lie in its current quadrant.  A king is less safe
+     * safe when enemy pieces lie in its current quintant.  A king is less safe
      * when any of the up-to-9 squares at and around it are xray attacked by
      * enemy pieces.  
      */ 
-    Coordinate king_loc[2];
-    int nb_pieces_by_quadrant[2][4];
+    std::vector<Coordinate> king_locs[2]; /* TODO: swap axes */
+    int nb_pieces_by_quintant[2][4];
     int nb_xrays[2][8][8];
 
     // PAWN STRUCTURE
@@ -42,8 +50,8 @@ struct Board {
     //int nb_weak_squares[2];
 
     // BISHOP TERMS
-    int nb_pawns_by_square_parity[2][2];
-    int nb_bishops_by_square_parity[2][2];
+    int nb_pawns_by_parity[2][2];
+    int nb_bishops_by_parity[2][2];
 
     // KNIGHT TERMS
     int nb_knights_on_weak_squares[2]; 
@@ -55,8 +63,8 @@ struct Board {
 };
 Board copy_board(Board B);
 
-Piece get_piece(const Board*, Coordinate);
 Piece get_piece(Board const* B, Coordinate coor);
+bool kronecker_piece(Board const* B, Coordinate coor, Piece p);
 
 extern Species init_row[];
 
@@ -77,6 +85,8 @@ void print_move(Board const* B, Move M);
 void print_movelist(Board const* B, MoveList* ML);
 
 
+void change_piece(Board* B, Coordinate rc, Piece p, bool is_add);
+void add_eval_diff(Board* B, Coordinate rc, Piece p, bool is_add);
 
 void apply_move(Board* B, Move M);
 void undo_move(Board* B, Move M);
@@ -95,19 +105,22 @@ void generate_moves(Board const* B, MoveList* ML);
 extern int points[];
 extern int KING_POINTS;
 int evaluate(Board* B);
-int evaluation_difference(Board* B, Move m);
+void add_evaluation_difference(Board* B, Move m);
 
-int king_tropism(Board const* B);
-int king_shelter(Board const* B);
-int pawn_connectivity(Board const* B);
-int bishop_adjustment(Board const* B); 
-int redundant_majors(Board const* B); 
-//int knight_outpost(Board const* B); 
-int rook_placement(Board const* B);
-int weak_square_malus(Board const* B); 
+//int king_tropism(Board const* B);
+//int king_shelter(Board const* B);
+//int pawn_connectivity(Board const* B);
+//int bishop_adjustment(Board const* B); 
+//int redundant_majors(Board const* B); 
+////int knight_outpost(Board const* B); 
+//int opened_rook(Board const* B);
+//int weak_square_malus(Board const* B); 
 
 extern unsigned int hash_by_piece[3][7];
 extern unsigned int hash_by_square[8][8];
-extern int quadrant_by_coor[8][8];
+extern int quintant_by_coor[8][8];
+
+/* REQUIRES: assumes nb_pawns_by_file is correct! */
+void update_least_advanced(Board* B, Color side, int col);
 
 #endif//BOARD_H

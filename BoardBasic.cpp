@@ -1,5 +1,5 @@
 #include "Board.h"
-#include "Display.h"
+#include "Helpers.h"
 #include <iostream>
 
 Board copy_board(Board B)
@@ -45,11 +45,11 @@ void init_board(Board* B)
         B->grid[7][c] = {Color::white, init_row[c]};
     }
 
-    B->evaluation_stack.push_back(0); /* initial evaluation */ 
+    B->evaluation_stack.push_back({0,0,0,0}); /* initial evaluation */ 
     B->hash = 0;
 
-    B->king_loc[0] = {0, 4};
-    B->king_loc[1] = {7, 4};
+    B->king_locs[0].push_back({0, 4});
+    B->king_locs[1].push_back({7, 4});
 
     for (int color=0; color!=2; ++color) {
         for (int c=0; c!=8; ++c) {
@@ -60,11 +60,11 @@ void init_board(Board* B)
         B->nb_rooks_by_file[color][0] = 1;
         B->nb_rooks_by_file[color][7] = 1;
         for (int q=0; q!=4; ++q) {
-            B->nb_pieces_by_quadrant[color][q] = (q&2)^(color<<1) ? 0 : 8;
+            B->nb_pieces_by_quintant[color][q] = (q&2)^(color<<1) ? 0 : 8;
         }
         for (int p=0; p!=2; ++p) {
-            B->nb_pawns_by_square_parity[color][p] = 4;
-            B->nb_bishops_by_square_parity[color][p] = 1;
+            B->nb_pawns_by_parity[color][p] = 4;
+            B->nb_bishops_by_parity[color][p] = 1;
         }
     }
 }
@@ -107,11 +107,11 @@ void print_board(Board const* B)
     new_line();
     std::cout << ANSI_BLUE << B->hash << ANSI_YELLOW;
     new_line();
-    std::cout << ANSI_YELLOW <<  "mtr" << ANSI_RED << B->evaluation_stack.back() + bishop_adjustment(B) + redundant_majors(B)
-              << ANSI_YELLOW << " kng" << ANSI_RED << king_tropism(B) + king_shelter(B)
-              << ANSI_YELLOW << " pwn" << ANSI_RED << pawn_connectivity(B) + weak_square_malus(B)
-              << ANSI_YELLOW << " out" << ANSI_RED << rook_placement(B)
-              << ANSI_YELLOW << " sqr" << ANSI_RED << 0 
+    DisaggregatedScore ds = B->evaluation_stack.back(); 
+    std::cout << ANSI_YELLOW <<  "mtr" << ANSI_RED << ds.material
+              << ANSI_YELLOW << " kng" << ANSI_RED << ds.king_safety 
+              << ANSI_YELLOW << " pwn" << ANSI_RED << ds.pawn_structure
+              << ANSI_YELLOW << " sqr" << ANSI_RED << ds.cozy_squares
               << ANSI_YELLOW;
     new_line();
 } 
@@ -170,9 +170,13 @@ bool read_board(Board* B, char const* string) /* returns TRUE if error */
 }
 
 
-Piece get_piece(Board const* B, Coordinate coor)
+Piece get_piece(Board const* B, Coordinate rc)
 {
-    return B->grid[coor.row][coor.col]; 
+    return B->grid[rc.row][rc.col]; 
 } 
 
+bool kronecker_piece(Board const* B, Coordinate rc, Piece p)
+{
+    return KRON(piece_equals(get_piece(B, rc), p));
+}
 

@@ -40,6 +40,7 @@ struct Piece {
     Species species;
 };
 const Piece empty_piece = {Color::empty_color, Species::empty_species};
+bool piece_equals(Piece p, Piece q);
 
 /*=============================================================================
 ====  1. EXTERNAL DEGREES OF FREEDOM  =========================================
@@ -68,6 +69,7 @@ struct Move { // a standard move (no promotion, en passant, or castling)
     MoveType type; 
 };
 bool is_capture(Move m);
+bool is_irreversible(Move m, Piece mover);
 
 const Move unk_move = {{0,0}, {0,0}, empty_piece, MoveType::extra_legal};
 

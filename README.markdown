@@ -220,12 +220,12 @@ TODO :
 
          pawn structure
            `pawn connectivity`                  (implemented, un-tuned)
-           `weak squares`                       (implemented, un-tuned, very slow)
+           `weak squares`                       (implemented, un-tuned, commented out)
            `passed pawns`                       
 
          piece-pawn interactions 
            `bishops-pawn malus`                 (implemented, un-tuned)
-           `knights on outposts`                (implemented, un-tuned, very slow)
+           `knights on outposts`                (implemented, un-tuned, commented out)
            `rooks on open files`                (implemented, un-tuned)
 
        weariness and contempt parameters for draw handling 

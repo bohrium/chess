@@ -1,11 +1,9 @@
 #include "Search.h"
 #include "Board.h"
+#include "Helpers.h"
 #include <iostream>
 #include <algorithm>
 #include <thread>
-
-#define MIN(X,Y) (((X)<(Y))?(X):(Y))
-#define MAX(X,Y) (((X)>(Y))?(X):(Y))
 
 void update_table(PVTable parent, PVTable update);
 
