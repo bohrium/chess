@@ -29,7 +29,7 @@ int piece_placement[][8][8] = {
         {_X,_x, 0,oo,oo, 0,_x,_X},
         {_X,_x, 0, 0, 0, 0,_x,_X},
         {_X,xx,_x,_x,_x,_x,xx,_X},
-        {XX,_X,_X,_X,_X,_X,_X,XX},
+        {XX,xx,xx,xx,xx,xx,xx,XX},
     },
     /*bishop*/ { /* bishops love long diagonals */
         {xx,xx,xx,xx,xx,xx,xx,xx},

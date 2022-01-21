@@ -100,21 +100,19 @@ void print_board(Board const* B)
     if (B->next_to_move == Color::white) {
         std::cout << ANSI_MAGENTA << "White" << ANSI_YELLOW << " to move";
     } else {                                                
-        std::cout << ANSI_MAGENTA << "Black" << ANSI_YELLOW << " to move";
+        std::cout << ANSI_CYAN << "Black" << ANSI_YELLOW << " to move";
     }
     std::cout << "; ";
     std::cout << ANSI_BLUE << B->plies_since_irreversible.back() << ANSI_YELLOW << " plies";
     new_line();
     std::cout << ANSI_BLUE << B->hash << ANSI_YELLOW;
     new_line();
-    std::cout << B->evaluation_stack.back()
-              << " " << king_tropism(B)
-              << " " << king_shelter(B)
-              << " " << pawn_connectivity(B)
-              << " " << bishop_adjustment(B) 
-              << " " << redundant_majors(B) 
-              << " " << rook_placement(B)
-              << " " << weak_square_malus(B); 
+    std::cout << ANSI_YELLOW <<  "mtr" << ANSI_RED << B->evaluation_stack.back() + bishop_adjustment(B) + redundant_majors(B)
+              << ANSI_YELLOW << " kng" << ANSI_RED << king_tropism(B) + king_shelter(B)
+              << ANSI_YELLOW << " pwn" << ANSI_RED << pawn_connectivity(B) + weak_square_malus(B)
+              << ANSI_YELLOW << " out" << ANSI_RED << rook_placement(B)
+              << ANSI_YELLOW << " sqr" << ANSI_RED << 0 
+              << ANSI_YELLOW;
     new_line();
 } 
 /*

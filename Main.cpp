@@ -7,9 +7,9 @@
 #include <thread>
 
 /* WARNING: if NB_PLIES too small, also should update verbose in main.c */
-#define NB_WHITE_PLIES       6  
-#define NB_BLACK_PLIES       6
-#define NB_COMMENTARY_PLIES  6
+#define NB_WHITE_PLIES      11  
+#define NB_BLACK_PLIES      11
+#define NB_COMMENTARY_PLIES 11
 
 
 int main(int argc, char** argv)
@@ -41,11 +41,10 @@ int main(int argc, char** argv)
         std::cout << "\033[20A" << std::flush;
 
         std::cout << (t%2==0 ? 'W' : 'B');
-        std::cout << " plays "; print_pv(&B, nb_plies, verbose, pv_table);
-        std::cout << ANSI_BLUE;
-        std::cout << " " << get_best_move(&B, NB_COMMENTARY_PLIES, -KING_POINTS/2, +KING_POINTS/2, true, true, 0, pv_table).score; 
-        std::cout << "            ";
-        std::cout << ANSI_YELLOW << std::endl; /* yellow */
+        std::cout << " plays (height " << ANSI_GREEN << sm.height << ANSI_YELLOW << ") ";
+        print_pv(&B, nb_plies, verbose, pv_table);
+        std::cout << " " << ANSI_RED << get_best_move(&B, NB_COMMENTARY_PLIES, -KING_POINTS/2, +KING_POINTS/2, true, true, 0, pv_table).score << ANSI_YELLOW; 
+        std::cout << "            " << std::endl;
 
         apply_move(&B, sm.m);
         if (sm.m.taken.species == Species::king) {
