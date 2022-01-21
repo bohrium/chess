@@ -65,7 +65,7 @@ int piece_placement[][8][8] = {
         {OO,OO,OO,OO,OO,OO,OO,OO},
         {xx,_O,_O,_O,_O,_O,_O,xx},
         {xx, 0,oo,oo,oo,oo, 0,xx},
-        {xx, 0, 0,_o,_o, 0, 0,xx},
+        {xx, 0, 0,oo,oo, 0, 0,xx},
         {xx, 0, 0, 0, 0, 0, 0,xx},
         {xx, 0, 0, 0, 0, 0, 0,xx},
         { 0, 0, 0, 0, 0, 0, 0, 0}, 
@@ -155,7 +155,9 @@ void add_eval_diff(Board* B, Coordinate rc, Piece p, bool is_add)
 
     /* easy evaluation terms */
     d_material     += sign * points[p.species];
-    d_cozy_squares += sign * piece_placement[p.species][r][c];
+    d_cozy_squares += sign * (
+        piece_placement[p.species][sign==+1 ? r : 7-r][c]
+    );
 
     if (p.species != Species::pawn && p.species != Species::king) {
         { /* king tropism */
@@ -174,7 +176,7 @@ void add_eval_diff(Board* B, Coordinate rc, Piece p, bool is_add)
     switch (p.species) {
     break; case Species::pawn:
         { /* cramped-bishop */
-            d_cozy_squares -= sign * 5 * B->nb_bishops_by_parity[self][parity(rc)];
+            d_cozy_squares -= sign * 13 * B->nb_bishops_by_parity[self][parity(rc)];
         }
         { /* connected-pawn, opened-rook */
             if ( is_add && B->nb_pawns_by_file[self][c]==1 || /* we have just filled an empty file */
@@ -191,8 +193,7 @@ void add_eval_diff(Board* B, Coordinate rc, Piece p, bool is_add)
         }
         { /* king-shelter */
             Coordinate kl = B->king_locs[self].back();
-            if (r == kl.row - sign &&
-                ABS(c - kl.col)<=1) {
+            if (r==kl.row-sign && ABS(c - kl.col)<=1) {
                 d_king_safety += sign * 13;
             }
         }
@@ -203,7 +204,7 @@ void add_eval_diff(Board* B, Coordinate rc, Piece p, bool is_add)
         { /* posted-knight */ /* TODO */ }
     break; case Species::bishop:
         { /* cramped-bishop */
-            d_cozy_squares -= sign * 5 * B->nb_pawns_by_parity[self][parity(rc)];
+            d_cozy_squares -= sign * 13 * B->nb_pawns_by_parity[self][parity(rc)];
         }
         { /* bishop-pair */
             d_material += sign * 34 * B->nb_bishops_by_parity[self][1-parity(rc)];
@@ -235,17 +236,17 @@ void add_eval_diff(Board* B, Coordinate rc, Piece p, bool is_add)
             }
         }
         { /* king-shelter */
-            auto has_pawn = [B](Color side, int row, int col){
+            auto has_pawn = [self, B](int row, int col){
                 if (!(0<=col && col<8)) { return 0; }
-                return KRON(piece_equals(get_piece(B, {row,col}), {side,Species::pawn}));
+                return KRON(piece_equals(get_piece(B, {row,col}), {self,Species::pawn}));
             };
             d_king_safety += sign * 13 * (
-               -has_pawn(self, old_r+1, old_c-1) /* old */
-               -has_pawn(self, old_r+1, old_c  ) 
-               -has_pawn(self, old_r+1, old_c+1) 
-               +has_pawn(self,     r-1,     c-1) /* new */
-               +has_pawn(self,     r-1,     c  ) 
-               +has_pawn(self,     r-1,     c+1) 
+               -has_pawn(old_r-sign, old_c-1) /* old */
+               -has_pawn(old_r-sign, old_c  ) 
+               -has_pawn(old_r-sign, old_c+1) 
+               +has_pawn(    r-sign,     c-1) /* new */
+               +has_pawn(    r-sign,     c  ) 
+               +has_pawn(    r-sign,     c+1) 
             );
         }
         { /* king-xrays */ /* TODO */ }

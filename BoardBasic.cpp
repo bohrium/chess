@@ -59,14 +59,22 @@ void init_board(Board* B)
         }
         B->nb_rooks_by_file[color][0] = 1;
         B->nb_rooks_by_file[color][7] = 1;
-        for (int q=0; q!=4; ++q) {
-            B->nb_pieces_by_quintant[color][q] = (q&2)^(color<<1) ? 0 : 8;
-        }
         for (int p=0; p!=2; ++p) {
             B->nb_pawns_by_parity[color][p] = 4;
             B->nb_bishops_by_parity[color][p] = 1;
         }
     }
+    B->nb_pieces_by_quintant[0][0] = 4;
+    B->nb_pieces_by_quintant[0][1] = 3;
+    B->nb_pieces_by_quintant[0][2] = 0;
+    B->nb_pieces_by_quintant[0][3] = 0;
+    B->nb_pieces_by_quintant[0][4] = 0;
+
+    B->nb_pieces_by_quintant[1][0] = 0;
+    B->nb_pieces_by_quintant[1][1] = 0;
+    B->nb_pieces_by_quintant[1][2] = 4;
+    B->nb_pieces_by_quintant[1][3] = 3;
+    B->nb_pieces_by_quintant[1][4] = 0;
 }
 
 void print_board(Board const* B)
@@ -104,6 +112,19 @@ void print_board(Board const* B)
     }
     std::cout << "; ";
     std::cout << ANSI_BLUE << B->plies_since_irreversible.back() << ANSI_YELLOW << " plies";
+    //new_line();
+    //std::cout << B->nb_pawns_by_parity[0][0];
+    //std::cout << B->nb_pawns_by_parity[0][1];
+    //std::cout << B->nb_pawns_by_parity[0][0];
+    //std::cout << B->nb_pawns_by_parity[0][1];
+    //std::cout << B->nb_bishops_by_parity[0][0];
+    //std::cout << B->nb_bishops_by_parity[0][1];
+    //std::cout << B->nb_bishops_by_parity[0][0];
+    //std::cout << B->nb_bishops_by_parity[0][1];
+    //std::cout << B->nb_pawns_by_file[0][0];
+    //std::cout << B->nb_pawns_by_file[0][1];
+    //std::cout << B->nb_pawns_by_file[0][0];
+    //std::cout << B->nb_pawns_by_file[0][1];
     new_line();
     std::cout << ANSI_BLUE << B->hash << ANSI_YELLOW;
     new_line();

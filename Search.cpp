@@ -119,11 +119,11 @@ ScoredMove get_best_move(Board* B, const int depth, int alpha, int beta, bool st
           reduction += CSR_AMOUNT;
         } 
         #endif//ALLOW_CSR
-        //#if ALLOW_AR
-        //if (MIN_FILTER_DEPTH <=depth && AR_THRESH<=l) {
-        //    reduction += AR_AMOUNT;
-        //} 
-        //#endif//ALLOW_AR 
+        #if ALLOW_AR
+        if (MIN_FILTER_DEPTH <=depth && AR_THRESH<=l) {
+            reduction += AR_AMOUNT;
+        } 
+        #endif//ALLOW_AR 
 
         /*--------  0.4.2. display move under consideration  ----------------*/
         BARK(verbose,print_move(B,m));
@@ -199,7 +199,12 @@ ScoredMove get_best_move(Board* B, const int depth, int alpha, int beta, bool st
         undo_move(B, best.m);
         BARK(verbose-1,std::cout << "\033[3D" << ANSI_BLUE << "   " << ANSI_YELLOW);
 
-        best = {best.m, child.score, child.height+1}; 
+        if ( is_white && child.score>=next_best.score ||
+            !is_white && child.score<=next_best.score) {
+            best = {best.m, child.score, child.height+1}; 
+        } else {
+            best = next_best;
+        }
     }
     #endif//ALLOW_CSR
  

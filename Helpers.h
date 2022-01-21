@@ -10,7 +10,7 @@
 
 #define MIN(X,Y) (((X)<(Y))?(X):(Y))
 #define MAX(X,Y) (((X)>(Y))?(X):(Y))
-#define ABS(X) ((0<=(X))?(X):((-X)))
+#define ABS(X) ((0<=(X))?(X):(-(X)))
 #define KRON(N) ((N)?1:0)
 
 #define CLONE_BACK(V) ((V).push_back((V).back()))
