@@ -1,13 +1,21 @@
 all:
-	g++ -pthread --std=c++11 Main.cpp Board.cpp Search.cpp -o main.o 
+	g++ -pthread --std=c++11 Main.cpp Pieces.cpp BoardBasic.cpp BoardMoves.cpp BoardEval.cpp Search.cpp -o main.o 
 
 grind:
-	g++ -pthread -g --std=c++11 Main.cpp Board.cpp Search.cpp -o main.o 
+	g++ -pthread -g --std=c++11 Main.cpp Pieces.cpp BoardBasic.cpp BoardMoves.cpp BoardEval.cpp Search.cpp -o main.o 
 	valgrind --leak-check=yes ./main.o
 
 profile:
-	g++ --std=c++11 TestSearch.cpp Board.cpp Search.cpp -o testsearch.o -pg 
+	g++ --std=c++11 TestSearch.cpp Pieces.cpp BoardBasic.cpp BoardMoves.cpp BoardEval.cpp Search.cpp -o testsearch.o -pg 
 	./testsearch.o 
+
+preptest:
+	g++ --std=c++11 TestBoard.cpp Board.cpp -o testboard.o 
+	./testboard.o > testboard_out  
+	g++ --std=c++11 TestMoves.cpp Board.cpp -o testmoves.o 
+	./testmoves.o > testmoves_out  
+	g++ --std=c++11 TestSearch.cpp Board.cpp Search.cpp -o testsearch.o 
+	./testsearch.o > testsearch_out 
 
 test:
 	g++ --std=c++11 TestBoard.cpp Board.cpp -o testboard.o 
@@ -16,26 +24,8 @@ test:
 	g++ --std=c++11 TestMoves.cpp Board.cpp -o testmoves.o 
 	./testmoves.o > out  
 	diff out testmoves_out
-	g++ --std=c++11 TestEvalRuy.cpp Board.cpp Search.cpp -o testevalruy.o 
-	./testevalruy.o > out  
-	diff out testevalruy_out
-	g++ --std=c++11 TestEvalSicilian.cpp Board.cpp Search.cpp -o testevalsicilian.o 
-	./testevalsicilian.o > out
-	diff out testevalsicilian_out
 	g++ --std=c++11 TestSearch.cpp Board.cpp Search.cpp -o testsearch.o 
 	./testsearch.o > out  
 	diff out testsearch_out
 	
-preptest:
-	g++ --std=c++11 TestBoard.cpp Board.cpp -o testboard.o 
-	./testboard.o > testboard_out  
-	g++ --std=c++11 TestMoves.cpp Board.cpp -o testmoves.o 
-	./testmoves.o > testmoves_out  
-	g++ --std=c++11 TestEvalRuy.cpp Board.cpp Search.cpp -o testevalruy.o 
-	./testevalruy.o > testevalruy_out 
-	g++ --std=c++11 TestEvalSicilian.cpp Board.cpp Search.cpp -o testevalsicilian.o 
-	./testevalsicilian.o > testevalsicilian_out 
-	g++ --std=c++11 TestSearch.cpp Board.cpp Search.cpp -o testsearch.o 
-	./testsearch.o > testsearch_out 
-
 

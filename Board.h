@@ -1,31 +1,11 @@
 #ifndef BOARD_H
 #define BOARD_H
+
+#include "Pieces.h"
 #include <vector>
 
-enum Color {
-    black=0, /* 0 by fiat */
-    white=1, /* 1 by fiat */
-    empty_color
-};
-Color flip_color(Color c);
-enum Species {
-    pawn=0,
-    knight=1,
-    bishop=2,
-    rook=3,
-    queen=4,
-    king=5,
-    empty_species=6
-};
-struct Piece {
-    Color color;
-    Species species;
-};
-const Piece empty_piece = {Color::empty_color, Species::empty_species};
-struct Coordinate {
-    int row, col; 
-};
-inline bool is_valid(Coordinate coor);
+#define NB_PLIES_TIL_DRAW 20
+
 struct Board {
     Color next_to_move;
     Piece grid[8][8];
@@ -75,35 +55,15 @@ struct Board {
 };
 Board copy_board(Board B);
 
+Piece get_piece(const Board*, Coordinate);
+Piece get_piece(Board const* B, Coordinate coor);
+
 extern Species init_row[];
 
 void init_board(Board* B);
 
-extern char letters[];
 void print_board(Board const* B);
 bool read_board(Board* B, char const* string);
-
-
-inline Piece get_piece(Board const* B, Coordinate coor);
- 
-enum MoveType {
-    ordinary =0,
-    promote_to_queen=1,
-    extra_legal=-1,
-};
-struct Move { // a standard move (no promotion, en passant, or castling)
-    Coordinate source, dest; 
-    Piece taken;
-    MoveType type; 
-};
-const Move unk_move = {{0,0}, {0,0}, empty_piece, MoveType::extra_legal};
-bool is_capture(Move m);
-
-void apply_move(Board* B, Move M);
-void undo_move(Board* B, Move M);
-
-void apply_null(Board* B);
-void undo_null(Board* B);
 
 // A chess position can have at most 332 possible next moves:
 // Consider a board with 9 queens, 2 rooks, 2 bishops, 2 knights, 1 king
@@ -115,6 +75,14 @@ struct MoveList {
 void print_move(Board const* B, Move M);
 
 void print_movelist(Board const* B, MoveList* ML);
+
+
+
+void apply_move(Board* B, Move M);
+void undo_move(Board* B, Move M);
+
+void apply_null(Board* B);
+void undo_null(Board* B);
 
 void generate_pawn_moves  (Board const* B, MoveList* ML, Coordinate source);
 void generate_knight_moves(Board const* B, MoveList* ML, Coordinate source);
@@ -128,5 +96,18 @@ extern int points[];
 extern int KING_POINTS;
 int evaluate(Board* B);
 int evaluation_difference(Board* B, Move m);
+
+int king_tropism(Board const* B);
+int king_shelter(Board const* B);
+int pawn_connectivity(Board const* B);
+int bishop_adjustment(Board const* B); 
+int redundant_majors(Board const* B); 
+//int knight_outpost(Board const* B); 
+int rook_placement(Board const* B);
+int weak_square_malus(Board const* B); 
+
+extern unsigned int hash_by_piece[3][7];
+extern unsigned int hash_by_square[8][8];
+extern int quadrant_by_coor[8][8];
 
 #endif//BOARD_H
