@@ -72,6 +72,7 @@ extern Species init_row[];
 void init_board(Board* B);
 
 void print_board(Board const* B);
+void print_board_fancy(Board const* B);
 bool read_board(Board* B, char const* string);
 
 extern unsigned int const hash_by_piece[3][7];

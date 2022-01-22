@@ -26,20 +26,23 @@ int main(int argc, char** argv)
     zero_table(pv_table);
     
     for (int t=0; ; ++t) {
-        print_board(&B);
+        print_board_fancy(&B);
         //char c; std::cin >> c;
-        std::cout << "\033[15A" << std::flush; /* go up clear */
+        //std::cout << "\033[15A" << std::flush; /* go up clear */
+        std::cout << "\033[33A" << std::flush; /* go up clear */
 
         std::cout << std::endl;
         int alpha=-KING_POINTS/2, beta=+KING_POINTS/2;
         int nb_plies = t%2==0 ? NB_WHITE_PLIES : NB_BLACK_PLIES; 
         int layers   = 3;
-        for (int k=0; k!=20; ++k) { std::cout << std::endl; }
+        for (int k=0; k!=50; ++k) { std::cout << std::endl; }
         //std::cout << "\033[20B" << std::flush;
         //ScoredMove sm = get_best_move_multithreaded(&B, nb_plies, alpha, beta, layers, pv_table);
         ScoredMove sm = get_best_move(&B, nb_plies, alpha, beta, true, false, MAX_VERBOSE, pv_table); 
-        std::cout << "\033[20A" << std::flush;
+        std::cout << "\033[50A" << std::flush;
 
+        for (int k=0; k!=200; ++k) { std::cout << " "; }
+        std::cout << "\33[200D";
         std::cout << (t%2==0 ? 'W' : 'B');
         std::cout << " plays (height " << ANSI_GREEN << std::right << std::setw(2) << sm.height << ANSI_YELLOW << ") ";
         print_pv(&B, nb_plies, MAX_VERBOSE, pv_table);

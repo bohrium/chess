@@ -1,6 +1,7 @@
 #include "Board.h"
 #include "Helpers.h"
 #include <iostream>
+#include <iomanip>
 
 Board copy_board(Board B)
 {
@@ -91,6 +92,59 @@ void init_board(Board* B)
     B->nb_king_attacks_near[1] = 0;
 }
 
+int const height = 4;
+int const width = 6;
+char const icons[height][7][width] = {
+    {"     ", " _^  ", "  o  ", "     ", "!_|_/", "!_+_/","     "},
+    {"  o  ", "/* ! ", " (_) ", "|_|_|", " (_) ", "_) (_","     "},
+    {" ( ) ", " / | ", "`| |`", " | | ", " / ! ", " / ! ","     "},
+    {" / ! ", "|  !_", "_/ !_", "|___|", "/___!", "/___!","     "},
+};
+
+
+void print_board_fancy(Board const* B)
+{
+    DisaggregatedScore ds = B->evaluation_stack.back(); 
+    bool is_white = (B->next_to_move == Color::white);
+
+    for (int rr=0; rr!=8*height; ++rr) {
+        for (int k=0; k!=120; ++k) { std::cout << " "; }
+        std::cout << "\33[120D";
+        for (int c=0; c!=8; ++c) {
+            Piece p = B->grid[rr/height][c];
+            //std::cout << ((rr%height==0) ? "` " : "  ");
+            if (rr%height==0) {
+                std::cout << (rr==0 ? "abcdefgh"[c] : '`');
+                std::cout << (c==0  ? "87654321"[rr/height] : ' ');
+            } else {
+                std::cout << "  ";
+            }
+            //if (rr%height==0) { std::cout << "abcdefgh"[c] << (8-rr/height); } 
+            //else              { std::cout << "  ";                           } 
+            std::cout << ((p.color==Color::white) ? ANSI_MAGENTA : ANSI_CYAN); 
+            for (int x=0; x!=width; ++x) {
+                char c = icons[rr%height][p.species][x];
+                std::cout << (c=='!' ? '\\' : c);
+            }
+            std::cout << ANSI_YELLOW;
+            std::cout << (((c==7||(rr/height)==7) && rr%height==height-1) ? " ." : "  ");
+            //std::cout << "  ";
+        }
+        std::cout << "      ";
+        switch (rr) {
+        break; case  0: std::cout << "turn = " << (is_white?ANSI_MAGENTA:ANSI_CYAN) << (is_white?"White":"Black");
+        break; case  1: std::cout << "plies = " << ANSI_BLUE << B->plies_since_irreversible.back();
+        break; case  2: std::cout << "hash = " << ANSI_BLUE << B->hash;
+        break; case  3: std::cout << "mat = " << ANSI_RED << std::setw(4) << std::right << std::showpos << ds.material;
+        break; case  4: std::cout << "kng = " << ANSI_RED << std::setw(4) << std::right << std::showpos << ds.king_safety + 13 * ( B->nb_king_attacks_near[0]-B->nb_king_attacks_near[1]);
+        break; case  5: std::cout << "pwn = " << ANSI_RED << std::setw(4) << std::right << std::showpos << ds.pawn_structure;
+        break; case  6: std::cout << "sqr = " << ANSI_RED << std::setw(4) << std::right << std::showpos << ds.cozy_squares;
+        }
+        std::cout << std::noshowpos << ANSI_YELLOW << std::endl;
+    }
+} 
+
+
 void print_board(Board const* B)
 {
     auto new_line = [](){
@@ -127,30 +181,6 @@ void print_board(Board const* B)
     std::cout << "; ";
     std::cout << ANSI_BLUE << B->plies_since_irreversible.back() << ANSI_YELLOW << " plies";
     new_line();
-    //std::cout << B->nb_pawns_by_parity[0][0];
-    //std::cout << B->nb_pawns_by_parity[0][1];
-    //std::cout << B->nb_pawns_by_parity[0][0];
-    //std::cout << B->nb_pawns_by_parity[0][1];
-    //std::cout << B->nb_bishops_by_parity[0][0];
-    //std::cout << B->nb_bishops_by_parity[0][1];
-    //std::cout << B->nb_bishops_by_parity[0][0];
-    //std::cout << B->nb_bishops_by_parity[0][1];
-    //std::cout << B->nb_pawns_by_file[0][0];
-    //std::cout << B->nb_pawns_by_file[0][1];
-    //std::cout << B->nb_pawns_by_file[0][0];
-    //std::cout << B->nb_pawns_by_file[0][1];
-    ////
-    //new_line();
-    //std::cout << B->nb_king_attacks_near[0] << " & ";
-    //std::cout << B->nb_king_attacks_near[1];
-    //new_line();
-    //for (int r=0; r!=8; ++r) {
-    //    for (int c=0; c!=8; ++c) {
-    //        std::cout << B->nb_xrays[0][r][c] << ":"
-    //                  << B->nb_xrays[1][r][c] << " ";
-    //    }
-    //    new_line();
-    //}
     std::cout << ANSI_BLUE << B->hash << ANSI_YELLOW;
     new_line();
     DisaggregatedScore ds = B->evaluation_stack.back(); 
