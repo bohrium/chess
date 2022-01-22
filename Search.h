@@ -20,7 +20,7 @@ const int ordering_depths[]   = { -1, -1,  0,  1,  1,  1,  2,  2,  2,  3,  3,  3
 #define MIN_FILTER_DEPTH 6 // plies 
 
 #define ALLOW_NMR 1
-#define ALLOW_AR  1
+//#define ALLOW_AR  1
 #define ALLOW_LMR 1
 #define ALLOW_CSR 1
 
@@ -28,7 +28,7 @@ const int ordering_depths[]   = { -1, -1,  0,  1,  1,  1,  2,  2,  2,  3,  3,  3
 #define NMR_AMOUNT   2 // fracplies
 
 #define AR_THRESH    6 // nb siblings
-#define AR_AMOUNT    1 // fracplies 
+//#define AR_AMOUNT    1 // fracplies 
 
 #define LMR_THRESH   2 // nb siblings
 #define LMR_AMOUNT   2 // fracplies 

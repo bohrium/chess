@@ -90,7 +90,7 @@ ScoredMove get_best_move(Board* B, const int depth, int alpha, int beta, bool st
             bool skip = false;
             if (( is_white && beta +NMR_THRESH<=child.score) ||
                 (!is_white && child.score<=alpha-NMR_THRESH)) {
-                best = {child.m, child.score, 0};//child.height+1}; 
+                best = {unk_move, child.score, 0};//child.height+1}; 
                 skip = true;
             }
             undo_null(B);
@@ -119,11 +119,14 @@ ScoredMove get_best_move(Board* B, const int depth, int alpha, int beta, bool st
           reduction += CSR_AMOUNT;
         } 
         #endif//ALLOW_CSR
-        #if ALLOW_AR
-        if (MIN_FILTER_DEPTH <=depth && AR_THRESH<=l) {
-            reduction += AR_AMOUNT;
-        } 
-        #endif//ALLOW_AR 
+        if (MIN_FILTER_DEPTH <=depth && l==AR_THRESH) {
+            trigger_lmr = true;
+        }
+        //#if ALLOW_AR
+        //if (MIN_FILTER_DEPTH <=depth && AR_THRESH<=l) {
+        //    reduction += AR_AMOUNT;
+        //} 
+        //#endif//ALLOW_AR 
 
         /*--------  0.4.2. display move under consideration  ----------------*/
         BARK(verbose,print_move(B,m));

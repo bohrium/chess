@@ -2,6 +2,7 @@
 #include "Search.h"
 #include "Helpers.h"
 #include <iostream>
+#include <iomanip>
 #include <stdlib.h>
 #include <time.h>
 #include <thread>
@@ -36,13 +37,14 @@ int main(int argc, char** argv)
         for (int k=0; k!=20; ++k) { std::cout << std::endl; }
         //std::cout << "\033[20B" << std::flush;
         //ScoredMove sm = get_best_move_multithreaded(&B, nb_plies, alpha, beta, layers, pv_table);
-        ScoredMove sm = get_best_move(&B, nb_plies, alpha, beta, true, true, MAX_VERBOSE, pv_table); 
+        ScoredMove sm = get_best_move(&B, nb_plies, alpha, beta, true, false, MAX_VERBOSE, pv_table); 
         std::cout << "\033[20A" << std::flush;
 
         std::cout << (t%2==0 ? 'W' : 'B');
-        std::cout << " plays (height " << ANSI_GREEN << sm.height << ANSI_YELLOW << ") ";
+        std::cout << " plays (height " << ANSI_GREEN << std::right << std::setw(2) << sm.height << ANSI_YELLOW << ") ";
         print_pv(&B, nb_plies, MAX_VERBOSE, pv_table);
-        std::cout << " " << ANSI_RED << get_best_move(&B, NB_COMMENTARY_PLIES, -KING_POINTS/2, +KING_POINTS/2, true, true, 0, pv_table).score << ANSI_YELLOW; 
+        int score = get_best_move(&B, NB_COMMENTARY_PLIES, -KING_POINTS/2, +KING_POINTS/2, true, true, 0, pv_table).score;
+        std::cout << " " << ANSI_RED << std::showpos << std::right << std::setw(5) << score << std::noshowpos << ANSI_YELLOW; 
         std::cout << "            " << std::endl;
 
         apply_move(&B, sm.m);

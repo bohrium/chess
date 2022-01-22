@@ -3,6 +3,9 @@
 #include <iostream>
 
 // BIG TODO: hook up eval function to these parameters!
+
+#define TO_MOVE_BONUS   13
+
 /* material parameters */
 
 #define KNIGHT_BONUS    34
@@ -135,7 +138,8 @@ int evaluate(Board* B) /* todo: constify type signature */
         return -KING_POINTS/2; /* black wins*/
     }
 
-    return score_total(B->evaluation_stack.back());
+    return score_total(B->evaluation_stack.back()) + 
+        (B->next_to_move==Color::white ? +1 : -1) * TO_MOVE_BONUS;
 }
 
 
