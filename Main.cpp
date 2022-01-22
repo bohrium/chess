@@ -8,9 +8,9 @@
 #include <thread>
 
 /* WARNING: if NB_PLIES too small, also should update verbose in main.c */
-#define NB_WHITE_PLIES      12
-#define NB_BLACK_PLIES      10
-#define NB_COMMENTARY_PLIES 10
+#define NB_WHITE_PLIES      10
+#define NB_BLACK_PLIES       8
+#define NB_COMMENTARY_PLIES  8
 
 PVTable pv_table;
 

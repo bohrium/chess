@@ -64,8 +64,8 @@ struct Board {
 };
 Board copy_board(Board B);
 
-Piece get_piece(Board const* B, Coordinate coor);
-bool kronecker_piece(Board const* B, Coordinate coor, Piece p);
+Piece get_piece(Board const* B, Coordinate rc);
+bool kronecker_piece(Board const* B, Coordinate rc, Piece p);
 
 extern Species init_row[];
 

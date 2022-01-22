@@ -72,7 +72,7 @@ void init_board(Board* B)
         }
     }
 
-    int const xrays[3][8] = {{ 0, 1, 1, 1, 1, 1, 1, 0},
+    int const xrays[3][8] = {{ 0, 1, 1, 0, 1, 0, 1, 0}, /* king doesn't count as attacker (should we change this ??) */
                              { 1, 1, 1, 3, 3, 1, 1, 1},
                              { 1, 0, 1, 0, 0, 1, 0, 1}};
     for (int c=0; c!=8; ++c) {
@@ -130,6 +130,18 @@ void print_board_fancy(Board const* B)
             std::cout << (((c==7||(rr/height)==7) && rr%height==height-1) ? " ." : "  ");
             //std::cout << "  ";
         }
+        auto hued_digit = [](char const* ansi_hue, int nb) {
+            if (!nb) { std::cout << ansi_hue << "."; }
+            else     { std::cout << ansi_hue << nb; }
+        };
+        auto comp_sq_counts = [hued_digit](int const arr[2][8][8], int row) {
+            for(int k=0; k!=8; ++k) {
+                hued_digit(ANSI_CYAN,    arr[0][row][k]);
+                hued_digit(ANSI_MAGENTA, arr[1][row][k]);
+                std::cout << " ";
+            }
+        };
+
         std::cout << "      ";
         switch (rr) {
         break; case  0: std::cout << "turn = " << (is_white?ANSI_MAGENTA:ANSI_CYAN) << (is_white?"White":"Black");
@@ -139,6 +151,23 @@ void print_board_fancy(Board const* B)
         break; case  4: std::cout << "kng = " << ANSI_RED << std::setw(4) << std::right << std::showpos << ds.king_safety + 13 * ( B->nb_king_attacks_near[0]-B->nb_king_attacks_near[1]);
         break; case  5: std::cout << "pwn = " << ANSI_RED << std::setw(4) << std::right << std::showpos << ds.pawn_structure;
         break; case  6: std::cout << "sqr = " << ANSI_RED << std::setw(4) << std::right << std::showpos << ds.cozy_squares;
+        break; case  7: comp_sq_counts(B->nb_xrays, 0);
+        break; case  8: comp_sq_counts(B->nb_xrays, 1);
+        break; case  9: comp_sq_counts(B->nb_xrays, 2);
+        break; case 10: comp_sq_counts(B->nb_xrays, 3);
+        break; case 11: comp_sq_counts(B->nb_xrays, 4);
+        break; case 12: comp_sq_counts(B->nb_xrays, 5);
+        break; case 13: comp_sq_counts(B->nb_xrays, 6);
+        break; case 14: comp_sq_counts(B->nb_xrays, 7);
+        break; case 15:
+        break; case 16: comp_sq_counts(B->attacks_by_pawn, 0);
+        break; case 17: comp_sq_counts(B->attacks_by_pawn, 1);
+        break; case 18: comp_sq_counts(B->attacks_by_pawn, 2);
+        break; case 19: comp_sq_counts(B->attacks_by_pawn, 3);
+        break; case 20: comp_sq_counts(B->attacks_by_pawn, 4);
+        break; case 21: comp_sq_counts(B->attacks_by_pawn, 5);
+        break; case 22: comp_sq_counts(B->attacks_by_pawn, 6);
+        break; case 23: comp_sq_counts(B->attacks_by_pawn, 7);
         }
         std::cout << std::noshowpos << ANSI_YELLOW << std::endl;
     }

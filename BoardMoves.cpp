@@ -268,13 +268,50 @@ void undo_move(Board* B, Move m)
 
 ////
 
-void update_xrays(Board* B, Coordinate rc, Piece p, bool is_add) 
+void update_xrays_by_pawn(Board* B, Coordinate rc, Piece p, bool is_add) 
 {
     int const sign_d = is_add ? +1 : -1;
     Color const self = p.color;
     Color const them = flip_color(self);
+    Piece const pawn = {self, Species::pawn};
 
-    Coordinate kl = B->king_locs[them].back();
+    for (int dr=-1; dr!=2; ++dr) {
+        for (int dc=-1; dc!=2; ++dc) {
+            if (dr*dr+dc*dc==0) { continue; }
+            Piece goal_a = {self, Species::queen};
+            Piece goal_b = (dr*dr+dc*dc==2) ? Piece{self, Species::bishop}
+                                            : Piece{self, Species::rook};
+            int nb_goals = 0;
+            for (int t=1; t!=8; ++t) {
+                Coordinate new_rc = {rc.row+dr*t,rc.col+dc*t};
+                if (!is_valid(new_rc)) { break; }
+                if (kronecker_piece(B, new_rc, goal_a) ||
+                    kronecker_piece(B, new_rc, goal_b)) {
+                    nb_goals += 1;
+                }
+                if (kronecker_piece(B, new_rc, pawn)) { break; } /* can't see through own pawn */
+            }
+
+            if (!nb_goals) { continue; }
+
+            for (int t=1; t!=8; ++t) {
+                Coordinate new_rc = {rc.row-dr*t,rc.col-dc*t}; /* go in opposite direction */
+                if (!is_valid(new_rc)) { break; }
+                B->nb_xrays[self][new_rc.row][new_rc.col] -= sign_d * nb_goals;
+                if (kronecker_piece(B, new_rc, pawn)) { break; } /* can't see through own pawn */
+            }
+        }
+    }
+}
+
+void update_xrays_by_piece(Board* B, Coordinate rc, Piece p, bool is_add) 
+{
+    int const sign_d = is_add ? +1 : -1;
+    Color const self = p.color;
+    Color const them = flip_color(self);
+    Piece const pawn = {self, Species::pawn};
+
+    //Coordinate kl = B->king_locs[them].back();
 
     switch (p.species) {
     break; case Species::knight: 
@@ -284,7 +321,7 @@ void update_xrays(Board* B, Coordinate rc, Piece p, bool is_add)
                 Coordinate new_rc = {rc.row+dr,rc.col+dc};
                 if (!is_valid(new_rc)) { continue; }
                 B->nb_xrays[self][new_rc.row][new_rc.col] += sign_d;
-                if (ABS(new_rc.row-kl.row)<=1 && ABS(new_rc.col-kl.col)<=1) { B->nb_king_attacks_near[them] += sign_d; }
+                //if (ABS(new_rc.row-kl.row)<=1 && ABS(new_rc.col-kl.col)<=1) { B->nb_king_attacks_near[them] += sign_d; }
             }
         }
     break; case Species::bishop: 
@@ -295,7 +332,8 @@ void update_xrays(Board* B, Coordinate rc, Piece p, bool is_add)
                     Coordinate new_rc = {rc.row+dr*t,rc.col+dc*t};
                     if (!is_valid(new_rc)) { break; }
                     B->nb_xrays[self][new_rc.row][new_rc.col] += sign_d;
-                    if (ABS(new_rc.row-kl.row)<=1 && ABS(new_rc.col-kl.col)<=1) { B->nb_king_attacks_near[them] += sign_d; }
+                    //if (ABS(new_rc.row-kl.row)<=1 && ABS(new_rc.col-kl.col)<=1) { B->nb_king_attacks_near[them] += sign_d; }
+                    if (kronecker_piece(B, new_rc, pawn)) { break; } /* can't see through own pawn */
                 }
             }
         }
@@ -307,7 +345,8 @@ void update_xrays(Board* B, Coordinate rc, Piece p, bool is_add)
                     Coordinate new_rc = {rc.row+dr*t,rc.col+dc*t};
                     if (!is_valid(new_rc)) { break; }
                     B->nb_xrays[self][new_rc.row][new_rc.col] += sign_d;
-                    if (ABS(new_rc.row-kl.row)<=1 && ABS(new_rc.col-kl.col)<=1) { B->nb_king_attacks_near[them] += sign_d; }
+                    //if (ABS(new_rc.row-kl.row)<=1 && ABS(new_rc.col-kl.col)<=1) { B->nb_king_attacks_near[them] += sign_d; }
+                    if (kronecker_piece(B, new_rc, pawn)) { break; } /* can't see through own pawn */
                 }
             }
         }
@@ -319,7 +358,8 @@ void update_xrays(Board* B, Coordinate rc, Piece p, bool is_add)
                     Coordinate new_rc = {rc.row+dr*t,rc.col+dc*t};
                     if (!is_valid(new_rc)) { break; }
                     B->nb_xrays[self][new_rc.row][new_rc.col] += sign_d;
-                    if (ABS(new_rc.row-kl.row)<=1 && ABS(new_rc.col-kl.col)<=1) { B->nb_king_attacks_near[them] += sign_d; }
+                    //if (ABS(new_rc.row-kl.row)<=1 && ABS(new_rc.col-kl.col)<=1) { B->nb_king_attacks_near[them] += sign_d; }
+                    if (kronecker_piece(B, new_rc, pawn)) { break; } /* can't see through own pawn */
                 }
             }
         }
@@ -366,7 +406,8 @@ void change_piece(Board* B, Coordinate rc, Piece p, bool is_add)
         int kq = quintant_from(B->king_locs[them].back());
         B->nb_pieces_by_quintant[self][pq] += sign_d; 
         
-        update_xrays(B, rc, p, is_add);
+        update_xrays_by_piece(B, rc, p, is_add);
+        update_king_attacks(B, rc, p, is_add);
         //{ /* king-xrays */
         //    /* TODO */
         //}
@@ -385,6 +426,7 @@ void change_piece(Board* B, Coordinate rc, Piece p, bool is_add)
             if (c != 7) { B->attacks_by_pawn[self][r-sign][c+1] += sign_d; }
             /* TODO; note that order of operations might depend on is_add */
         }
+        update_xrays_by_pawn(B, rc, p, is_add); 
         //{ /* king x-rays */
         //}
         //{ /* loose pieces */
@@ -416,7 +458,8 @@ void update_least_advanced(Board* B, Color side, int col) {
         return;
     }
     for (int row=start; row!=end; row+=step) {
-        if (!piece_equals(get_piece(B, {row,col}), {side,Species::pawn})) { continue; }
+        //if (!piece_equals(get_piece(B, {row,col}), {side,Species::pawn})) { continue; }
+        if (!kronecker_piece(B, {row,col}, {side,Species::pawn})) { continue; }
         B->least_advanced[side][col] = row;
         return;
     }
