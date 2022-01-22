@@ -33,6 +33,7 @@ struct Board {
     std::vector<Coordinate> king_locs[2]; /* TODO: swap axes */
     int nb_pieces_by_quintant[2][4];
     int nb_xrays[2][8][8];
+    int nb_king_attacks_near[2];
 
     // PAWN STRUCTURE
     /*     (--- CAUTION:   rank == 7-row   ---)
@@ -47,15 +48,15 @@ struct Board {
     int attacks_by_pawn[2][8][8];
     //bool weak_squares[2][8][8];
     //bool outposts[2][8][8];
-    //int nb_weak_squares[2];
+    int nb_weak_squares[2];
+
+    // KNIGHT TERMS
+    //int nb_knights_on_weak_squares[2]; 
+    //int nb_knights_on_outposts[2]; 
 
     // BISHOP TERMS
     int nb_pawns_by_parity[2][2];
     int nb_bishops_by_parity[2][2];
-
-    // KNIGHT TERMS
-    int nb_knights_on_weak_squares[2]; 
-    int nb_knights_on_outposts[2]; 
 
     // MAJOR TERMS
     int nb_rooks_by_file[2][8];
@@ -73,9 +74,9 @@ void init_board(Board* B);
 void print_board(Board const* B);
 bool read_board(Board* B, char const* string);
 
-extern unsigned int hash_by_piece[3][7];
-extern unsigned int hash_by_square[8][8];
-extern int quintant_by_coor[8][8];
+extern unsigned int const hash_by_piece[3][7];
+extern unsigned int const hash_by_square[8][8];
+extern int const quintant_by_coor[8][8];
 int quintant_from(Coordinate rc);
 
 // A chess position can have at most 332 possible next moves:
@@ -108,7 +109,7 @@ extern int KING_POINTS;
 int evaluate(Board* B);
 void add_eval_diff(Board* B, Coordinate rc, Piece p, bool is_add);
 
-///* REQUIRES: assumes nb_pawns_by_file is correct! */
-//void update_least_advanced(Board* B, Color side, int col);
+/* REQUIRES: assumes nb_pawns_by_file is correct! */
+void update_least_advanced(Board* B, Color side, int col);
 
 #endif//BOARD_H

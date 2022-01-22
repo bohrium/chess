@@ -52,7 +52,7 @@ bool piece_equals(Piece p, Piece q);
 struct Coordinate {
     int row, col; 
 };
-bool is_valid(Coordinate coor);
+bool is_valid(Coordinate rc);
 int parity(Coordinate rc);
 
 /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

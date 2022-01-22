@@ -51,30 +51,44 @@ void init_board(Board* B)
     B->king_locs[0].push_back({0, 4});
     B->king_locs[1].push_back({7, 4});
 
-    for (int color=0; color!=2; ++color) {
+    for (int side=0; side!=2; ++side) {
         for (int c=0; c!=8; ++c) {
-            B->nb_pawns_by_file[color][c] = 1;
-            B->nb_rooks_by_file[color][c] = 0;
-            B->least_advanced[color][c] = color==Color::white ? 6 : 1;
+            B->nb_pawns_by_file[side][c] = 1;
+            B->nb_rooks_by_file[side][c] = 0;
+            B->least_advanced[side][c] = side==Color::white ? 6 : 1;
         }
-        B->nb_rooks_by_file[color][0] = 1;
-        B->nb_rooks_by_file[color][7] = 1;
+        B->nb_rooks_by_file[side][0] = 1;
+        B->nb_rooks_by_file[side][7] = 1;
         for (int p=0; p!=2; ++p) {
-            B->nb_pawns_by_parity[color][p] = 4;
-            B->nb_bishops_by_parity[color][p] = 1;
+            B->nb_pawns_by_parity[side][p] = 4;
+            B->nb_bishops_by_parity[side][p] = 1;
         }
     }
-    B->nb_pieces_by_quintant[0][0] = 4;
-    B->nb_pieces_by_quintant[0][1] = 3;
-    B->nb_pieces_by_quintant[0][2] = 0;
-    B->nb_pieces_by_quintant[0][3] = 0;
-    B->nb_pieces_by_quintant[0][4] = 0;
+    int const quint_counts[2][5] = {{4,3,0,0,0}, {0,0,4,3,0}};
+    for (int side=0; side!=2; ++side) {
+        for (int q=0; q!=5; ++q) {
+            B->nb_pieces_by_quintant[side][q] = quint_counts[side][q];
+        }
+    }
 
-    B->nb_pieces_by_quintant[1][0] = 0;
-    B->nb_pieces_by_quintant[1][1] = 0;
-    B->nb_pieces_by_quintant[1][2] = 4;
-    B->nb_pieces_by_quintant[1][3] = 3;
-    B->nb_pieces_by_quintant[1][4] = 0;
+    int const xrays[3][8] = {{ 0, 1, 1, 1, 1, 1, 1, 0},
+                             { 1, 1, 1, 3, 3, 1, 1, 1},
+                             { 1, 0, 1, 0, 0, 1, 0, 1}};
+    for (int c=0; c!=8; ++c) {
+        for (int r=0; r!=8; ++r) {
+            for (int side=0; side!=2; ++side) {
+                B->nb_xrays[side][r][c] = 0;
+            }
+        }
+        B->nb_xrays[0][0][c] = xrays[0][c];
+        B->nb_xrays[0][1][c] = xrays[1][c];
+        B->nb_xrays[0][2][c] = xrays[2][c];
+        B->nb_xrays[1][5][c] = xrays[2][c];
+        B->nb_xrays[1][6][c] = xrays[1][c];
+        B->nb_xrays[1][7][c] = xrays[0][c];
+    }
+    B->nb_king_attacks_near[0] = 0;
+    B->nb_king_attacks_near[1] = 0;
 }
 
 void print_board(Board const* B)
@@ -112,20 +126,31 @@ void print_board(Board const* B)
     }
     std::cout << "; ";
     std::cout << ANSI_BLUE << B->plies_since_irreversible.back() << ANSI_YELLOW << " plies";
-    //new_line();
-    //std::cout << B->nb_pawns_by_parity[0][0];
-    //std::cout << B->nb_pawns_by_parity[0][1];
-    //std::cout << B->nb_pawns_by_parity[0][0];
-    //std::cout << B->nb_pawns_by_parity[0][1];
-    //std::cout << B->nb_bishops_by_parity[0][0];
-    //std::cout << B->nb_bishops_by_parity[0][1];
-    //std::cout << B->nb_bishops_by_parity[0][0];
-    //std::cout << B->nb_bishops_by_parity[0][1];
-    //std::cout << B->nb_pawns_by_file[0][0];
-    //std::cout << B->nb_pawns_by_file[0][1];
-    //std::cout << B->nb_pawns_by_file[0][0];
-    //std::cout << B->nb_pawns_by_file[0][1];
     new_line();
+    //std::cout << B->nb_pawns_by_parity[0][0];
+    //std::cout << B->nb_pawns_by_parity[0][1];
+    //std::cout << B->nb_pawns_by_parity[0][0];
+    //std::cout << B->nb_pawns_by_parity[0][1];
+    //std::cout << B->nb_bishops_by_parity[0][0];
+    //std::cout << B->nb_bishops_by_parity[0][1];
+    //std::cout << B->nb_bishops_by_parity[0][0];
+    //std::cout << B->nb_bishops_by_parity[0][1];
+    //std::cout << B->nb_pawns_by_file[0][0];
+    //std::cout << B->nb_pawns_by_file[0][1];
+    //std::cout << B->nb_pawns_by_file[0][0];
+    //std::cout << B->nb_pawns_by_file[0][1];
+    ////
+    //new_line();
+    //std::cout << B->nb_king_attacks_near[0] << " & ";
+    //std::cout << B->nb_king_attacks_near[1];
+    //new_line();
+    //for (int r=0; r!=8; ++r) {
+    //    for (int c=0; c!=8; ++c) {
+    //        std::cout << B->nb_xrays[0][r][c] << ":"
+    //                  << B->nb_xrays[1][r][c] << " ";
+    //    }
+    //    new_line();
+    //}
     std::cout << ANSI_BLUE << B->hash << ANSI_YELLOW;
     new_line();
     DisaggregatedScore ds = B->evaluation_stack.back(); 
