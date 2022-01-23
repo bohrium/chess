@@ -353,8 +353,8 @@ void print_pv(Board* B, int depth, int verbose, PVTable parent)
 ====  2. MULTITHREADING  ======================================================
 =============================================================================*/
 
-#define THREADS_WIDTH 12
-#define ELDERS 2
+#define THREADS_WIDTH 9 /* TODO: alpha beta prune after bundle of threads */
+#define ELDERS 1
 #define COYOUTHS AR_THRESH 
 ScoredMove get_best_move_multithreaded(Board* B, const int depth, int alpha, int beta, int layers, PVTable parent)
 {
@@ -382,19 +382,24 @@ ScoredMove get_best_move_multithreaded(Board* B, const int depth, int alpha, int
     order_moves(B, &ML, ordering_depths[depth], 6, parent);
     ScoredMove sms[MAX_NB_MOVES];
 
-    ScoredMove best = {unk_move, is_white ? -KING_POINTS : +KING_POINTS};
+    ScoredMove best = {unk_move, is_white ? -KING_POINTS : +KING_POINTS, -1};
     for (int l=0; l!=ELDERS; ++l) {
-        int reduced_depth = depth-1; /* assume cosingular is triggered */
-        if (1 <= l) { reduced_depth -= 1; }
-        if (COYOUTHS <= l) { reduced_depth -= 1; }
+        //int reduced_depth = depth-1; /* assume cosingular is triggered */
+        //if (1 <= l) { reduced_depth -= 1; }
+        //if (COYOUTHS <= l) { reduced_depth -= 1; }
+        int reduced_depth = depth-1;
 
         Move m = ML.moves[l];
-        for (int i=0; i!=5-layers; ++i) { std::cout << "\033[2C"; }
-        print_move(B, m); std::cout << "\n\033[100D" << std::flush;
+
+        std::cout << "\033[100D" << std::flush;
+        for (int i=0; i!=3-layers; ++i) { std::cout << "\033[8C"; }
+        print_move(B, m);
+        std::cout << "\033[100D" << std::flush;
+
         apply_move(B, m);
-        sms[l] = {m, get_best_move_multithreaded(B, reduced_depth, alpha, beta, layers-1, parent).score};
+        ScoredMove sm = get_best_move_multithreaded(B, reduced_depth, alpha, beta, layers-1, parent);
+        sms[l] = {m, sm.score, sm.height+1};
         undo_move(B, m);
-        std::cout << "\033[1A" << std::flush;
 
         if ( is_white && best.score < sms[l].score ||
             !is_white && sms[l].score < best.score) {
@@ -419,10 +424,12 @@ ScoredMove get_best_move_multithreaded(Board* B, const int depth, int alpha, int
                 std::thread([&best, is_white, &ML,&sms,l,alpha,beta,depth,layers, &my_pv_tables](Board by_val){
                   Move m = ML.moves[l];
                   apply_move(&by_val, m);
-                  int reduced_depth = depth-1; /* assume cosingular is triggered */
-                  if (1 <= l) { reduced_depth -= 1; }
-                  if (COYOUTHS <= l) { reduced_depth -= 1; }
-                  sms[l] = {m, get_best_move_multithreaded(&by_val, reduced_depth, alpha, beta, layers-3,  *(my_pv_tables[l])).score};
+                  //int reduced_depth = depth-1; /* assume cosingular is triggered */
+                  //if (1 <= l) { reduced_depth -= 1; }
+                  //if (COYOUTHS <= l) { reduced_depth -= 1; }
+                  int reduced_depth = depth-3;
+                  ScoredMove sm = get_best_move_multithreaded(&by_val, reduced_depth, alpha, beta, layers-2, *(my_pv_tables[l]));
+                  sms[l] = {m, sm.score, sm.height+1};
                   undo_move(&by_val, m);
                   if ( is_white && best.score < sms[l].score ||
                       !is_white && sms[l].score < best.score) {
@@ -432,11 +439,19 @@ ScoredMove get_best_move_multithreaded(Board* B, const int depth, int alpha, int
         }
         //for (int l=ML.length-1; l>=ELDERS; --l) {
         for (int l=L; l<ML.length && l<L+THREADS_WIDTH; ++l) {
-            for (int i=0; i!=5-layers; ++i) { std::cout << "  "; }
-            std::cout << "waiting on "; print_move(B, ML.moves[l]); std::cout << std::flush; 
-            std::cout << "\n\033[100D" << std::flush;
+
+            std::cout << "\033[100D" << std::flush;
+            for (int i=0; i!=3-layers; ++i) { std::cout << "\033[8C"; }
+            std::cout << "$"; print_move(B, ML.moves[l]);
+            std::cout << "\033[100D" << std::flush;
+
             threads[l-L].join();
-            std::cout << "\033[1A                              \n\033[1A" << std::flush;
+
+            std::cout << "\033[100D" << std::flush;
+            for (int i=0; i!=3-layers; ++i) { std::cout << "\033[8C"; }
+            std::cout << "                              " << std::flush;
+            std::cout << "\033[100D" << std::flush;
+
             update_table(parent, *(my_pv_tables[l]));
             free(my_pv_tables[l]);
         }

@@ -15,7 +15,7 @@
 
 #define BISHOP_PAIR     34
 #define MAJOR_PAIR      34 /* malus */
-#define ROOK_PAWN       13 /* malus */
+#define ROOK_PAWN       13 /* malus */ /* TODO: ROOK-PAWN, KNIGHT-PAWN BILINEARS!! */
 #define KNIGHT_PAWN      5
 
 /* king safety parameters */
@@ -81,17 +81,17 @@ int piece_placement[][8][8] = {
         {_X,_x, 0,oo,oo, 0,_x,_X},
         {_X,_x, 0, 0, 0, 0,_x,_X},
         {_X,xx,_x,_x,_x,_x,xx,_X},
-        {XX,xx,xx,xx,xx,xx,xx,XX},
+        {XX,_X,_X,_X,_X,_X,_X,XX},
     },
     /*bishop*/ { /* bishops love long diagonals */
-        {xx,xx,xx,xx,xx,xx,xx,xx},
-        {xx,oo, 0, 0, 0, 0,oo,xx},
-        {xx, 0,oo, 0, 0,oo, 0,xx},
-        {xx, 0, 0,oo,oo, 0, 0,xx},
-        {xx, 0, 0,oo,oo, 0, 0,xx},
-        {xx, 0,oo, 0, 0,oo, 0,xx},
-        {xx,oo, 0, 0, 0, 0,oo,xx},
-        {xx,xx,xx,xx,xx,xx,xx,xx},
+        {XX,_X,_X,_X,_X,_X,XX,XX},
+        {XX,oo, 0, 0, 0, 0,oo,XX},
+        {_X, 0,oo, 0, 0,oo, 0,_X},
+        {_X, 0, 0,oo,oo, 0, 0,_X},
+        {_X, 0, 0,oo,oo, 0, 0,_X},
+        {_X, 0,oo, 0, 0,oo, 0,_X},
+        {XX,oo, 0, 0, 0, 0,oo,XX},
+        {XX,XX,_X,_X,_X,_X,XX,XX},
     },
     /*rook*/ { /* rooks love 7th ranks */
         { 0, 0, 0, 0, 0, 0, 0, 0},
@@ -140,7 +140,7 @@ int evaluate(Board* B) /* todo: constify type signature */
 
     return score_total(B->evaluation_stack.back()) 
        + TO_MOVE_BONUS * (B->next_to_move==Color::white ? +1 : -1)
-       + 13 * ( B->nb_king_attacks_near[0] 
+       + 34 * ( B->nb_king_attacks_near[0] 
                -B->nb_king_attacks_near[1]);
     /* TODO: incorporate king attacks into difference eval */
 }

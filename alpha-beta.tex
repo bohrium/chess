@@ -1,0 +1,156 @@
+\documentclass[12pt]{article}
+\usepackage[top=1in,bottom=1in,left=1in,right=1in]{geometry}
+
+\usepackage{amsmath, amssymb}
+
+\title{Notes on Evaluation of Game Trees}
+\author{sam t, 2022-01}
+\date{}
+
+\newcommand{\bb}{\mathfrak{b}}
+\newcommand{\dd}{\mathfrak{d}}
+\newcommand{\ii}{\mathfrak{i}}
+\newcommand{\jj}{\mathfrak{j}}
+
+\begin{document}
+  \maketitle
+
+  \section{Alpha Beta Search}
+
+    \subsection{Game Trees}
+
+      We wish to determine the minimax score of a zero-sum two-player
+      full-information game tree.  Say the tree has depth $D$ and branching
+      factor $B$ and that its leaves are valued in the real numbers.  We write
+      $r$ for the root node, $m(n)$ for the result of applying move $m$ to node
+      $n$, and $s(n)$ for the value of a leaf node $n$.  The depth $d(n)$ of a
+      node obeys $d(r)=0$ and $d(m(n))=d(n)+1$.
+
+      Without loss, the first player seeks to maximize the score.  Then we
+      extend $s$ to non-leaf nodes $n$ via $s(n) = {\max_m}^{d(n)} s(m(n))$.
+      Here, $\max^{i}$ denotes $\max$ or $\min$ as $i$ is even or odd.  this
+      inductive definition of tree value translates directly to the recursive
+      \textbf{minimax} algorithm evaluating game trees.  
+
+    \subsection{Alpha Beta Search}
+
+      We can often inspect fewer than all $B^D$ leaves.  The crucial
+      observation is that, whether or not $(a\wedge b) \geq c$ holds or fails
+      independently of $d$ --- and when it does hold,
+      $ 
+          (a\wedge b) \vee (c\wedge d) 
+      $
+      also doesn't depend on $d$.  So we may verify and exploit the hypothesis
+      while only ever inspecting only $3$ of the $4$ leaves.  
+      %
+      What permits these savings is that, though we wish to evaluate $a\wedge
+      b$ exactly, we merely seek to bound $c\wedge d$.
+      %
+      The same idea may save more nodes in more elaborate cases.
+      %
+      For instance, imagine a $16$-leaf binary tree each of whose four $4$-leaf
+      sub-trees verifies the above bound and whose sub-trees' values also
+      verify the above bound.  Then we may get by while inspecting only $9$ of
+      the $16$ leaves.
+
+      But we may improve still further over recursive application of that $3/4$
+      factor. 
+      Say $(a\wedge b) \geq c$ and
+          $(a\wedge b) \leq (e\wedge f)$ and
+          $(A\vee B) \geq C$ and 
+          $(a\vee b) \geq (A\vee B)$. 
+      Then
+      \begin{align*}
+          &(((a\wedge b) \vee (c\wedge d)) ~\wedge~    
+           ((e\wedge f) \vee (g\wedge h))) ~~\vee~~   \\
+          &(((A\wedge B) \vee (C\wedge D)) ~\wedge~   
+           ((E\wedge F) \vee (G\wedge H)))            \\ 
+      \end{align*}
+      does not depend on $d,g,h,D,E,F,G,H$.  Na\"ive recursion with the $3/4$s
+      would have inspected the leaf $g$.  But due to an ``out-of-phase'' or
+      ``staggered'' application of the key observation, the hypothesis 
+      $
+          ((a\!\wedge\!b)\,\vee\,(c\!\wedge\!d)) \,\leq\, (e\!\wedge\!f))
+      $
+      implies we may ignore the entire pair $(g\!\wedge\!h)$ 
+      %
+      In this favorable circumstance, we may get by while inspecting only $8$
+      of the $16$ leaves.  
+
+      WRITE DOWN ALPHA BETA
+
+    \subsection{Crude Analyses}
+
+      BEST CASE ANALYSIS: $b^{d/2} 1^{d/2}$ 
+
+      VERY ROUGH AVERAGE CASE ANALYSIS: $b^{d/2} (b/2)^{d/2}$ 
+
+    \subsection{Move Ordering, Interior Estimators}
+
+    \subsection{Principle Variation Search}
+
+      A further refinement 
+
+  \section{Analysis with Markov Scores}
+
+    \subsection{Model}
+
+      We now model the distribution of leaf values for games such as chess.
+      (A chess engine might seek to approximate the value of a tree with $B=D=30$). 
+
+      Chess often features nodes ``quiet'' in the sense that their direct
+      children are pretty similar in quality and score.  The closed, positional
+      games of Tigran Petrosian and Anatoly Karpov give a wealth of examples.
+      Due to quietness, nodes with late common ancestors tend to have similar
+      values.  We model this by using the game tree's underlying graph as 
+      a graphical model of ``hidden values'' $h(n)$ that agree with the
+      score $s(n)$ at the leaves.
+      %
+      Specifically, let $h(r)=0$ and that $h(m(n)) \sim L(h(n), 1)$ obeys a
+      two-sided variance-$1$ exponential distribution around $h(n)$.  We assume
+      the steps $\epsilon(m,n)=h(m(n))-h(n)$ are all independent. 
+      (If we allow the variance to depend on depth, then the case where the
+      pre-leaf-to-leaf steps account for all the variance is the case where the
+      leaf scores are all independent).
+
+      Let's write $v(n) = s(n)-h(n)$ for the centered sub-tree value, which is
+      interesting because the centered values at a given depth are all
+      i.i.d.\ and because $v(r)=s(r)$.  We have $v(n)=0$ on leaves and
+      $$
+          v(n) = {\max_m}^{d(n)} v(m(n)) + \epsilon(m,n)
+      $$
+      on branches.
+      %
+      Suppose that $v(m(n))$ has mean $\mu$ and variance $\sigma^2$. 
+      %
+      Meanwhile, $\epsilon(m,n)$ has mean $0$ and variance $1$.
+
+      We expect the maximum to be near the top $1/(B+1)=1/(2B^\prime)$th quantile
+      of the distribution of $v(m(n))+\epsilon(m,n)$.  This distribution has
+      mean $\mu$ and variance $\sigma^2+1$.  In turn, this quantile is roughly
+      $$
+          \tilde \mu \approx \mu + \sqrt{\sigma^2+1} \cdot \log(B^\prime)
+      $$
+      The typical scale will also be
+      $\sqrt{\sigma^2+1} \cdot 1/B^\prime$.
+      %
+      We see that the scale will converge to a fixed point of
+      $
+          \tilde \sigma^2 \approx (\tilde \sigma^2 + 1) / B^\prime
+      $
+      or
+      $$
+          \tilde \sigma^2 \approx 1/B^\prime
+      $$
+
+      Since we alternate maximizations and minimizations, $\mu$ doesn't
+      accumulate much net drift.  This, for nodes far above the leaves,
+      including for the root, $v(n)$ tends to lie within some interval of width
+      roughly $(\log(B^\prime)+C) / B^\prime$ for some universal
+      constant $C$. 
+
+    \subsection{Evaluation with a Window}
+
+
+\end{document}
+

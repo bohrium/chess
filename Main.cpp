@@ -7,10 +7,14 @@
 #include <time.h>
 #include <thread>
 
-/* WARNING: if NB_PLIES too small, also should update verbose in main.c */
-#define NB_WHITE_PLIES      10
-#define NB_BLACK_PLIES       8
-#define NB_COMMENTARY_PLIES  8
+/* WARNING: if NB_DEPTH too small, also should update verbose in main.c */
+#define NB_WHITE_DEPTH       8
+#define NB_BLACK_DEPTH       8
+#define NB_COMMENTARY_DEPTH  8
+
+#define LINE_REPORT_PLIES 6 
+
+#define MULTITHREADED 0 
 
 PVTable pv_table;
 
@@ -25,38 +29,44 @@ int main(int argc, char** argv)
 
     zero_table(pv_table);
     
-    for (int t=0; ; ++t) {
+    for (int t=0; t!=240; ++t) {
+        // DISPLAY
         print_board_fancy(&B);
-        //char c; std::cin >> c;
-        //std::cout << "\033[15A" << std::flush; /* go up clear */
-        std::cout << "\033[33A" << std::flush; /* go up clear */
+        GO_UP(33);
 
+        // CALCULATION 
         std::cout << std::endl;
         int alpha=-KING_POINTS/2, beta=+KING_POINTS/2;
-        int nb_plies = t%2==0 ? NB_WHITE_PLIES : NB_BLACK_PLIES; 
-        int layers   = 3;
-        for (int k=0; k!=50; ++k) { std::cout << std::endl; }
-        //std::cout << "\033[20B" << std::flush;
-        //ScoredMove sm = get_best_move_multithreaded(&B, nb_plies, alpha, beta, layers, pv_table);
+        int nb_plies = t%2==0 ? NB_WHITE_DEPTH : NB_BLACK_DEPTH; 
+
+        GO_DOWN(40);
+#if MULTITHREADED
+        int thread_layers = 3;
+        ScoredMove sm = get_best_move_multithreaded(&B, nb_plies, alpha, beta, thread_layers, pv_table);
+#else
         ScoredMove sm = get_best_move(&B, nb_plies, alpha, beta, true, false, MAX_VERBOSE, pv_table); 
-        std::cout << "\033[50A" << std::flush;
+#endif
+        GO_UP(40);
 
-        for (int k=0; k!=200; ++k) { std::cout << " "; }
-        std::cout << "\33[200D";
-        std::cout << (t%2==0 ? 'W' : 'B');
-        std::cout << " plays (height " << ANSI_GREEN << std::right << std::setw(2) << sm.height << ANSI_YELLOW << ") ";
-        print_pv(&B, nb_plies, MAX_VERBOSE, pv_table);
-        int score = get_best_move(&B, NB_COMMENTARY_PLIES, -KING_POINTS/2, +KING_POINTS/2, true, true, 0, pv_table).score;
-        std::cout << " " << ANSI_RED << std::showpos << std::right << std::setw(5) << score << std::noshowpos << ANSI_YELLOW; 
-        std::cout << "            " << std::endl;
-
+        // GAME DYNAMICS
         apply_move(&B, sm.m);
         if (sm.m.taken.species == Species::king) {
             std::cout << "CHECKMATE!" << std::endl;
             break; 
         }
 
-        //char c;  std::cin >> c;
+        // COMMENTARY
+        ScoredMove commentary = get_best_move(&B, NB_COMMENTARY_DEPTH, -KING_POINTS/2, +KING_POINTS/2, true, true, 0, pv_table);
+        CLEAR_REST_OF_LINE;
+        if (t%2==0) { std::cout << COLORIZE(ANSI_MAGENTA, 'W'); }
+        else        { std::cout << COLORIZE(ANSI_CYAN   , 'B'); }
+        std::cout << " plays ";
+        std::cout << "(height " << COLORIZE(ANSI_GREEN, FLUSH_RIGHT(2, sm.height)) << ") ";
+        print_pv(&B, nb_plies, LINE_REPORT_PLIES, pv_table);
+        std::cout << " ";
+        std::cout << COLORIZE(ANSI_RED, SHOW_SIGN(FLUSH_RIGHT(4, commentary.score))); 
+        CLEAR_REST_OF_LINE;
+        std::cout << std::endl;
     }
     print_board(&B);    
 

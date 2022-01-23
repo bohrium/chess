@@ -1,3 +1,7 @@
+ab:
+	pdflatex alpha-beta.tex
+	evince alpha-beta.pdf
+
 all:
 	g++ -pthread --std=c++11 Main.cpp Pieces.cpp BoardBasic.cpp BoardMoves.cpp BoardEval.cpp Search.cpp -o main.o 
 

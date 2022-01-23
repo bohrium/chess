@@ -108,8 +108,8 @@ void print_board_fancy(Board const* B)
     bool is_white = (B->next_to_move == Color::white);
 
     for (int rr=0; rr!=8*height; ++rr) {
-        for (int k=0; k!=120; ++k) { std::cout << " "; }
-        std::cout << "\33[120D";
+        for (int k=0; k!=110; ++k) { std::cout << " "; }
+        std::cout << "\33[110D";
         for (int c=0; c!=8; ++c) {
             Piece p = B->grid[rr/height][c];
             //std::cout << ((rr%height==0) ? "` " : "  ");
@@ -148,7 +148,7 @@ void print_board_fancy(Board const* B)
         break; case  1: std::cout << "plies = " << ANSI_BLUE << B->plies_since_irreversible.back();
         break; case  2: std::cout << "hash = " << ANSI_BLUE << B->hash;
         break; case  3: std::cout << "mat = " << ANSI_RED << std::setw(4) << std::right << std::showpos << ds.material;
-        break; case  4: std::cout << "kng = " << ANSI_RED << std::setw(4) << std::right << std::showpos << ds.king_safety + 13 * ( B->nb_king_attacks_near[0]-B->nb_king_attacks_near[1]);
+        break; case  4: std::cout << "kng = " << ANSI_RED << std::setw(4) << std::right << std::showpos << ds.king_safety + 34 * ( B->nb_king_attacks_near[0]-B->nb_king_attacks_near[1]);
         break; case  5: std::cout << "pwn = " << ANSI_RED << std::setw(4) << std::right << std::showpos << ds.pawn_structure;
         break; case  6: std::cout << "sqr = " << ANSI_RED << std::setw(4) << std::right << std::showpos << ds.cozy_squares;
         break; case  7: comp_sq_counts(B->nb_xrays, 0);

@@ -1,3 +1,6 @@
 out
 gmon.out
 *.o
+*.out
+*.aux
+*.log
