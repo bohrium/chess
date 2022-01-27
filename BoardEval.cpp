@@ -8,7 +8,7 @@
 
 /* material parameters */
 
-#define KNIGHT_BONUS    34
+#define KNIGHT_BONUS    13
 #define BISHOP_BONUS    34
 #define ROOK_BONUS      89
 #define QUEEN_BONUS     89
@@ -143,7 +143,9 @@ int evaluate(Board* B) /* todo: constify type signature */
        + 13 * ( B->nb_king_attacks_near[0] 
                -B->nb_king_attacks_near[1]) 
        +  5 * ( B->nb_weak_squares[0] 
-               -B->nb_weak_squares[1]);
+               -B->nb_weak_squares[1]) 
+       +  5 * (-B->nb_xrays_by_side[0] 
+               +B->nb_xrays_by_side[1]);
     /* TODO: incorporate king attacks etc into difference eval */
 }
 
@@ -226,11 +228,11 @@ void add_eval_diff(Board* B, Coordinate rc, Piece p, bool is_add)
                                                  34); /* open */
         }
         { /* redundant-majors */
-            d_material -= sign * 34 * (B->nb_majors[self]-1);
+            d_material -= sign * 34 * (B->nb_majors[self] + (is_add ? -1 : 0));
         }
     break; case Species::queen:
         { /* redundant-majors */
-            d_material -= sign * 34 * (B->nb_majors[self]-1);
+            d_material -= sign * 34 * (B->nb_majors[self] + (is_add ? -1 : 0));
         }
     break; case Species::king:
         Coordinate old_rc = GET_FROM_LAST(B->king_locs[self], 2);

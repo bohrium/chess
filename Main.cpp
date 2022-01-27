@@ -9,8 +9,8 @@
 
 /* WARNING: if NB_DEPTH too small, also should update verbose in main.c */
 #define NB_WHITE_DEPTH      15
-#define NB_BLACK_DEPTH       6
-#define NB_COMMENTARY_DEPTH  6
+#define NB_BLACK_DEPTH       7
+#define NB_COMMENTARY_DEPTH  7
 
 #define LINE_REPORT_PLIES 6 
 

@@ -17,24 +17,25 @@ const int ordering_depths[]   = { -1, -1,  0,  1,  1,  1,  2,  2,  2,  3,  3,  3
 
 /* REDUCTION PARAMETERS */
 
-#define MIN_FILTER_DEPTH 6 // plies 
+#define RED_DEPTH_SOFT_FLOOR 6 // plies 
+#define RED_DEPTH_HARD_FLOOR 4 // plies 
 
 #define ALLOW_NMR 1
 //#define ALLOW_AR  1
 #define ALLOW_LMR 1
 #define ALLOW_CSR 1
 
-#define NMR_THRESH 50 // centipawns
-#define NMR_AMOUNT  2 // fracplies
+#define NMR_THRESH 50  // centipawns
+#define NMR_AMOUNT 0.8 // (fracplies
 
-#define AR_THRESH   8 // nb siblings
-//#define AR_AMOUNT   1 // fracplies 
+#define AR_THRESH 12  // nb siblings
+#define AR_AMOUNT 0.8 // fracplies 
 
-#define LMR_THRESH  2 // nb siblings
-#define LMR_AMOUNT  2 // fracplies 
+#define LMR_THRESH 2  // nb siblings
+#define LMR_AMOUNT 0.8 // fracplies 
 
 #define CSR_THRESH 50 // centipawns
-#define CSR_AMOUNT  2 // fracplies
+#define CSR_AMOUNT 0.8 // fracplies
 
 /* SEARCH METHODS */
 

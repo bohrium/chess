@@ -32,6 +32,9 @@ void init_board(Board* B)
     B->nb_weak_squares[0] = 8;
     B->nb_weak_squares[1] = 8;
 
+    B->nb_xrays_by_side[0] = 4; // knight moves
+    B->nb_xrays_by_side[1] = 4; // knight moves
+
     for (int r=0; r!=8; ++r) {
         for (int c=0; c!=8; ++c) {
             B->grid[r][c] = empty_piece;

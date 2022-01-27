@@ -33,6 +33,7 @@ struct Board {
     std::vector<Coordinate> king_locs[2]; /* TODO: swap axes */
     int nb_pieces_by_quintant[2][4];
     int nb_xrays[2][8][8];
+    int nb_xrays_by_side[2];
     int nb_king_attacks_near[2];
 
     // PAWN STRUCTURE
