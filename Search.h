@@ -3,7 +3,7 @@
 
 #include "Board.h"
 
-#define MAX_VERBOSE 3
+#define MAX_VERBOSE 4
 
 /* BASIC SEARCH PARAMETERS */
 
@@ -26,16 +26,16 @@ const int ordering_depths[]   = { -1, -1,  0,  1,  1,  1,  2,  2,  2,  3,  3,  3
 #define ALLOW_CSR 1
 
 #define NMR_THRESH 50  // centipawns
-#define NMR_AMOUNT 0.8 // (fracplies
+#define NMR_AMOUNT 0.9 // (fracplies
 
-#define AR_THRESH 12  // nb siblings
-#define AR_AMOUNT 0.8 // fracplies 
+#define AR_THRESH  8  // nb siblings
+#define AR_AMOUNT 0.9 // fracplies 
 
 #define LMR_THRESH 2  // nb siblings
 #define LMR_AMOUNT 0.8 // fracplies 
 
 #define CSR_THRESH 50 // centipawns
-#define CSR_AMOUNT 0.8 // fracplies
+#define CSR_AMOUNT 0.7 // fracplies
 
 /* SEARCH METHODS */
 

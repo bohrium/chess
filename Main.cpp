@@ -8,13 +8,13 @@
 #include <thread>
 
 /* WARNING: if NB_DEPTH too small, also should update verbose in main.c */
-#define NB_WHITE_DEPTH      15
-#define NB_BLACK_DEPTH       7
-#define NB_COMMENTARY_DEPTH  7
+#define NB_WHITE_DEPTH      17
+#define NB_BLACK_DEPTH      14
+#define NB_COMMENTARY_DEPTH 11
 
 #define LINE_REPORT_PLIES 6 
 
-#define MULTITHREADED 0 
+#define MULTITHREADED 1 
 
 PVTable pv_table;
 
@@ -29,7 +29,7 @@ int main(int argc, char** argv)
 
     zero_table(pv_table);
     
-    for (int t=0; t!=240; ++t) {
+    for (int t=0; t!=360; ++t) {
         // DISPLAY
         print_board_fancy(&B);
         GO_UP(33);
@@ -41,7 +41,7 @@ int main(int argc, char** argv)
 
         GO_DOWN(40);
 #if MULTITHREADED
-        int thread_layers = 3;
+        int thread_layers = 2;
         ScoredMove sm = get_best_move_multithreaded(&B, nb_plies, alpha, beta, thread_layers, pv_table);
 #else
         ScoredMove sm = get_best_move(&B, nb_plies, alpha, beta, true, false, MAX_VERBOSE, pv_table); 

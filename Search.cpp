@@ -353,7 +353,7 @@ void print_pv(Board* B, int depth, int verbose, PVTable parent)
 ====  2. MULTITHREADING  ======================================================
 =============================================================================*/
 
-#define THREADS_WIDTH 9 /* TODO: alpha beta prune after bundle of threads */
+#define THREADS_WIDTH 9 /* TODO: alpha beta prune after bundle of threads (DONE but UNTUNED) */
 #define ELDERS 1
 #define COYOUTHS AR_THRESH 
 ScoredMove get_best_move_multithreaded(Board* B, const int depth, int alpha, int beta, int layers, PVTable parent)
@@ -392,7 +392,7 @@ ScoredMove get_best_move_multithreaded(Board* B, const int depth, int alpha, int
         Move m = ML.moves[l];
 
         std::cout << "\033[100D" << std::flush;
-        for (int i=0; i!=3-layers; ++i) { std::cout << "\033[8C"; }
+        for (int i=0; i!=5-layers; ++i) { std::cout << "\033[8C"; }
         print_move(B, m);
         std::cout << "\033[100D" << std::flush;
 
@@ -411,6 +411,8 @@ ScoredMove get_best_move_multithreaded(Board* B, const int depth, int alpha, int
     }
 
     PVTable* my_pv_tables[36];
+    int new_alphas[36];
+    int new_betas [36];
     for (int t=0; t!=ML.length; ++t) {
         my_pv_tables[t] = (PVTable*)malloc(2*20*PV_TABLE_SIZE * sizeof(PVRecord));
         update_table(*(my_pv_tables[t]), parent);
@@ -419,15 +421,16 @@ ScoredMove get_best_move_multithreaded(Board* B, const int depth, int alpha, int
     for (int L=ELDERS; L<ML.length; L+=THREADS_WIDTH) {
         std::vector<std::thread> threads;
         for (int l=L; l<ML.length && l<L+THREADS_WIDTH; ++l) {
+            new_alphas[l] = alpha;
+            new_betas[l] = beta;
+
             Board by_val = copy_board(*B);
             threads.push_back(
-                std::thread([&best, is_white, &ML,&sms,l,alpha,beta,depth,layers, &my_pv_tables](Board by_val){
+                std::thread([&best, is_white, &ML,&sms,l,alpha,beta,depth,layers, &my_pv_tables, &new_alphas, &new_betas](Board by_val){
                   Move m = ML.moves[l];
                   apply_move(&by_val, m);
-                  //int reduced_depth = depth-1; /* assume cosingular is triggered */
-                  //if (1 <= l) { reduced_depth -= 1; }
-                  //if (COYOUTHS <= l) { reduced_depth -= 1; }
-                  int reduced_depth = depth-3;
+
+                  int reduced_depth = 0.8*(depth-RED_DEPTH_HARD_FLOOR)+RED_DEPTH_HARD_FLOOR-1;
                   ScoredMove sm = get_best_move_multithreaded(&by_val, reduced_depth, alpha, beta, layers-2, *(my_pv_tables[l]));
                   sms[l] = {m, sm.score, sm.height+1};
                   undo_move(&by_val, m);
@@ -435,25 +438,30 @@ ScoredMove get_best_move_multithreaded(Board* B, const int depth, int alpha, int
                       !is_white && sms[l].score < best.score) {
                       best = sms[l];
                   }
+                  if (is_white) { new_alphas[l] = MAX(new_alphas[l], sms[l].score); } 
+                  else          { new_betas[l]  = MIN(new_betas[l] , sms[l].score); } 
                 }, copy_board(*B)));
         }
         //for (int l=ML.length-1; l>=ELDERS; --l) {
         for (int l=L; l<ML.length && l<L+THREADS_WIDTH; ++l) {
 
             std::cout << "\033[100D" << std::flush;
-            for (int i=0; i!=3-layers; ++i) { std::cout << "\033[8C"; }
-            std::cout << "$"; print_move(B, ML.moves[l]);
+            for (int i=0; i!=5-layers; ++i) { std::cout << "\033[8C"; }
+            std::cout << COLORIZE(ANSI_GREEN, "$"); print_move(B, ML.moves[l]);
             std::cout << "\033[100D" << std::flush;
 
             threads[l-L].join();
 
             std::cout << "\033[100D" << std::flush;
-            for (int i=0; i!=3-layers; ++i) { std::cout << "\033[8C"; }
+            for (int i=0; i!=5-layers; ++i) { std::cout << "\033[8C"; }
             std::cout << "                              " << std::flush;
             std::cout << "\033[100D" << std::flush;
 
             update_table(parent, *(my_pv_tables[l]));
             free(my_pv_tables[l]);
+
+            alpha = MAX(alpha, new_alphas[l]);
+            beta  = MIN(beta , new_betas [l]);
         }
     }
 

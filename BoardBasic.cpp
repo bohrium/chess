@@ -181,14 +181,14 @@ void print_board_fancy(Board const* B)
         break; case 13: comp_sq_counts(B->nb_xrays, 6);
         break; case 14: comp_sq_counts(B->nb_xrays, 7);
         break; case 15:
-        break; case 16: comp_sq_counts(B->attacks_by_pawn, 0);  comp_sq_flags(B->is_weak_square, 0);
-        break; case 17: comp_sq_counts(B->attacks_by_pawn, 1);  comp_sq_flags(B->is_weak_square, 1);
-        break; case 18: comp_sq_counts(B->attacks_by_pawn, 2);  comp_sq_flags(B->is_weak_square, 2);
-        break; case 19: comp_sq_counts(B->attacks_by_pawn, 3);  comp_sq_flags(B->is_weak_square, 3);
-        break; case 20: comp_sq_counts(B->attacks_by_pawn, 4);  comp_sq_flags(B->is_weak_square, 4);
-        break; case 21: comp_sq_counts(B->attacks_by_pawn, 5);  comp_sq_flags(B->is_weak_square, 5);
-        break; case 22: comp_sq_counts(B->attacks_by_pawn, 6);  comp_sq_flags(B->is_weak_square, 6);
-        break; case 23: comp_sq_counts(B->attacks_by_pawn, 7);  comp_sq_flags(B->is_weak_square, 7);
+        break; case 16: comp_sq_counts(B->attacks_by_pawn, 0);  //comp_sq_flags(B->is_weak_square, 0);
+        break; case 17: comp_sq_counts(B->attacks_by_pawn, 1);  //comp_sq_flags(B->is_weak_square, 1);
+        break; case 18: comp_sq_counts(B->attacks_by_pawn, 2);  //comp_sq_flags(B->is_weak_square, 2);
+        break; case 19: comp_sq_counts(B->attacks_by_pawn, 3);  //comp_sq_flags(B->is_weak_square, 3);
+        break; case 20: comp_sq_counts(B->attacks_by_pawn, 4);  //comp_sq_flags(B->is_weak_square, 4);
+        break; case 21: comp_sq_counts(B->attacks_by_pawn, 5);  //comp_sq_flags(B->is_weak_square, 5);
+        break; case 22: comp_sq_counts(B->attacks_by_pawn, 6);  //comp_sq_flags(B->is_weak_square, 6);
+        break; case 23: comp_sq_counts(B->attacks_by_pawn, 7);  //comp_sq_flags(B->is_weak_square, 7);
         break; case 24: std::cout << B->nb_weak_squares[0] <<"." << B->nb_weak_squares[1]; 
         }
         std::cout << std::noshowpos << ANSI_YELLOW << std::endl;
