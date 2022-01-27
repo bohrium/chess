@@ -24,7 +24,7 @@ int stable_eval(Board* B, int max_plies, int alpha, int beta);
             std::cout << "\033[15C";                    \
         }                                               \
         {STMNT;}                                        \
-        std::cout << "                  ";              \
+        REPEAT(30,_,std::cout << " ");                  \
         std::cout << "\033[120D" << std::flush;         \
     }                                                    
 
@@ -61,9 +61,10 @@ ScoredMove get_best_move(Board* B, const int depth, int alpha, int beta, bool st
     generate_moves(B, &ML);
     int nb_candidates = ML.length; 
     if (2<=depth) {
-        BARK(verbose,std::cout << "\033[3D" << ANSI_BLUE << ".$." << ANSI_YELLOW);
+        BARK(verbose,std::cout<<COLORIZE(GRAY,"sortin"));
+        //BARK(verbose,std::cout << "\033[3D" << COLORIZE(GRAY, ".$."));
         order_moves(B, &ML, ordering_depths[depth], 6, parent);//branching_factors[depth]);
-        BARK(verbose,std::cout << "\033[3D" << ANSI_BLUE << "   " << ANSI_YELLOW);
+        //BARK(verbose,std::cout << "\033[3D" << COLORIZE(GRAY, "   "));
         nb_candidates = MIN(ML.length, branching_factors[depth]);
     }
 
@@ -82,7 +83,7 @@ ScoredMove get_best_move(Board* B, const int depth, int alpha, int beta, bool st
     if ((RED_DEPTH_SOFT_FLOOR<=depth && null_move_okay)) { 
         int pass = stable_eval(B, QUIESCE_DEPTH, alpha-2, beta+2);
         if (is_white && beta<pass || !is_white && pass<alpha) {
-            BARK(verbose,std::cout << "\033[3D" << COLORIZE(ANSI_GREEN, "NUL"));
+            BARK(verbose,std::cout << "\033[3D" << COLORIZE(GREEN, "NUL"));
             apply_null(B);
             int alpha_hi = is_white ? beta-1+NMR_THRESH : alpha  -NMR_THRESH; 
             int beta_hi  = is_white ? beta  +NMR_THRESH : alpha+1-NMR_THRESH; 
@@ -95,7 +96,7 @@ ScoredMove get_best_move(Board* B, const int depth, int alpha, int beta, bool st
                 skip = true;
             }
             undo_null(B);
-            BARK(verbose,std::cout << "\033[3D" << COLORIZE(ANSI_GREEN, "   "));
+            BARK(verbose,std::cout << "\033[3D" << COLORIZE(GREEN, "   "));
             if (skip) { goto END; }
         }
     }
@@ -128,7 +129,7 @@ ScoredMove get_best_move(Board* B, const int depth, int alpha, int beta, bool st
         #endif//ALLOW_AR 
 
         /*--------  0.4.2. display move under consideration  ----------------*/
-        BARK(verbose,std::cout<<COLORIZE(ANSI_GRAY,FLUSH_RIGHT(2,l)<<"/"<<FLUSH_RIGHT(2,nb_candidates))<<" ";print_move(B,m));
+        BARK(verbose,std::cout<<COLORIZE(GRAY,FLUSH_RIGHT(2,l)<<"/"<<FLUSH_RIGHT(2,nb_candidates))<<" ";print_move(B,m));
 
         /*--------  0.4.3. late move reduction  -----------------------------*/
         #if ALLOW_LMR
@@ -136,7 +137,7 @@ ScoredMove get_best_move(Board* B, const int depth, int alpha, int beta, bool st
         /* scout / late move reduction */
         if ((RED_DEPTH_SOFT_FLOOR <=depth && 1<=l) && 
             (SCOUT_THRESH<=beta-alpha || (trigger_lmr && !is_capture(m)))) {
-            BARK(verbose-1,std::cout << "\033[3D" << COLORIZE(ANSI_RED, "LMR"));
+            BARK(verbose-1,std::cout << "\033[3D" << COLORIZE(RED, "LMR"));
             apply_move(B, m);
             int alpha_lo = is_white ? alpha : beta-1; 
             int beta_lo  = is_white ? alpha+1 : beta; 
@@ -152,7 +153,7 @@ ScoredMove get_best_move(Board* B, const int depth, int alpha, int beta, bool st
                 skip = true;
             }
             undo_move(B, m);
-            BARK(verbose-1,std::cout << "\033[3D" << COLORIZE(ANSI_RED, "   "));
+            BARK(verbose-1,std::cout << "\033[3D" << COLORIZE(RED, "   "));
         }
         if (skip) { continue; }
         #endif//ALLOW_LMR
@@ -195,12 +196,12 @@ ScoredMove get_best_move(Board* B, const int depth, int alpha, int beta, bool st
     if (RED_DEPTH_SOFT_FLOOR<=depth && 2<=ML.length &&
         ( is_white && next_best.score + CSR_THRESH < best.score ||    
          !is_white && next_best.score - CSR_THRESH > best.score)) {
-        BARK(verbose,std::cout<<COLORIZE(ANSI_BLUE,"cosing");print_move(B,best.m));
-        BARK(verbose-1,std::cout << "\033[3D" << COLORIZE(ANSI_BLUE, "CSR"));
+        BARK(verbose,std::cout<<COLORIZE(BLUE,"cosing");print_move(B,best.m));
+        //BARK(verbose-1,std::cout << "\033[3D" << COLORIZE(BLUE, "CSR"));
         apply_move(B, best.m);
         ScoredMove child = get_best_move(B, depth-1, alpha, beta, true, true, verbose-1, parent);
         undo_move(B, best.m);
-        BARK(verbose-1,std::cout << "\033[3D" << COLORIZE(ANSI_BLUE , "   "));
+        //BARK(verbose-1,std::cout << "\033[3D" << COLORIZE(BLUE , "   "));
 
         if ( is_white && child.score>=next_best.score ||
             !is_white && child.score<=next_best.score) {
@@ -235,13 +236,9 @@ Move shallow_greedy_move(Board* B)
 
     int score_acc = -KING_POINTS/2; 
     for (int m=0; m!=ML.length; ++m) {
-
-        //std::cout << "{GR" << std::flush;
         apply_move(B, ML.moves[m]);
         int score = sign * evaluate(B);
         undo_move(B, ML.moves[m]);
-        //std::cout << "GR}" << std::flush;
-
         score_acc = MAX(score_acc, score);
         if (score_acc == score) { move_acc = m; }
     }
@@ -364,7 +361,6 @@ ScoredMove get_best_move_multithreaded(Board* B, const int depth, int alpha, int
     const int orig_beta = beta;
     const bool is_white = B->next_to_move==Color::white;
 
-    /* TODO: protect hash writes as atomic? */
     bool stable = true;
     if (stable) {
         PVRecord pvr = parent[depth][B->hash % PV_TABLE_SIZE];
@@ -384,9 +380,6 @@ ScoredMove get_best_move_multithreaded(Board* B, const int depth, int alpha, int
 
     ScoredMove best = {unk_move, is_white ? -KING_POINTS : +KING_POINTS, -1};
     for (int l=0; l!=ELDERS; ++l) {
-        //int reduced_depth = depth-1; /* assume cosingular is triggered */
-        //if (1 <= l) { reduced_depth -= 1; }
-        //if (COYOUTHS <= l) { reduced_depth -= 1; }
         int reduced_depth = depth-1;
 
         Move m = ML.moves[l];
@@ -446,15 +439,15 @@ ScoredMove get_best_move_multithreaded(Board* B, const int depth, int alpha, int
         for (int l=L; l<ML.length && l<L+THREADS_WIDTH; ++l) {
 
             std::cout << "\033[100D" << std::flush;
-            for (int i=0; i!=5-layers; ++i) { std::cout << "\033[8C"; }
-            std::cout << COLORIZE(ANSI_GREEN, "$"); print_move(B, ML.moves[l]);
+            REPEAT(5-layers, _, std::cout << "\033[8C");
+            std::cout << COLORIZE(GREEN, "$"); print_move(B, ML.moves[l]);
             std::cout << "\033[100D" << std::flush;
 
             threads[l-L].join();
 
             std::cout << "\033[100D" << std::flush;
-            for (int i=0; i!=5-layers; ++i) { std::cout << "\033[8C"; }
-            std::cout << "                              " << std::flush;
+            REPEAT(5-layers, _, std::cout << "\033[8C");
+            REPEAT(30, _, std::cout << " ");
             std::cout << "\033[100D" << std::flush;
 
             update_table(parent, *(my_pv_tables[l]));

@@ -8,8 +8,8 @@
 #include <thread>
 
 /* WARNING: if NB_DEPTH too small, also should update verbose in main.c */
-#define NB_WHITE_DEPTH      11
-#define NB_BLACK_DEPTH      11
+#define NB_WHITE_DEPTH      10
+#define NB_BLACK_DEPTH      10
 #define NB_COMMENTARY_DEPTH  8
 
 #define LINE_REPORT_PLIES 4 
@@ -21,7 +21,7 @@ PVTable pv_table;
 int main(int argc, char** argv)
 {
     srand(time(NULL));
-    std::cout << ANSI_YELLOW;
+    std::cout << YELLOW;
     std::cout << "Welcome!" << std::endl; 
 
     Board B;
@@ -50,10 +50,10 @@ int main(int argc, char** argv)
 
         // ANNOUNCE MOVE 
         CLEAR_REST_OF_LINE;
-        if (t%2==0) { std::cout << COLORIZE(ANSI_MAGENTA, 'W'); }
-        else        { std::cout << COLORIZE(ANSI_CYAN   , 'B'); }
+        if (t%2==0) { std::cout << COLORIZE(MAGENTA, 'W'); }
+        else        { std::cout << COLORIZE(CYAN   , 'B'); }
         std::cout << " plays ";
-        std::cout << "(height " << COLORIZE(ANSI_GREEN, FLUSH_RIGHT(2, sm.height)) << ") ";
+        std::cout << "(height " << COLORIZE(GREEN, FLUSH_RIGHT(2, sm.height)) << ") ";
         print_pv(&B, nb_plies, LINE_REPORT_PLIES, pv_table);
 
         // GAME DYNAMICS
@@ -66,7 +66,7 @@ int main(int argc, char** argv)
         // COMMENTARY
         std::cout << " ";
         ScoredMove commentary = get_best_move(&B, NB_COMMENTARY_DEPTH, -KING_POINTS/2, +KING_POINTS/2, true, true, 0, pv_table);
-        std::cout << COLORIZE(ANSI_RED, SHOW_SIGN(FLUSH_RIGHT(4, commentary.score))); 
+        std::cout << COLORIZE(RED, SHOW_SIGN(FLUSH_RIGHT(4, commentary.score))); 
         CLEAR_REST_OF_LINE;
         std::cout << std::endl;
     }
