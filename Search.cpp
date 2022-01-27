@@ -1,6 +1,7 @@
 #include "Search.h"
 #include "Board.h"
 #include "Helpers.h"
+#include <iomanip>
 #include <iostream>
 #include <algorithm>
 #include <thread>
@@ -20,11 +21,11 @@ int stable_eval(Board* B, int max_plies, int alpha, int beta);
 #define BARK(VERBOSE,STMNT)                             \
     if (0<(VERBOSE)) {                                  \
         for (int t=0; t!=MAX_VERBOSE-(VERBOSE); ++t) {  \
-            std::cout << "\033[9C";                     \
+            std::cout << "\033[15C";                    \
         }                                               \
         {STMNT;}                                        \
         std::cout << "                  ";              \
-        std::cout << "\033[100D" << std::flush;         \
+        std::cout << "\033[120D" << std::flush;         \
     }                                                    
 
 
@@ -129,7 +130,7 @@ ScoredMove get_best_move(Board* B, const int depth, int alpha, int beta, bool st
         //#endif//ALLOW_AR 
 
         /*--------  0.4.2. display move under consideration  ----------------*/
-        BARK(verbose,print_move(B,m));
+        BARK(verbose,std::cout<<COLORIZE(ANSI_GRAY,FLUSH_RIGHT(2,l)<<"/"<<FLUSH_RIGHT(2,nb_candidates))<<" ";print_move(B,m));
 
         /*--------  0.4.3. late move reduction  -----------------------------*/
         #if ALLOW_LMR
@@ -195,7 +196,8 @@ ScoredMove get_best_move(Board* B, const int depth, int alpha, int beta, bool st
     if (MIN_FILTER_DEPTH<=depth && 2<=ML.length &&
         ( is_white && next_best.score + CSR_THRESH < best.score ||    
          !is_white && next_best.score - CSR_THRESH > best.score)) {
-        BARK(verbose,print_move(B,best.m));
+        //BARK(verbose,print_move(B,best.m));
+        BARK(verbose,std::cout<<COLORIZE(ANSI_BLUE,"cosing");print_move(B,best.m));
         BARK(verbose-1,std::cout << "\033[3D" << ANSI_BLUE << ".!." << ANSI_YELLOW);
         apply_move(B, best.m);
         ScoredMove child = get_best_move(B, depth-1, alpha, beta, true, true, verbose-1, parent);

@@ -425,6 +425,10 @@ void change_piece(Board* B, Coordinate rc, Piece p, bool is_add)
             if (c != 0) { B->attacks_by_pawn[self][r-sign][c-1] += sign_d; }
             if (c != 7) { B->attacks_by_pawn[self][r-sign][c+1] += sign_d; }
             /* TODO; note that order of operations might depend on is_add */
+
+            if (true) { update_weak_squares(B, self, c  ); }
+            if (1<=c) { update_weak_squares(B, self, c-1); }
+            if (c<7 ) { update_weak_squares(B, self, c+1); }
         }
         update_xrays_by_pawn(B, rc, p, is_add); 
         //{ /* king x-rays */
@@ -458,12 +462,32 @@ void update_least_advanced(Board* B, Color side, int col) {
         return;
     }
     for (int row=start; row!=end; row+=step) {
-        //if (!piece_equals(get_piece(B, {row,col}), {side,Species::pawn})) { continue; }
         if (!kronecker_piece(B, {row,col}, {side,Species::pawn})) { continue; }
         B->least_advanced[side][col] = row;
         return;
     }
     std::cout << "WOAH!  SHOULDN'T ARRIVE HERE!" << std::endl;
+} 
+
+void update_weak_squares(Board* B, Color side, int col) {
+    int start = (side == Color::white ?  7 :  0); /* white's home base is row 7 */
+    int step  = (side == Color::white ? -1 : +1);
+    int end   = (side == Color::white ? -1 :  8);
+
+    int is_unattackable = true;
+    for (int row=start; row!=end; row+=step) {
+        if (is_unattackable &&
+            ((1<=col && B->attacks_by_pawn[side][row][col-1]) ||
+             (col<7 && B->attacks_by_pawn[side][row][col+1] ))) {
+            is_unattackable = false;
+        }
+        bool is_weak = is_unattackable && !kronecker_piece(B, {row,col}, {side, Species::pawn});
+        bool* old = &B->is_weak_square[side][row][col];  
+        if (*old != is_weak) {
+            *old = is_weak;
+            B->nb_weak_squares[side] += (is_weak ? +1 : -1); 
+        }
+    }
 } 
 
 

@@ -5,83 +5,23 @@
 ==  0. Moves  =================================================================
 ===============================================================================
 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-~~  0.0. Chess, viewed abstractly  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Chess is a deterministic, fully observable two-player game.  That is, chess is
+determined by its set `S` of states, its transition relation `~> subset SxS`,
+its schedule `turn : S --> {white, black}`, and its valuation `value : S -->
+{+1, -1, 0}`.
 
+We require a universal bound on `~>`-chains' lengths; this occurs, for
+instance, when `S` is finite and `~>`'s transitive closure `~~~>` is
+anti-reflexive.  Then we may define ideal-outcome : S --> {+1, -1, 0} 
 
-
-Chess is a deterministic, fully observable two-player game.  Let `C = {black,
-white}` name the players.  Then the dynamics of chess is determined by its set
-`P` of states, its transition relation `next : P --> Pow(P)`, its schedule
-`turn : P --> C`, and its valuation `value : P --> Signs` where `Signs = {+inf,
--inf, 0}`.
-
-
-
-We require a universal bound on `next`-chains' lengths; this occurs, for
-instance, when `P` is finite and `next`'s transitive closure `~~>` is
-anti-reflexive.  Then we may define `outcome : P --> Signs` by
-
-    outcome(s) = (max if turn(p)==white else min) {outcome(q) : q in next(p)}
-                 if value(p)==0 else value(p) 
-
-Of great recreational interest is the computation of `outcome` on concrete
-states of such as the 960 initial states designed by Bobby Fischer. 
-
-
-
-We can say more about `(S, next, turn, value)` for chess.  If we ignore the
-three kludgy FIDE rules regarding draw-by-repetition, castling, and pawn
-double-moves, then each element of `P` is determined by its turn bit, its
-plies-since-irreversible counter, and its array of pieces:
-
-    P = C x [101] x (Grid --> ({empty} + C x Species)) 
-
-Here, `Grid=[8]x[8]` and `Species = {pawn,knight,bishop,rook,queen,king}`.  Let
-`turn, ply, get` project `P` to its components.  `value` is the sign of the
-number of white kings minus the number of black kings on the board.  To recover
-FIDE chess, we would also track the set of previous positions, six bits to
-track which of the black and white rooks and kings have previously moved, and
-which files if any are liable to en-passant. 
-
-
-
-It remains to describe `next`.  To begin, let's ignore rules about moving into
-check, edge effects on a finite board, and the specialness of the last rank for
-pawn promotion.  Then `next(s)` is a union --- over `g in Grid` such that
-`color(get(p)(g)) == turn(p)` --- of sets 
-
-    {m(p) : (m,f) in movesof(species(cs))(color(cs), color.(get(p)))(g)} 
-    where cs = get(s)(g)
-
-What specifies these sets is a map `movesof : Species --> (C x (Grid --> C))
---> Grid --> Pow(P-->P)`.  We regard `movesof` as the essence of a chess
-variant's dynamics.  In chess, `movesof` is equivariant to spatial translation,
-to left-right reflection, and to the pairing of up-down reflection with color
-inversion.  
-
-
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-~~  0.1. Steps and Operators  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-So we are interested in atomic moves `(v,h) in Int x Nat`.  We have the binary
-logical operators &, | and the unary slidification operator $(). 
-
-We have 1.1 + 3.2 + 3.4 + 1.8 = 3.3.3 = 27 possible sliding/capture modes.
-
-.-1      --- wazir
-.-2      --- ferz
-..-1     --- rook
-..-2     --- bishop 
-.-1.-2   --- mann (nonroyal king)
-..-1..-2 --- queen
-.^1-^2   --- peasant (unpromotable, nondoublemovable pawn)
-.-5      --- knight
-..-5     --- nightrider
-..-2.-5  --- archbishop
-..-1.-5  --- chancellor
+ whose
+state is (roughly) given by grids of (potentially empty) pieces (together with
+a who-is-to-move bit and a counter of the number of plies since an irreversible
+move).  Note that for full FIDE rules, the state would also need to track the
+set of all previous positions (for draw by repetition), six bits indicating
+castling privileges (which of three black pieces have moved and which of three
+white pieces have moved), which file if any is liable to en-passant.  But we
+view 
 
 ===============================================================================
 ==  1. Material Values  =======================================================

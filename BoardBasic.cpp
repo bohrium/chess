@@ -29,14 +29,18 @@ void init_board(Board* B)
     B->nb_majors[0] = 3;
     B->nb_majors[1] = 3;
 
+    B->nb_weak_squares[0] = 8;
+    B->nb_weak_squares[1] = 8;
+
     for (int r=0; r!=8; ++r) {
         for (int c=0; c!=8; ++c) {
             B->grid[r][c] = empty_piece;
             B->attacks_by_pawn[Color::black][r][c] = 0;
             B->attacks_by_pawn[Color::white][r][c] = 0;
+            B->is_weak_square[Color::black][r][c] = (r==0);
+            B->is_weak_square[Color::white][r][c] = (r==7);
         }
     }
-
     for (int c=0; c!=8; ++c) {
         B->grid[0][c] = {Color::black, init_row[c]};
         B->grid[1][c] = {Color::black, Species::pawn};
@@ -134,6 +138,11 @@ void print_board_fancy(Board const* B)
             if (!nb) { std::cout << ansi_hue << "."; }
             else     { std::cout << ansi_hue << nb; }
         };
+        auto hued_bool  = [](char const* ansi_hue, bool nb) {
+            if (!nb) { std::cout << ansi_hue << "."; }
+            else     { std::cout << ansi_hue << "1"; }
+        };
+
         auto comp_sq_counts = [hued_digit](int const arr[2][8][8], int row) {
             for(int k=0; k!=8; ++k) {
                 hued_digit(ANSI_CYAN,    arr[0][row][k]);
@@ -141,6 +150,15 @@ void print_board_fancy(Board const* B)
                 std::cout << " ";
             }
         };
+        auto comp_sq_flags  = [hued_bool ](bool const arr[2][8][8], int row) {
+            for(int k=0; k!=8; ++k) {
+                hued_bool(ANSI_CYAN,    arr[0][row][k]);
+                hued_bool(ANSI_MAGENTA, arr[1][row][k]);
+                std::cout << " ";
+            }
+        };
+
+
 
         std::cout << "      ";
         switch (rr) {
@@ -148,8 +166,8 @@ void print_board_fancy(Board const* B)
         break; case  1: std::cout << "plies = " << ANSI_BLUE << B->plies_since_irreversible.back();
         break; case  2: std::cout << "hash = " << ANSI_BLUE << B->hash;
         break; case  3: std::cout << "mat = " << ANSI_RED << std::setw(4) << std::right << std::showpos << ds.material;
-        break; case  4: std::cout << "kng = " << ANSI_RED << std::setw(4) << std::right << std::showpos << ds.king_safety + 34 * ( B->nb_king_attacks_near[0]-B->nb_king_attacks_near[1]);
-        break; case  5: std::cout << "pwn = " << ANSI_RED << std::setw(4) << std::right << std::showpos << ds.pawn_structure;
+        break; case  4: std::cout << "kng = " << ANSI_RED << std::setw(4) << std::right << std::showpos << ds.king_safety + 13 * ( B->nb_king_attacks_near[0]-B->nb_king_attacks_near[1]);
+        break; case  5: std::cout << "pwn = " << ANSI_RED << std::setw(4) << std::right << std::showpos << ds.pawn_structure + 5 * ( B->nb_weak_squares[0]-B->nb_weak_squares[1]);
         break; case  6: std::cout << "sqr = " << ANSI_RED << std::setw(4) << std::right << std::showpos << ds.cozy_squares;
         break; case  7: comp_sq_counts(B->nb_xrays, 0);
         break; case  8: comp_sq_counts(B->nb_xrays, 1);
@@ -160,14 +178,15 @@ void print_board_fancy(Board const* B)
         break; case 13: comp_sq_counts(B->nb_xrays, 6);
         break; case 14: comp_sq_counts(B->nb_xrays, 7);
         break; case 15:
-        break; case 16: comp_sq_counts(B->attacks_by_pawn, 0);
-        break; case 17: comp_sq_counts(B->attacks_by_pawn, 1);
-        break; case 18: comp_sq_counts(B->attacks_by_pawn, 2);
-        break; case 19: comp_sq_counts(B->attacks_by_pawn, 3);
-        break; case 20: comp_sq_counts(B->attacks_by_pawn, 4);
-        break; case 21: comp_sq_counts(B->attacks_by_pawn, 5);
-        break; case 22: comp_sq_counts(B->attacks_by_pawn, 6);
-        break; case 23: comp_sq_counts(B->attacks_by_pawn, 7);
+        break; case 16: comp_sq_counts(B->attacks_by_pawn, 0);  comp_sq_flags(B->is_weak_square, 0);
+        break; case 17: comp_sq_counts(B->attacks_by_pawn, 1);  comp_sq_flags(B->is_weak_square, 1);
+        break; case 18: comp_sq_counts(B->attacks_by_pawn, 2);  comp_sq_flags(B->is_weak_square, 2);
+        break; case 19: comp_sq_counts(B->attacks_by_pawn, 3);  comp_sq_flags(B->is_weak_square, 3);
+        break; case 20: comp_sq_counts(B->attacks_by_pawn, 4);  comp_sq_flags(B->is_weak_square, 4);
+        break; case 21: comp_sq_counts(B->attacks_by_pawn, 5);  comp_sq_flags(B->is_weak_square, 5);
+        break; case 22: comp_sq_counts(B->attacks_by_pawn, 6);  comp_sq_flags(B->is_weak_square, 6);
+        break; case 23: comp_sq_counts(B->attacks_by_pawn, 7);  comp_sq_flags(B->is_weak_square, 7);
+        break; case 24: std::cout << B->nb_weak_squares[0] <<"." << B->nb_weak_squares[1]; 
         }
         std::cout << std::noshowpos << ANSI_YELLOW << std::endl;
     }

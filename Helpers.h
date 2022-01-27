@@ -1,6 +1,7 @@
 #ifndef HELPERS_H
 #define HELPERS_H
 
+#define ANSI_GRAY       "\033[0;90m"
 #define ANSI_YELLOW     "\033[0;33m"
 #define ANSI_MAGENTA    "\033[1;35m"
 #define ANSI_CYAN       "\033[1;36m"

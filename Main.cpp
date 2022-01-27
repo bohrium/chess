@@ -8,9 +8,9 @@
 #include <thread>
 
 /* WARNING: if NB_DEPTH too small, also should update verbose in main.c */
-#define NB_WHITE_DEPTH       8
-#define NB_BLACK_DEPTH       8
-#define NB_COMMENTARY_DEPTH  8
+#define NB_WHITE_DEPTH      15
+#define NB_BLACK_DEPTH       6
+#define NB_COMMENTARY_DEPTH  6
 
 #define LINE_REPORT_PLIES 6 
 
@@ -48,6 +48,14 @@ int main(int argc, char** argv)
 #endif
         GO_UP(40);
 
+        // ANNOUNCE MOVE 
+        CLEAR_REST_OF_LINE;
+        if (t%2==0) { std::cout << COLORIZE(ANSI_MAGENTA, 'W'); }
+        else        { std::cout << COLORIZE(ANSI_CYAN   , 'B'); }
+        std::cout << " plays ";
+        std::cout << "(height " << COLORIZE(ANSI_GREEN, FLUSH_RIGHT(2, sm.height)) << ") ";
+        print_pv(&B, nb_plies, LINE_REPORT_PLIES, pv_table);
+
         // GAME DYNAMICS
         apply_move(&B, sm.m);
         if (sm.m.taken.species == Species::king) {
@@ -56,14 +64,8 @@ int main(int argc, char** argv)
         }
 
         // COMMENTARY
-        ScoredMove commentary = get_best_move(&B, NB_COMMENTARY_DEPTH, -KING_POINTS/2, +KING_POINTS/2, true, true, 0, pv_table);
-        CLEAR_REST_OF_LINE;
-        if (t%2==0) { std::cout << COLORIZE(ANSI_MAGENTA, 'W'); }
-        else        { std::cout << COLORIZE(ANSI_CYAN   , 'B'); }
-        std::cout << " plays ";
-        std::cout << "(height " << COLORIZE(ANSI_GREEN, FLUSH_RIGHT(2, sm.height)) << ") ";
-        print_pv(&B, nb_plies, LINE_REPORT_PLIES, pv_table);
         std::cout << " ";
+        ScoredMove commentary = get_best_move(&B, NB_COMMENTARY_DEPTH, -KING_POINTS/2, +KING_POINTS/2, true, true, 0, pv_table);
         std::cout << COLORIZE(ANSI_RED, SHOW_SIGN(FLUSH_RIGHT(4, commentary.score))); 
         CLEAR_REST_OF_LINE;
         std::cout << std::endl;

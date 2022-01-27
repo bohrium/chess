@@ -38,15 +38,16 @@ struct Board {
     // PAWN STRUCTURE
     /*     (--- CAUTION:   rank == 7-row   ---)
      * For us, a "weak square" (for white) is a square such that {no friendly
-     * pawn in either of the two adjacent files has strictly lesser rank} AND
-     * {no friendly pawn of the same file has lesser-or-equal rank}.  An
+     * pawn in either of the two adjacent files has strictly lesser rank}
+     *      stricken out: {{{AND {no friendly pawn of the same file has lesser-or-equal rank}.}}}
+     * An
      * "outpost" for the enemy is a weak square of ours also attacked by an
      * enemy pawn.
      */ 
     int nb_pawns_by_file[2][8];
     int least_advanced[2][8]; 
     int attacks_by_pawn[2][8][8];
-    //bool weak_squares[2][8][8];
+    bool is_weak_square[2][8][8];
     //bool outposts[2][8][8];
     int nb_weak_squares[2];
 
@@ -112,5 +113,6 @@ void add_eval_diff(Board* B, Coordinate rc, Piece p, bool is_add);
 
 /* REQUIRES: assumes nb_pawns_by_file is correct! */
 void update_least_advanced(Board* B, Color side, int col);
+void update_weak_squares(Board* B, Color side, int col);
 
 #endif//BOARD_H

@@ -140,9 +140,11 @@ int evaluate(Board* B) /* todo: constify type signature */
 
     return score_total(B->evaluation_stack.back()) 
        + TO_MOVE_BONUS * (B->next_to_move==Color::white ? +1 : -1)
-       + 34 * ( B->nb_king_attacks_near[0] 
-               -B->nb_king_attacks_near[1]);
-    /* TODO: incorporate king attacks into difference eval */
+       + 13 * ( B->nb_king_attacks_near[0] 
+               -B->nb_king_attacks_near[1]) 
+       +  5 * ( B->nb_weak_squares[0] 
+               -B->nb_weak_squares[1]);
+    /* TODO: incorporate king attacks etc into difference eval */
 }
 
 
