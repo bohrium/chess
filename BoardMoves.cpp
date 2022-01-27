@@ -371,9 +371,9 @@ void update_xrays_by_piece(Board* B, Coordinate rc, Piece p, bool is_add)
     }
 }
 
-void update_king_attacks(Board* B, Coordinate rc, Piece p, bool is_add)
+void update_king_attacks(Board* B, Coordinate rc, Color king_color, bool is_add)
 {
-    Color const self = p.color;
+    Color const self = king_color;
     Color const them = flip_color(self);
 
     B->nb_king_attacks_near[self] = 0; 
@@ -406,13 +406,14 @@ void change_piece(Board* B, Coordinate rc, Piece p, bool is_add)
     if (is_add) { B->grid[r][c] = p; }
     else        { B->grid[r][c] = empty_piece; }
 
+
     if (p.species != Species::pawn && p.species != Species::king) {
         int pq = quintant_from(rc);
         int kq = quintant_from(B->king_locs[them].back());
         B->nb_pieces_by_quintant[self][pq] += sign_d; 
         
         update_xrays_by_piece(B, rc, p, is_add);
-        update_king_attacks(B, rc, p, is_add);
+        update_king_attacks(B, B->king_locs[them].back(), them, is_add);
         //{ /* king-xrays */
         //    /* TODO */
         //}
@@ -423,6 +424,7 @@ void change_piece(Board* B, Coordinate rc, Piece p, bool is_add)
     /* update piece-square counts and pawn structure terms */
     switch (p.species) {
     break; case Species::pawn:
+        B->nb_pawns[self] += sign_d;
         B->nb_pawns_by_parity[self][parity(rc)] += sign_d;
         B->nb_pawns_by_file[self][c] += sign_d;
         update_least_advanced(B, self, c);
@@ -440,16 +442,18 @@ void change_piece(Board* B, Coordinate rc, Piece p, bool is_add)
         //}
         //{ /* loose pieces */
         //}
-    //break; case Species::knight:
+    break; case Species::knight:
+        B->nb_knights[self] += sign_d; 
     break; case Species::bishop:
         B->nb_pawns_by_parity[self][parity(rc)] += sign_d;
     break; case Species::rook:
+        B->nb_rooks[self] += sign_d;
         B->nb_rooks_by_file[self][c] += sign_d;
         B->nb_majors[self] += sign_d;
     break; case Species::queen:
         B->nb_majors[self] += sign_d;
     break; case Species::king: 
-        update_king_attacks(B, rc, p, is_add);
+        update_king_attacks(B, rc, self, is_add);
     }
 }
 

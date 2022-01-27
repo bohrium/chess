@@ -63,28 +63,28 @@ int points[] = {
 int XX=-89,_X=-34,xx=-13,_x=-5,_o=+5,oo=+13,_O=+34,OO=+89; 
 
 int piece_placement[][8][8] = {
-    /*pawn*/ { /* push pawns and control the center */
+    /*pawn*/ { /* push pawns, control center, rook pawns worth less */
         { 0, 0, 0, 0, 0, 0, 0, 0},
         {OO,OO,OO,OO,OO,OO,OO,OO},
         {xx,_O,_O,_O,_O,_O,_O,xx},
         {xx, 0,oo,oo,oo,oo, 0,xx},
-        {xx, 0, 0,oo,oo, 0, 0,xx},
+        {xx, 0, 0,_o,_o, 0, 0,xx},
         {xx, 0, 0, 0, 0, 0, 0,xx},
         {xx, 0, 0, 0, 0, 0, 0,xx},
         { 0, 0, 0, 0, 0, 0, 0, 0}, 
     },
     /*knight*/ { /* a knight on the rim is dim*/ 
         {XX,xx,xx,xx,xx,xx,xx,XX},
-        {xx,xx,_x,_x,_x,_x,xx,xx},
-        {xx,_x, 0, 0, 0, 0,_x,xx},
-        {xx,_x, 0,_O,_O, 0,_x,xx},
-        {xx,_x, 0,oo,oo, 0,_x,xx},
-        {xx,_x, 0, 0, 0, 0,_x,xx},
-        {xx,xx,_x,_x,_x,_x,xx,xx},
+        {xx,xx, 0, 0, 0, 0, 0,xx},
+        {xx, 0, 0, 0, 0, 0, 0,xx},
+        {xx, 0, 0,oo,oo, 0, 0,xx},
+        {xx, 0, 0, 0, 0, 0, 0,xx},
+        {xx, 0, 0, 0, 0, 0, 0,xx},
+        {xx,xx, 0, 0, 0, 0,xx,xx},
         {XX,xx,xx,xx,xx,xx,xx,XX},
     },
     /*bishop*/ { /* bishops love long diagonals */
-        {XX,xx,xx,xx,xx,xx,XX,XX},
+        {XX,XX,xx,xx,xx,xx,XX,XX},
         {XX,oo, 0, 0, 0, 0,oo,XX},
         {xx, 0,oo, 0, 0,oo, 0,xx},
         {xx, 0, 0,oo,oo, 0, 0,xx},
@@ -93,7 +93,7 @@ int piece_placement[][8][8] = {
         {XX,oo, 0, 0, 0, 0,oo,XX},
         {XX,XX,xx,xx,xx,xx,XX,XX},
     },
-    /*rook*/ { /* rooks love 7th ranks */
+    /*rook*/ { /* rooks love 7th ranks (term small since so mobile) */
         { 0, 0, 0, 0, 0, 0, 0, 0},
         {_o,oo,oo,oo,oo,oo,oo,_o},
         { 0, 0, 0, 0, 0, 0, 0, 0},
@@ -103,14 +103,14 @@ int piece_placement[][8][8] = {
         { 0, 0, 0, 0, 0, 0, 0, 0},
         { 0, 0, 0, 0, 0, 0, 0, 0}, 
     },
-    /*queen*/ { /* centralize the queen */
+    /*queen*/ { /* centralize the queen (term small since so mobile) */
+        { 0, 0, 0, 0, 0, 0, 0, 0},
         { 0, 0, 0, 0, 0, 0, 0, 0},
         { 0, 0, 0,_o,_o, 0, 0, 0},
-        { 0, 0,_o,oo,oo,_o, 0, 0},
-        { 0,_o,oo,oo,oo,oo,_o, 0},
-        { 0,_o,oo,oo,oo,oo,_o, 0},
-        { 0, 0,_o,oo,oo,_o, 0, 0},
+        { 0, 0,_o,_o,_o,_o, 0, 0},
+        { 0, 0,_o,_o,_o,_o, 0, 0},
         { 0, 0, 0,_o,_o, 0, 0, 0},
+        { 0, 0, 0, 0, 0, 0, 0, 0},
         { 0, 0, 0, 0, 0, 0, 0, 0},
     },
     /*king*/ { /* centralize the king (hopefully overridden in middle game by safety factors) */
@@ -211,8 +211,17 @@ void add_eval_diff(Board* B, Coordinate rc, Piece p, bool is_add)
         { /* weak-squares, posted-knight */ /* TODO */ }
         { /* king-xrays */ /* TODO */ }
         { /* loose-pieces */ /* TODO */ }
+        { /* cramped-rook */
+            d_material -= sign * ROOK_PAWN * B->nb_rooks[self];  
+        }
+        { /* cocramped-knight */
+            d_material += sign * KNIGHT_PAWN * B->nb_knights[self];  
+        }
     break; case Species::knight:
         { /* posted-knight */ /* TODO */ }
+        { /* cocramped-knight */
+            d_material += sign * KNIGHT_PAWN * B->nb_pawns[self];  
+        }
     break; case Species::bishop:
         { /* cramped-bishop */
             d_cozy_squares -= sign * 13 * B->nb_pawns_by_parity[self][parity(rc)];
@@ -229,6 +238,9 @@ void add_eval_diff(Board* B, Coordinate rc, Piece p, bool is_add)
         }
         { /* redundant-majors */
             d_material -= sign * 34 * (B->nb_majors[self] + (is_add ? -1 : 0));
+        }
+        { /* cramped-rook */
+            d_material -= sign * ROOK_PAWN * B->nb_pawns[self];  
         }
     break; case Species::queen:
         { /* redundant-majors */

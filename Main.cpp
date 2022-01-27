@@ -8,13 +8,13 @@
 #include <thread>
 
 /* WARNING: if NB_DEPTH too small, also should update verbose in main.c */
-#define NB_WHITE_DEPTH      17
-#define NB_BLACK_DEPTH      14
-#define NB_COMMENTARY_DEPTH 11
+#define NB_WHITE_DEPTH      11
+#define NB_BLACK_DEPTH      11
+#define NB_COMMENTARY_DEPTH  8
 
-#define LINE_REPORT_PLIES 6 
+#define LINE_REPORT_PLIES 4 
 
-#define MULTITHREADED 1 
+#define MULTITHREADED 0 
 
 PVTable pv_table;
 

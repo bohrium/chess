@@ -51,10 +51,12 @@ struct Board {
     bool is_weak_square[2][8][8];
     //bool outposts[2][8][8];
     int nb_weak_squares[2];
+    int nb_pawns[2];
 
     // KNIGHT TERMS
     //int nb_knights_on_weak_squares[2]; 
     //int nb_knights_on_outposts[2]; 
+    int nb_knights[2];
 
     // BISHOP TERMS
     int nb_pawns_by_parity[2][2];
@@ -63,6 +65,7 @@ struct Board {
     // MAJOR TERMS
     int nb_rooks_by_file[2][8];
     int nb_majors[2];
+    int nb_rooks[2];
 };
 Board copy_board(Board B);
 

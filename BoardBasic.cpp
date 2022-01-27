@@ -26,14 +26,18 @@ void init_board(Board* B)
     B->next_to_move = Color::white;
     B->plies_since_irreversible.push_back(0);
 
+    B->nb_knights[0]=2;
+    B->nb_knights[1]=2;
+    B->nb_rooks[0]=2;
+    B->nb_rooks[1]=2;
+    B->nb_pawns[0]=8;
+    B->nb_pawns[1]=8;
+
     B->nb_majors[0] = 3;
     B->nb_majors[1] = 3;
 
     B->nb_weak_squares[0] = 8;
     B->nb_weak_squares[1] = 8;
-
-    B->nb_xrays_by_side[0] = 4; // knight moves
-    B->nb_xrays_by_side[1] = 4; // knight moves
 
     for (int r=0; r!=8; ++r) {
         for (int c=0; c!=8; ++c) {
@@ -79,7 +83,9 @@ void init_board(Board* B)
         }
     }
 
-    int const xrays[3][8] = {{ 0, 1, 1, 0, 1, 0, 1, 0}, /* king doesn't count as attacker (should we change this ??) */
+    B->nb_xrays_by_side[0] = 0;
+    B->nb_xrays_by_side[1] = 0;
+    int const xrays[3][8] = {{ 2, 4, 4, 2, 4, 3, 4, 2}, /* king doesn't count as attacker; xrays through self pieces but not self pawns*/
                              { 1, 1, 1, 3, 3, 1, 1, 1},
                              { 1, 0, 1, 0, 0, 1, 0, 1}};
     for (int c=0; c!=8; ++c) {
@@ -88,12 +94,12 @@ void init_board(Board* B)
                 B->nb_xrays[side][r][c] = 0;
             }
         }
-        B->nb_xrays[0][0][c] = xrays[0][c];
-        B->nb_xrays[0][1][c] = xrays[1][c];
-        B->nb_xrays[0][2][c] = xrays[2][c];
-        B->nb_xrays[1][5][c] = xrays[2][c];
-        B->nb_xrays[1][6][c] = xrays[1][c];
-        B->nb_xrays[1][7][c] = xrays[0][c];
+        B->nb_xrays[0][0][c] = xrays[0][c];  B->nb_xrays_by_side[0] += xrays[0][c];
+        B->nb_xrays[0][1][c] = xrays[1][c];  B->nb_xrays_by_side[0] += xrays[1][c];
+        B->nb_xrays[0][2][c] = xrays[2][c];  B->nb_xrays_by_side[0] += xrays[2][c];
+        B->nb_xrays[1][5][c] = xrays[2][c];  B->nb_xrays_by_side[1] += xrays[2][c];
+        B->nb_xrays[1][6][c] = xrays[1][c];  B->nb_xrays_by_side[1] += xrays[1][c];
+        B->nb_xrays[1][7][c] = xrays[0][c];  B->nb_xrays_by_side[1] += xrays[0][c];
     }
     B->nb_king_attacks_near[0] = 0;
     B->nb_king_attacks_near[1] = 0;
@@ -103,7 +109,7 @@ int const height = 4;
 int const width = 6;
 char const icons[height][7][width] = {
     {"     ", " _^  ", "  o  ", "     ", "!_|_/", "!_+_/","     "},
-    {"  o  ", "/* ! ", " (_) ", "|_|_|", " (_) ", "_) (_","     "},
+    {"  _  ", "[* ! ", " (_) ", "|_|_|", " (_) ", "_) (_","     "},
     {" ( ) ", " / | ", "`| |`", " | | ", " / ! ", " / ! ","     "},
     {" / ! ", "|  !_", "_/ !_", "|___|", "/___!", "/___!","     "},
 };
@@ -172,24 +178,26 @@ void print_board_fancy(Board const* B)
         break; case  4: std::cout << "kng = " << ANSI_RED << std::setw(4) << std::right << std::showpos << ds.king_safety + 13 * ( B->nb_king_attacks_near[0]-B->nb_king_attacks_near[1]);
         break; case  5: std::cout << "pwn = " << ANSI_RED << std::setw(4) << std::right << std::showpos << ds.pawn_structure + 5 * ( B->nb_weak_squares[0]-B->nb_weak_squares[1]);
         break; case  6: std::cout << "sqr = " << ANSI_RED << std::setw(4) << std::right << std::showpos << ds.cozy_squares;
-        break; case  7: comp_sq_counts(B->nb_xrays, 0);
-        break; case  8: comp_sq_counts(B->nb_xrays, 1);
-        break; case  9: comp_sq_counts(B->nb_xrays, 2);
-        break; case 10: comp_sq_counts(B->nb_xrays, 3);
-        break; case 11: comp_sq_counts(B->nb_xrays, 4);
-        break; case 12: comp_sq_counts(B->nb_xrays, 5);
-        break; case 13: comp_sq_counts(B->nb_xrays, 6);
-        break; case 14: comp_sq_counts(B->nb_xrays, 7);
-        break; case 15:
-        break; case 16: comp_sq_counts(B->attacks_by_pawn, 0);  //comp_sq_flags(B->is_weak_square, 0);
-        break; case 17: comp_sq_counts(B->attacks_by_pawn, 1);  //comp_sq_flags(B->is_weak_square, 1);
-        break; case 18: comp_sq_counts(B->attacks_by_pawn, 2);  //comp_sq_flags(B->is_weak_square, 2);
-        break; case 19: comp_sq_counts(B->attacks_by_pawn, 3);  //comp_sq_flags(B->is_weak_square, 3);
-        break; case 20: comp_sq_counts(B->attacks_by_pawn, 4);  //comp_sq_flags(B->is_weak_square, 4);
-        break; case 21: comp_sq_counts(B->attacks_by_pawn, 5);  //comp_sq_flags(B->is_weak_square, 5);
-        break; case 22: comp_sq_counts(B->attacks_by_pawn, 6);  //comp_sq_flags(B->is_weak_square, 6);
-        break; case 23: comp_sq_counts(B->attacks_by_pawn, 7);  //comp_sq_flags(B->is_weak_square, 7);
-        break; case 24: std::cout << B->nb_weak_squares[0] <<"." << B->nb_weak_squares[1]; 
+        break; case  7: std::cout << "ini = " << ANSI_RED << std::setw(4) << std::right << std::showpos << 5 * (-B->nb_xrays_by_side[0] + B->nb_xrays_by_side[1])
+                                                                                                         + 13* (B->next_to_move==Color::white ? +1 : -1);
+;
+        break; case  8: comp_sq_counts(B->nb_xrays, 0);
+        break; case  9: comp_sq_counts(B->nb_xrays, 1);
+        break; case 10: comp_sq_counts(B->nb_xrays, 2);
+        break; case 11: comp_sq_counts(B->nb_xrays, 3);
+        break; case 12: comp_sq_counts(B->nb_xrays, 4);
+        break; case 13: comp_sq_counts(B->nb_xrays, 5);
+        break; case 14: comp_sq_counts(B->nb_xrays, 6);
+        break; case 15: comp_sq_counts(B->nb_xrays, 7);
+        break; case 16:                                                                                                                                                    
+        break; case 17: comp_sq_counts(B->attacks_by_pawn, 0);  //comp_sq_flags(B->is_weak_square, 0);
+        break; case 18: comp_sq_counts(B->attacks_by_pawn, 1);  //comp_sq_flags(B->is_weak_square, 1);
+        break; case 19: comp_sq_counts(B->attacks_by_pawn, 2);  //comp_sq_flags(B->is_weak_square, 2);
+        break; case 20: comp_sq_counts(B->attacks_by_pawn, 3);  //comp_sq_flags(B->is_weak_square, 3);
+        break; case 21: comp_sq_counts(B->attacks_by_pawn, 4);  //comp_sq_flags(B->is_weak_square, 4);
+        break; case 22: comp_sq_counts(B->attacks_by_pawn, 5);  //comp_sq_flags(B->is_weak_square, 5);
+        break; case 23: comp_sq_counts(B->attacks_by_pawn, 6);  //comp_sq_flags(B->is_weak_square, 6);
+        break; case 24: comp_sq_counts(B->attacks_by_pawn, 7);  //comp_sq_flags(B->is_weak_square, 7); std::cout << B->nb_weak_squares[0] <<"." << B->nb_weak_squares[1]; 
         }
         std::cout << std::noshowpos << ANSI_YELLOW << std::endl;
     }

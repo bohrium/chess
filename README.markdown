@@ -216,11 +216,11 @@ TODO :
 
          king safety
            `attackers in same quadrant as king` (implemented, un-tuned)
-           `attackers xray king neighborhood`     
+           `attackers xray king neighborhood`   (implemented, un-tuned) 
 
          pawn structure
            `pawn connectivity`                  (implemented, un-tuned)
-           `weak squares`                       (implemented, un-tuned, commented out)
+           `weak squares`                       (implemented, un-tuned)
            `passed pawns`                       
 
          piece-pawn interactions 
