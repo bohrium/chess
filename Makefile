@@ -5,6 +5,9 @@ ab:
 all:
 	g++ -pthread --std=c++11 Main.cpp Pieces.cpp BoardBasic.cpp BoardMoves.cpp BoardEval.cpp Search.cpp -o main.o 
 
+prof:
+	g++ -pthread -pg --std=c++11 Main.cpp Pieces.cpp BoardBasic.cpp BoardMoves.cpp BoardEval.cpp Search.cpp -o main.o 
+
 grind:
 	g++ -pthread -g --std=c++11 Main.cpp Pieces.cpp BoardBasic.cpp BoardMoves.cpp BoardEval.cpp Search.cpp -o main.o 
 	valgrind --leak-check=yes ./main.o
