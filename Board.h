@@ -106,13 +106,7 @@ struct MoveList {
 void print_move(Board const* B, Move M);
 void print_movelist(Board const* B, MoveList* ML);
 
-void generate_pawn_moves  (Board const* B, MoveList* ML, Coordinate source);
-void generate_knight_moves(Board const* B, MoveList* ML, Coordinate source);
-void generate_bishop_moves(Board const* B, MoveList* ML, Coordinate source);
-void generate_rook_moves  (Board const* B, MoveList* ML, Coordinate source);
-void generate_queen_moves (Board const* B, MoveList* ML, Coordinate source);
-void generate_king_moves  (Board const* B, MoveList* ML, Coordinate source);
-void generate_moves(Board const* B, MoveList* ML);
+void generate_moves(Board const* B, MoveList* ML, bool captures_only);
 
 void change_piece(Board* B, Coordinate rc, Piece p, bool is_add);
 

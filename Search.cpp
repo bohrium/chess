@@ -59,7 +59,7 @@ ScoredMove get_best_move(Board* B, const int depth, int alpha, int beta, bool st
     /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     ~~~~  0.2. Generate Moves  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
     MoveList ML;  
-    generate_moves(B, &ML);
+    generate_moves(B, &ML, false);
     int nb_candidates = ML.length; 
     if (2<=depth) {
         BARK(verbose,std::cout<<COLORIZE(GRAY,"sortin"));
@@ -226,42 +226,50 @@ END:
 ====  1. SEARCH HELPERS  ======================================================
 =============================================================================*/
 
-Move shallow_greedy_move(Board* B)
+bool shallow_greedy_move(Board* B, Move* m)
 {
-    /* TODO: check for empty move list?? */
     MoveList ML;  
-    generate_moves(B, &ML);
+    generate_moves(B, &ML, true);
+    if (!ML.length) { return false; }
+
     int move_acc = 0;
 
     int sign = B->next_to_move == Color::white ? +1 : -1; 
 
     int score_acc = -KING_POINTS/2; 
-    for (int m=0; m!=ML.length; ++m) {
-        apply_move(B, ML.moves[m]);
+    for (int l=0; l!=ML.length; ++l) {
+        apply_move(B, ML.moves[l]);
         int score = sign * evaluate(B);
-        undo_move(B, ML.moves[m]);
-        score_acc = MAX(score_acc, score);
-        if (score_acc == score) { move_acc = m; }
+        undo_move(B, ML.moves[l]);
+        if (score_acc < score) {
+            score_acc = score;
+            move_acc = l;
+        }
     }
-    score_acc *= sign; /* useless but goes with computation spirit */
-    return ML.moves[move_acc]; 
+    //score_acc *= sign; /* useless but goes with computation spirit */
+
+    *m = ML.moves[move_acc];
+    return true;
 }
 
 int stable_eval(Board* B, int max_plies, int alpha, int beta)
 {
     /* TODO: check for taken king at very beginning and during loop */
-    /* TODO: implement alpha beta style cutoffs */
 
-    if (max_plies<=0) { return evaluate(B); }
-    bool is_white = B->next_to_move==Color::white;
     int pass = evaluate(B);
+    if (max_plies<=0) { return pass; }
+    bool is_white = B->next_to_move==Color::white;
     if (is_white && pass>=beta || !is_white && pass<alpha) { return pass; } 
+    if ( is_white && alpha<pass ) { alpha = pass; }
+    if (!is_white && pass< beta ) { beta  = pass; }
 
-    Move m = shallow_greedy_move(B);
-    if (!is_capture(m)) { return evaluate(B); }
+    Move m;
+    bool found_capture = shallow_greedy_move(B, &m);
+    if (!found_capture) { return pass; }
+    //if (!is_capture(m)) { return pass; }
 
     apply_move(B, m);
-    int go = stable_eval(B, max_plies-1, alpha, beta); /* TODO: update alpha beta */ 
+    int go = stable_eval(B, max_plies-1, alpha, beta); 
     undo_move(B, m);
     return is_white ? MAX(pass, go) : MIN(pass, go);
 }
@@ -374,7 +382,7 @@ ScoredMove get_best_move_multithreaded(Board* B, const int depth, int alpha, int
     }
 
     MoveList ML; 
-    generate_moves(B, &ML);
+    generate_moves(B, &ML, false);
     ML.length = MIN(ML.length, 36);
     order_moves(B, &ML, ordering_depths[depth], 6, parent);
     ScoredMove sms[MAX_NB_MOVES];

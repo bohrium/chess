@@ -18,139 +18,147 @@ void print_movelist(Board const* B, MoveList* ML)
     }
 }
 
-void generate_moves_for_piece(Board const* B, MoveList* ML, Piece mover, Coordinate source)
+void generate_pawn_moves  (Board const* B, MoveList* ML, Coordinate source, bool captures_only);
+void generate_knight_moves(Board const* B, MoveList* ML, Coordinate source, bool captures_only);
+void generate_bishop_moves(Board const* B, MoveList* ML, Coordinate source, bool captures_only);
+void generate_rook_moves  (Board const* B, MoveList* ML, Coordinate source, bool captures_only);
+void generate_queen_moves (Board const* B, MoveList* ML, Coordinate source, bool captures_only);
+void generate_king_moves  (Board const* B, MoveList* ML, Coordinate source, bool captures_only);
+
+void generate_moves_for_piece(Board const* B, MoveList* ML, Piece mover, Coordinate source, bool captures_only)
 {
     /* does nothing for empty Piece */
     switch (mover.species) {
-    case Species::empty_species: break;
-    case Species::pawn:   generate_pawn_moves  (B, ML, source); break; 
-    case Species::knight: generate_knight_moves(B, ML, source); break; 
-    case Species::bishop: generate_bishop_moves(B, ML, source); break; 
-    case Species::rook:   generate_rook_moves  (B, ML, source); break; 
-    case Species::queen:  generate_queen_moves (B, ML, source); break; 
-    case Species::king:   generate_king_moves  (B, ML, source); break; 
+    break; case Species::empty_species: 
+    break; case Species::pawn:   generate_pawn_moves  (B, ML, source, captures_only);  
+    break; case Species::knight: generate_knight_moves(B, ML, source, captures_only);  
+    break; case Species::bishop: generate_bishop_moves(B, ML, source, captures_only);  
+    break; case Species::rook:   generate_rook_moves  (B, ML, source, captures_only);  
+    break; case Species::queen:  generate_queen_moves (B, ML, source, captures_only);  
+    break; case Species::king:   generate_king_moves  (B, ML, source, captures_only);  
     }
 }
-void generate_moves(Board const* B, MoveList* ML, Color next_to_move)
+void generate_moves(Board const* B, MoveList* ML, bool captures_only)
 {
     ML->length = 0;
     for (int r=0; r!=8; ++r) {
         for (int c=0; c!=8; ++c) {
             Piece mover = get_piece(B, {r, c});
-            if (mover.color != next_to_move) { continue; }
-            generate_moves_for_piece(B, ML, mover, {r, c});
+            if (mover.color != B->next_to_move) { continue; }
+            //generate_moves_for_piece(B, ML, mover, {r, c}, false/*captures_only*/);
+            generate_moves_for_piece(B, ML, mover, {r, c}, captures_only);
         }
     }
-}  
-void generate_moves(Board const* B, MoveList* ML)
-{
-    generate_moves(B, ML, B->next_to_move);
 }
 
-bool add_move_color_guard(Board const* B, MoveList* ML, Coordinate source, Coordinate dest, Color needed_color)
+bool add_move_color_guard(Board const* B, MoveList* ML, Coordinate source, Coordinate dest, Color needed_color, bool captures_only)
 {
     Piece taken = get_piece(B, dest);
     if (is_valid(dest) && taken.color == needed_color) {
-        ML->moves[ML->length++] = {source, dest, taken, MoveType::ordinary}; 
+        if (!captures_only || needed_color!=Color::empty_color) {
+            ML->moves[ML->length++] = {source, dest, taken, MoveType::ordinary}; 
+        }
         return true;
     }
     return false;
 } 
 
-bool add_pawn_move_color_guard(Board const* B, MoveList* ML, Coordinate source, Coordinate dest, Color needed_color)
-{
+bool add_pawn_move_color_guard(Board const* B, MoveList* ML, Coordinate source, Coordinate dest, Color needed_color, bool captures_only)
+{ /* only difference from `add_move_color_guard` is possibility of promotion */
     Piece taken = get_piece(B, dest);
     if (is_valid(dest) && taken.color == needed_color) {
-        Move m = {source, dest, taken, MoveType::ordinary};
-        /* CAUTION: row "0" is farthest from white's camp */
-        Piece mover = get_piece(B, source);
-        if (mover.color==Color::white && dest.row==0 || 
-            mover.color==Color::black && dest.row==7) {
-            m.type = MoveType::promote_to_queen;
-        } 
-        ML->moves[ML->length++] = m; 
+        if (!captures_only || needed_color!=Color::empty_color) {
+            Move m = {source, dest, taken, MoveType::ordinary};
+            /* CAUTION: row "0" is farthest from white's camp */
+            Piece mover = get_piece(B, source);
+            if (mover.color==Color::white && dest.row==0 || 
+                mover.color==Color::black && dest.row==7) {
+                m.type = MoveType::promote_to_queen;
+            } 
+            ML->moves[ML->length++] = m; 
+        }
         return true;
     }
     return false;
 }
 
-void generate_pawn_moves  (Board const* B, MoveList* ML, Coordinate source)
+void generate_pawn_moves  (Board const* B, MoveList* ML, Coordinate source, bool captures_only)
 {
     int row=source.row, col=source.col;
     int direction = B->next_to_move==Color::white ? -1 : +1;
     int start = B->next_to_move==Color::white ? 6 : 1;
     Coordinate dest = {row+direction, col}; 
-    if (add_pawn_move_color_guard(B, ML, source, {row+direction, col}, Color::empty_color) &&
+    if (add_pawn_move_color_guard(B, ML, source, {row+direction, col}, Color::empty_color, captures_only) &&
         row == start) {
-        add_move_color_guard(B, ML, source, {row+2*direction, col}, Color::empty_color);
+        add_move_color_guard(B, ML, source, {row+2*direction, col}, Color::empty_color, captures_only);
     }
-    add_pawn_move_color_guard(B, ML, source, {row+direction, col+1}, flip_color(B->next_to_move));
-    add_pawn_move_color_guard(B, ML, source, {row+direction, col-1}, flip_color(B->next_to_move));
+    add_pawn_move_color_guard(B, ML, source, {row+direction, col+1}, flip_color(B->next_to_move), captures_only);
+    add_pawn_move_color_guard(B, ML, source, {row+direction, col-1}, flip_color(B->next_to_move), captures_only);
 }
-void generate_knight_moves(Board const* B, MoveList* ML, Coordinate source)
+void generate_knight_moves(Board const* B, MoveList* ML, Coordinate source, bool captures_only)
 {
     int row=source.row, col=source.col;
     for (int dr=-2; dr!=3; ++dr) {
         for (int dc=-2; dc!=3; ++dc) {
             if (dr*dr + dc*dc != 2*2 + 1*1) { continue; }  
-            add_move_color_guard(B, ML, source, {row+dr, col+dc}, Color::empty_color);
-            add_move_color_guard(B, ML, source, {row+dr, col+dc}, flip_color(B->next_to_move));
+            add_move_color_guard(B, ML, source, {row+dr, col+dc}, Color::empty_color, captures_only);
+            add_move_color_guard(B, ML, source, {row+dr, col+dc}, flip_color(B->next_to_move), captures_only);
         }
     }
 }
-void generate_bishop_moves(Board const* B, MoveList* ML, Coordinate source)
+void generate_bishop_moves(Board const* B, MoveList* ML, Coordinate source, bool captures_only)
 {
     int row=source.row, col=source.col;
     for (int dr=-1; dr!=2; ++dr) {
         for (int dc=-1; dc!=2; ++dc) {
             if (dr*dr + dc*dc != 1*1 + 1*1) { continue; }
             for (int t=1; t!=8; ++t) {
-                if (! add_move_color_guard(B, ML, source, {row+t*dr, col+t*dc}, Color::empty_color)) {
-                    add_move_color_guard(B, ML, source, {row+t*dr, col+t*dc}, flip_color(B->next_to_move));
+                if (! add_move_color_guard(B, ML, source, {row+t*dr, col+t*dc}, Color::empty_color, captures_only)) {
+                    add_move_color_guard(B, ML, source, {row+t*dr, col+t*dc}, flip_color(B->next_to_move), captures_only);
                     break;
                 }
             }
         }
     }
 }
-void generate_rook_moves  (Board const* B, MoveList* ML, Coordinate source)
+void generate_rook_moves  (Board const* B, MoveList* ML, Coordinate source, bool captures_only)
 {
     int row=source.row, col=source.col;
     for (int dr=-1; dr!=2; ++dr) {
         for (int dc=-1; dc!=2; ++dc) {
             if (dr*dr + dc*dc != 1*1) { continue; }
             for (int t=1; t!=8; ++t) {
-                if (! add_move_color_guard(B, ML, source, {row+t*dr, col+t*dc}, Color::empty_color)) {
-                    add_move_color_guard(B, ML, source, {row+t*dr, col+t*dc}, flip_color(B->next_to_move));
+                if (! add_move_color_guard(B, ML, source, {row+t*dr, col+t*dc}, Color::empty_color, captures_only)) {
+                    add_move_color_guard(B, ML, source, {row+t*dr, col+t*dc}, flip_color(B->next_to_move), captures_only);
                     break;
                 }
             }
         }
     }
 }
-void generate_queen_moves (Board const* B, MoveList* ML, Coordinate source)
+void generate_queen_moves (Board const* B, MoveList* ML, Coordinate source, bool captures_only)
 {
     int row=source.row, col=source.col;
     for (int dr=-1; dr!=2; ++dr) {
         for (int dc=-1; dc!=2; ++dc) {
             if (dr*dr + dc*dc == 0) { continue; }
             for (int t=1; t!=8; ++t) {
-                if (! add_move_color_guard(B, ML, source, {row+t*dr, col+t*dc}, Color::empty_color)) {
-                    add_move_color_guard(B, ML, source, {row+t*dr, col+t*dc}, flip_color(B->next_to_move));
+                if (! add_move_color_guard(B, ML, source, {row+t*dr, col+t*dc}, Color::empty_color, captures_only)) {
+                    add_move_color_guard(B, ML, source, {row+t*dr, col+t*dc}, flip_color(B->next_to_move), captures_only);
                     break;
                 }
             }
         }
     }
 }
-void generate_king_moves (Board const* B, MoveList* ML, Coordinate source)
+void generate_king_moves (Board const* B, MoveList* ML, Coordinate source, bool captures_only)
 {
     int row=source.row, col=source.col;
     for (int dr=-1; dr!=2; ++dr) {
         for (int dc=-1; dc!=2; ++dc) {
             if (dr*dr + dc*dc == 0) { continue; }
-            add_move_color_guard(B, ML, source, {row+dr, col+dc}, Color::empty_color);
-            add_move_color_guard(B, ML, source, {row+dr, col+dc}, flip_color(B->next_to_move));
+            add_move_color_guard(B, ML, source, {row+dr, col+dc}, Color::empty_color, captures_only);
+            add_move_color_guard(B, ML, source, {row+dr, col+dc}, flip_color(B->next_to_move), captures_only);
         }
     }
 }
@@ -562,11 +570,12 @@ void update_weak_squares(Board* B, Color side, int col) {
     int step  = (side == Color::white ? -1 : +1);
     int end   = (side == Color::white ? -1 :  8);
 
+    auto atx = B->attacks_by_pawn[side];
     int is_attackable = false;
     for (int row=start; row!=end; row+=step) {
         if (!is_attackable &&
-            ((1<=col && B->attacks_by_pawn[side][row][col-1]) ||
-             (col<7 && B->attacks_by_pawn[side][row][col+1] ))) {
+            ((1<=col && atx[row][col-1]) ||
+             (col <7 && atx[row][col+1]))) {
             is_attackable = true;
         }
         Piece p = B->grid[row][col]; 
