@@ -1,13 +1,13 @@
 #ifndef HELPERS_H
 #define HELPERS_H
 
-#define GRAY       "\033[0;90m"
-#define YELLOW     "\033[0;33m"
-#define MAGENTA    "\033[1;35m"
-#define CYAN       "\033[1;36m"
-#define BLUE       "\033[0;34m"
-#define RED        "\033[0;31m"
-#define GREEN      "\033[0;32m"
+#define GRAY    "\033[0;90m"
+#define YELLOW  "\033[0;33m"
+#define MAGENTA "\033[1;35m"
+#define CYAN    "\033[1;36m"
+#define BLUE    "\033[0;34m"
+#define RED     "\033[0;31m"
+#define GREEN   "\033[0;32m"
 #define DEFAULT_COLOR   YELLOW
 
 #define GO_DOWN(N) {for (int k=0; k!=N; ++k) { std::cout << std::endl; }}

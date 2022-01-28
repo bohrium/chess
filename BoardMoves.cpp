@@ -323,6 +323,9 @@ void update_xrays_by_piece(Board* B, Coordinate rc, Piece p, bool is_add)
                 if (!is_valid(new_rc)) { continue; }
                 B->nb_xrays[self][new_rc.row][new_rc.col] += sign_d;
                 B->nb_xrays_by_side[self] += sign_d;
+                //if () {
+                //    nb_xrayed_stones[self] += sign_d * (nb_xrays[them][r][c] ? 1 : 0);
+                //}
                 //if (ABS(new_rc.row-kl.row)<=1 && ABS(new_rc.col-kl.col)<=1) { B->nb_king_attacks_near[them] += sign_d; }
             }
         }
@@ -420,6 +423,8 @@ void change_piece(Board* B, Coordinate rc, Piece p, bool is_add)
         //{ /* loose pieces */
         //}
     }
+    //nb_xrayed_stones[self] += sign_d * (nb_xrays[them][r][c] ? 1 : 0);
+    //nb_loose_stones [self] += sign_d * (nb_xrays[them][r][c] ? 1 : 0);
 
     /* update piece-square counts and pawn structure terms */
     switch (p.species) {

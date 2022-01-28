@@ -1,4 +1,5 @@
 #include "Board.h"
+#include "EvalParams.h"
 #include "Search.h"
 #include "Helpers.h"
 #include <iostream>
@@ -8,9 +9,9 @@
 #include <thread>
 
 /* WARNING: if NB_DEPTH too small, also should update verbose in main.c */
-#define NB_WHITE_DEPTH      10
-#define NB_BLACK_DEPTH      10
-#define NB_COMMENTARY_DEPTH  8
+#define NB_WHITE_DEPTH      14
+#define NB_BLACK_DEPTH      12
+#define NB_COMMENTARY_DEPTH 10
 
 #define LINE_REPORT_PLIES 4 
 

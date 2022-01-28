@@ -7,6 +7,7 @@
 #define NB_PLIES_TIL_DRAW 20
 
 struct DisaggregatedScore {
+    int initiative;
     int material;
     int king_safety;
     int pawn_structure;
@@ -20,6 +21,8 @@ struct Board {
     unsigned int hash;
 
     std::vector<DisaggregatedScore> evaluation_stack;
+
+    int nb_xrayed_stones[2];
 
     // KING SAFETY TERMS
     /* We define four quintants (0123) representing black's queenside, black's
@@ -111,7 +114,6 @@ void undo_move(Board* B, Move M);
 void apply_null(Board* B);
 void undo_null(Board* B);
 
-extern int KING_POINTS;
 int evaluate(Board* B);
 void add_eval_diff(Board* B, Coordinate rc, Piece p, bool is_add);
 

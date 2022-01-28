@@ -1,6 +1,7 @@
 #include "Search.h"
 #include "Board.h"
 #include "Helpers.h"
+#include "EvalParams.h"
 #include <iomanip>
 #include <iostream>
 #include <algorithm>

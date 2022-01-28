@@ -1,5 +1,6 @@
 #include "Board.h"
 #include "Helpers.h"
+#include "EvalParams.h"
 #include <iostream>
 #include <iomanip>
 
@@ -178,8 +179,8 @@ void print_board_fancy(Board const* B)
         break; case  4: std::cout << "kng = " << RED << std::setw(4) << std::right << std::showpos << ds.king_safety + 13 * ( B->nb_king_attacks_near[0]-B->nb_king_attacks_near[1]);
         break; case  5: std::cout << "pwn = " << RED << std::setw(4) << std::right << std::showpos << ds.pawn_structure + 5 * ( B->nb_weak_squares[0]-B->nb_weak_squares[1]);
         break; case  6: std::cout << "sqr = " << RED << std::setw(4) << std::right << std::showpos << ds.cozy_squares;
-        break; case  7: std::cout << "ini = " << RED << std::setw(4) << std::right << std::showpos << 5 * (-B->nb_xrays_by_side[0] + B->nb_xrays_by_side[1])
-                                                                                                         + 13* (B->next_to_move==Color::white ? +1 : -1);
+        break; case  7: std::cout << "ini = " << RED << std::setw(4) << std::right << std::showpos << MOBILITY * (-B->nb_xrays_by_side[0] + B->nb_xrays_by_side[1])
+                                                                                                    + TURN_BONUS * (B->next_to_move==Color::white ? +1 : -1);
 ;
         break; case  8: comp_sq_counts(B->nb_xrays, 0);
         break; case  9: comp_sq_counts(B->nb_xrays, 1);
