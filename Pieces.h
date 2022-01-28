@@ -2,8 +2,6 @@
 #define PIECES_H
 #include <vector>
 
-#define NB_PLIES_TIL_DRAW 20
-
 /*=============================================================================
 ====  0. INTERNAL DEGREES OF FREEDOM  =========================================
 =============================================================================*/
@@ -16,7 +14,10 @@ enum Color {
     white=1,
     empty_color=2
 };
-Color flip_color(Color c);
+inline Color flip_color(Color c)
+{
+    return c==Color::white ? Color::black : Color::white; 
+}
 
 /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ~~~~  0.1. Species  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
@@ -40,7 +41,10 @@ struct Piece {
     Species species;
 };
 const Piece empty_piece = {Color::empty_color, Species::empty_species};
-bool piece_equals(Piece p, Piece q);
+inline bool piece_equals(Piece p, Piece q)
+{
+    return p.color==q.color && p.species==q.species;
+}
 
 /*=============================================================================
 ====  1. EXTERNAL DEGREES OF FREEDOM  =========================================
@@ -52,8 +56,15 @@ bool piece_equals(Piece p, Piece q);
 struct Coordinate {
     int row, col; 
 };
-bool is_valid(Coordinate rc);
-int parity(Coordinate rc);
+inline bool is_valid(Coordinate coor)
+{
+    return (0<=coor.row && coor.row<8) &&
+           (0<=coor.col && coor.col<8); 
+}
+inline int parity(Coordinate rc)
+{
+    return (rc.row + rc.col)%2;
+}
 
 /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ~~~~  1.1. Move  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
@@ -68,8 +79,14 @@ struct Move { // a standard move (no promotion, en passant, or castling)
     Piece taken;
     MoveType type; 
 };
-bool is_capture(Move m);
-bool is_irreversible(Move m, Piece mover);
+inline bool is_capture(Move m)
+{
+    return m.taken.species != Species::empty_species;
+}
+inline bool is_irreversible(Move m, Piece mover)
+{
+    return is_capture(m) || mover.species==Species::pawn;
+}
 
 const Move unk_move = {{0,0}, {0,0}, empty_piece, MoveType::extra_legal};
 

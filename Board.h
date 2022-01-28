@@ -2,9 +2,10 @@
 #define BOARD_H
 
 #include "Pieces.h"
+#include "Helpers.h"
 #include <vector>
 
-#define NB_PLIES_TIL_DRAW 20
+#define NB_PLIES_TIL_DRAW 100
 
 struct DisaggregatedScore {
     int initiative;
@@ -72,11 +73,18 @@ struct Board {
 };
 Board copy_board(Board B);
 
-Piece get_piece(Board const* B, Coordinate rc);
-bool kronecker_piece(Board const* B, Coordinate rc, Piece p);
+//inline Piece get_piece(Board const* B, Coordinate rc);
+//inline bool kronecker_piece(Board const* B, Coordinate rc, Piece p);
+inline Piece get_piece(Board const* B, Coordinate rc)
+{
+    return B->grid[rc.row][rc.col]; 
+} 
+inline bool kronecker_piece(Board const* B, Coordinate rc, Piece p)
+{
+    return KRON(piece_equals(get_piece(B, rc), p));
+}
 
-extern Species init_row[];
-
+//extern Species init_row[];
 void init_board(Board* B);
 
 void print_board(Board const* B);

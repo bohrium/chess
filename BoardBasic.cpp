@@ -306,13 +306,4 @@ bool read_board(Board* B, char const* string) /* returns TRUE if error */
 }
 
 
-Piece get_piece(Board const* B, Coordinate rc)
-{
-    return B->grid[rc.row][rc.col]; 
-} 
-
-bool kronecker_piece(Board const* B, Coordinate rc, Piece p)
-{
-    return KRON(piece_equals(get_piece(B, rc), p));
-}
 

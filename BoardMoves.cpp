@@ -187,7 +187,7 @@ int const quintant_by_coor[8][8] = {
     {2,2,2,2,3,3,3,3},
 };
 
-int quintant_from(Coordinate rc)
+inline int quintant_from(Coordinate rc)
 {
     return quintant_by_coor[rc.row][rc.col];
 }
@@ -268,110 +268,183 @@ void undo_move(Board* B, Move m)
 
 ////
 
+/* TODO: codify GRAND CONVENTION: alternate signs of direction!! */
+
+int const nb_knight_dirs = 8; 
+int const knight_dirs[][2] = {
+    {+2, +1},    {-2, -1},    
+    {+2, -1},    {-2, +1},    
+    {+1, +2},    {-1, -2},
+    {+1, -2},    {-1, +2},
+};
+int const nb_bishop_dirs = 4; 
+int const bishop_dirs[][2] = {
+    {+1, +1},    {-1, -1},
+    {+1, -1},    {-1, +1},
+};
+int const nb_rook_dirs = 4; 
+int const rook_dirs[][2] = {
+    {+1,  0},    {-1,  0},
+    { 0, +1},    { 0, -1},
+};
+int const nb_queen_dirs = 8; 
+int const queen_dirs[][2] = {
+    {+1, +1},    {-1, -1},
+    {+1, -1},    {-1, +1},
+    {+1,  0},    {-1,  0},
+    { 0, +1},    { 0, -1},
+};
+
+inline int max_ray_len(int r, int c, int dr, int dc)
+{
+    //int R = dr ? ((0<dr) ? ((7-r)/dr) : (r/(-dr))) : 8;
+    //int C = dc ? ((0<dc) ? ((7-c)/dc) : (c/(-dc))) : 8;
+    //return MIN(R,C);
+    return !dr  ? (!dc ? -1 : 0<dc ? (7-c)/dc : c/(-dc)) :
+           0<dr ? (!dc ? (7-r)/dr : 0<dc ? MIN((7-r)/dr,(7-c)/dc) : MIN((7-r)/dr,c/(-dc))):
+                  (!dc ? r/(-dr)  : 0<dc ? MIN(r/(-dr),(7-c)/dc) : MIN(r/(-dr),c/(-dc)));
+}
+
 void update_xrays_by_pawn(Board* B, Coordinate rc, Piece p, bool is_add) 
 {
     int const sign_d = is_add ? +1 : -1;
     Color const self = p.color;
-    Color const them = flip_color(self);
-    Piece const pawn = {self, Species::pawn};
+    //Color const them = flip_color(self);
 
-    for (int dr=-1; dr!=2; ++dr) {
-        for (int dc=-1; dc!=2; ++dc) {
-            if (dr*dr+dc*dc==0) { continue; }
-            Piece goal_a = {self, Species::queen};
-            Piece goal_b = (dr*dr+dc*dc==2) ? Piece{self, Species::bishop}
-                                            : Piece{self, Species::rook};
-            int nb_goals = 0;
-            for (int t=1; t!=8; ++t) {
-                Coordinate new_rc = {rc.row+dr*t,rc.col+dc*t};
-                if (!is_valid(new_rc)) { break; }
-                if (kronecker_piece(B, new_rc, goal_a) ||
-                    kronecker_piece(B, new_rc, goal_b)) {
-                    nb_goals += 1;
-                }
-                if (kronecker_piece(B, new_rc, pawn)) { break; } /* can't see through own pawn */
-            }
+    // removing an un-xrayed pawn changes nothing
+    if (!is_add && !B->nb_xrays[self][rc.row][rc.col]) { return; }
 
-            if (!nb_goals) { continue; }
+    int nb_sources_by_dir[nb_queen_dirs] = {0,0,0,0,0,0,0,0};
+    int ranges_by_dir    [nb_queen_dirs] = {0,0,0,0,0,0,0,0};
 
-            for (int t=1; t!=8; ++t) {
-                Coordinate new_rc = {rc.row-dr*t,rc.col-dc*t}; /* go in opposite direction */
-                if (!is_valid(new_rc)) { break; }
-                B->nb_xrays[self][new_rc.row][new_rc.col] -= sign_d * nb_goals;
-                B->nb_xrays_by_side[self] -= sign_d * nb_goals;
-                if (kronecker_piece(B, new_rc, pawn)) { break; } /* can't see through own pawn */
-            }
+    for (int k=0; k!=nb_queen_dirs; ++k) {
+        int dr = queen_dirs[k][0]; int dc = queen_dirs[k][1];
+        Species goal_a = Species::queen;
+        Species goal_b = (dr*dr+dc*dc==2) ? Species::bishop
+                                          : Species::rook;
+
+        Coordinate src_rc = rc;
+        int T = max_ray_len(rc.row, rc.col, dr, dc);
+        int t=0;
+        Piece p;
+        #define LOOP_BODY                                                                   \
+            src_rc.row += dr; src_rc.col += dc;                                             \
+            p = B->grid[src_rc.row][src_rc.col];                                            \
+            if (p.color == self) { /*continue;*/                                            \
+            if (p.species==Species::pawn) { t+=1; break; } /* can't see through own pawn */ \
+            if (p.species==goal_a || p.species==goal_b) { nb_sources_by_dir[k] += 1; }      \
+            }                                                                               \
+            ++t; /* manual loop iter */                                                          
+
+        switch (T) { /*waterfall*/
+            case 7: LOOP_BODY 
+            case 6: LOOP_BODY
+            case 5: LOOP_BODY
+            case 4: LOOP_BODY
+            case 3: LOOP_BODY
+            case 2: LOOP_BODY
+            case 1: LOOP_BODY
+            case 0: break;
         }
+
+        #undef LOOP_BODY
+
+        ranges_by_dir[k] = t; /* already incremented, mind you! */
+    }
+
+    for (int k=0; k!=nb_queen_dirs; ++k) {/* go in opposite direction */
+        int minus_k = k + ((k%2) ? -1 : +1); /* GRAND CONVENTION */
+        int nb_sources = nb_sources_by_dir[minus_k]; 
+        if (!nb_sources || !ranges_by_dir[k]) { continue; }
+        int dr = queen_dirs[k][0]; int dc = queen_dirs[k][1];
+
+        Coordinate dst_rc = rc;
+        int T = ranges_by_dir[k];
+        int t=0;
+        #define LOOP_BODY                                                       \
+            dst_rc.row += dr; dst_rc.col += dc;                                 \
+            B->nb_xrays[self][dst_rc.row][dst_rc.col] -= sign_d * nb_sources;   \
+            B->nb_xrays_by_side[self] -= sign_d * nb_sources;                   
+
+        switch (T) { /*waterfall*/
+            case 7: LOOP_BODY 
+            case 6: LOOP_BODY
+            case 5: LOOP_BODY
+            case 4: LOOP_BODY
+            case 3: LOOP_BODY
+            case 2: LOOP_BODY
+            case 1: LOOP_BODY
+            case 0: break;
+        }
+
+        #undef LOOP_BODY
     }
 }
+
+
 
 void update_xrays_by_piece(Board* B, Coordinate rc, Piece p, bool is_add) 
 {
     int const sign_d = is_add ? +1 : -1;
     Color const self = p.color;
     Color const them = flip_color(self);
-    Piece const pawn = {self, Species::pawn};
 
-    //Coordinate kl = B->king_locs[them].back();
-
+    int nb_dirs;
+    auto dirs = knight_dirs;
     switch (p.species) {
-    break; case Species::knight: 
-        for (int dr=-2; dr!=3; ++dr) {
-            for (int dc=-2; dc!=3; ++dc) {
-                if (dr*dr + dc*dc != 2*2 + 1*1) { continue; }  
-                Coordinate new_rc = {rc.row+dr,rc.col+dc};
-                if (!is_valid(new_rc)) { continue; }
-                B->nb_xrays[self][new_rc.row][new_rc.col] += sign_d;
-                B->nb_xrays_by_side[self] += sign_d;
-                //if () {
-                //    nb_xrayed_stones[self] += sign_d * (nb_xrays[them][r][c] ? 1 : 0);
-                //}
-                //if (ABS(new_rc.row-kl.row)<=1 && ABS(new_rc.col-kl.col)<=1) { B->nb_king_attacks_near[them] += sign_d; }
-            }
-        }
-    break; case Species::bishop: 
-        for (int dr=-1; dr!=2; ++dr) {
-            for (int dc=-1; dc!=2; ++dc) {
-                if (dr*dr + dc*dc != 1*1 + 1*1) { continue; }
-                for (int t=1; t!=8; ++t) {
-                    Coordinate new_rc = {rc.row+dr*t,rc.col+dc*t};
-                    if (!is_valid(new_rc)) { break; }
-                    B->nb_xrays[self][new_rc.row][new_rc.col] += sign_d;
-                    B->nb_xrays_by_side[self] += sign_d;
-                    //if (ABS(new_rc.row-kl.row)<=1 && ABS(new_rc.col-kl.col)<=1) { B->nb_king_attacks_near[them] += sign_d; }
-                    if (kronecker_piece(B, new_rc, pawn)) { break; } /* can't see through own pawn */
-                }
-            }
-        }
-    break; case Species::rook  : 
-        for (int dr=-1; dr!=2; ++dr) {
-            for (int dc=-1; dc!=2; ++dc) {
-                if (dr*dr + dc*dc != 1) { continue; }
-                for (int t=1; t!=8; ++t) {
-                    Coordinate new_rc = {rc.row+dr*t,rc.col+dc*t};
-                    if (!is_valid(new_rc)) { break; }
-                    B->nb_xrays[self][new_rc.row][new_rc.col] += sign_d;
-                    B->nb_xrays_by_side[self] += sign_d;
-                    //if (ABS(new_rc.row-kl.row)<=1 && ABS(new_rc.col-kl.col)<=1) { B->nb_king_attacks_near[them] += sign_d; }
-                    if (kronecker_piece(B, new_rc, pawn)) { break; } /* can't see through own pawn */
-                }
-            }
-        }
-    break; case Species::queen : 
-        for (int dr=-1; dr!=2; ++dr) {
-            for (int dc=-1; dc!=2; ++dc) {
-                if (!(dr || dc)) { continue; }
-                for (int t=1; t!=8; ++t) {
-                    Coordinate new_rc = {rc.row+dr*t,rc.col+dc*t};
-                    if (!is_valid(new_rc)) { break; }
-                    B->nb_xrays[self][new_rc.row][new_rc.col] += sign_d;
-                    B->nb_xrays_by_side[self] += sign_d;
-                    //if (ABS(new_rc.row-kl.row)<=1 && ABS(new_rc.col-kl.col)<=1) { B->nb_king_attacks_near[them] += sign_d; }
-                    if (kronecker_piece(B, new_rc, pawn)) { break; } /* can't see through own pawn */
-                }
-            }
-        }
+    break; case Species::knight: nb_dirs=nb_knight_dirs; dirs=knight_dirs; goto LEAPER; 
+    break; case Species::bishop: nb_dirs=nb_bishop_dirs; dirs=bishop_dirs; goto RIDER ;
+    break; case Species::rook  : nb_dirs=nb_rook_dirs  ; dirs=rook_dirs  ; goto RIDER ;
+    break; case Species::queen : nb_dirs=nb_queen_dirs ; dirs=queen_dirs ; goto RIDER ;
     }
+
+LEAPER:
+    for (int k=0; k!=nb_dirs; ++k) {
+        Coordinate new_rc = {rc.row + dirs[k][0], rc.col + dirs[k][1]};
+        if (!is_valid(new_rc)) { continue; }
+        B->nb_xrays[self][new_rc.row][new_rc.col] += sign_d;
+        B->nb_xrays_by_side[self] += sign_d;
+    }
+    return;
+
+RIDER :
+    for (int k=0; k!=nb_dirs; ++k) {
+        int dr = dirs[k][0]; int dc = dirs[k][1];
+
+        Coordinate new_rc = rc;
+        int T = max_ray_len(rc.row, rc.col, dr, dc); 
+        int t=0;
+        Piece p;
+        #define LOOP_BODY                                            \
+            new_rc.row += dr; new_rc.col += dc;                      \
+            B->nb_xrays[self][new_rc.row][new_rc.col] += sign_d;     \
+            B->nb_xrays_by_side[self] += sign_d;                     \
+            p = B->grid[new_rc.row][new_rc.col];                     \
+            if (p.species==Species::pawn && p.color==self) { break; } 
+
+        switch (T) { /*waterfall*/
+            case 7: LOOP_BODY 
+            case 6: LOOP_BODY
+            case 5: LOOP_BODY
+            case 4: LOOP_BODY
+            case 3: LOOP_BODY
+            case 2: LOOP_BODY
+            case 1: LOOP_BODY
+            case 0: break;
+        }
+
+        #undef LOOP_BODY
+
+        //for (int t=0; t!=T; ++t) {
+        //    new_rc.row += dr; new_rc.col += dc;
+        //    B->nb_xrays[self][new_rc.row][new_rc.col] += sign_d;
+        //    B->nb_xrays_by_side[self] += sign_d;
+        //    Piece p = B->grid[new_rc.row][new_rc.col];
+        //    if (p.species==Species::pawn && p.color==self) { break; } /* can't see through own pawn */
+        //}
+    }
+    return;
+
 }
 
 void update_king_attacks(Board* B, Coordinate rc, Color king_color, bool is_add)
@@ -380,14 +453,15 @@ void update_king_attacks(Board* B, Coordinate rc, Color king_color, bool is_add)
     Color const them = flip_color(self);
 
     B->nb_king_attacks_near[self] = 0; 
-    if (!is_add) { return; }
+    if (!is_add) { return; } /* return only after zeroing */
 
+    int r, c;
     for (int dr=-1; dr!=2; ++dr) {
+        r = rc.row+dr; if (!(0<=r && r<8)) { continue; }
         for (int dc=-1; dc!=2; ++dc) {
-            if (!(dr || dc)) { continue; }
-            Coordinate new_rc = {rc.row+dr,rc.col+dc};
-            if (!is_valid(new_rc)) { continue; }
-            B->nb_king_attacks_near[self] += B->nb_xrays[them][new_rc.row][new_rc.col];
+            if (!(dc||dr)) { continue; }
+            c = rc.col+dc; if (!(0<=c && c<8)) { continue; }
+            B->nb_king_attacks_near[self] += B->nb_xrays[them][r][c];
         }
     }
 }
@@ -488,14 +562,15 @@ void update_weak_squares(Board* B, Color side, int col) {
     int step  = (side == Color::white ? -1 : +1);
     int end   = (side == Color::white ? -1 :  8);
 
-    int is_unattackable = true;
+    int is_attackable = false;
     for (int row=start; row!=end; row+=step) {
-        if (is_unattackable &&
+        if (!is_attackable &&
             ((1<=col && B->attacks_by_pawn[side][row][col-1]) ||
              (col<7 && B->attacks_by_pawn[side][row][col+1] ))) {
-            is_unattackable = false;
+            is_attackable = true;
         }
-        bool is_weak = is_unattackable && !kronecker_piece(B, {row,col}, {side, Species::pawn});
+        Piece p = B->grid[row][col]; 
+        bool is_weak = !is_attackable && (p.species!=Species::pawn || p.color!=side);
         bool* old = &B->is_weak_square[side][row][col];  
         if (*old != is_weak) {
             *old = is_weak;
@@ -521,4 +596,35 @@ void update_weak_squares(Board* B, Color side, int col) {
 //    );
 //} 
 
+
+
+
+
+    //break; case Species::rook  : 
+    //    for (int k=0; k!=nb_rook_dirs; ++k) {
+    //        int dr = rook_dirs[k][0]; int dc = rook_dirs[k][1];
+    //        int T = max_ray_len(rc.row, rc.col, dr, dc); 
+    //        Coordinate new_rc = rc;
+    //        for (int t=0; t!=T; ++t) {
+    //            new_rc.row += dr; new_rc.col += dc;
+    //            B->nb_xrays[self][new_rc.row][new_rc.col] += sign_d;
+    //            B->nb_xrays_by_side[self] += sign_d;
+    //            Piece p = B->grid[new_rc.row][new_rc.col];
+    //            if (p.species==Species::pawn && p.color==self) { break; } /* can't see through own pawn */
+    //        }
+    //    }
+    //break; case Species::queen : 
+    //    for (int k=0; k!=nb_queen_dirs; ++k) {
+    //        int dr = queen_dirs[k][0]; int dc = queen_dirs[k][1];
+    //        int T = max_ray_len(rc.row, rc.col, dr, dc); 
+    //        Coordinate new_rc = rc;
+    //        for (int t=0; t!=T; ++t) {
+    //            new_rc.row += dr; new_rc.col += dc;
+    //            B->nb_xrays[self][new_rc.row][new_rc.col] += sign_d;
+    //            B->nb_xrays_by_side[self] += sign_d;
+    //            Piece p = B->grid[new_rc.row][new_rc.col];
+    //            if (p.species==Species::pawn && p.color==self) { break; } /* can't see through own pawn */
+    //        }
+    //    }
+    //}
 
