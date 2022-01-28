@@ -47,13 +47,16 @@ ScoredMove get_best_move(Board* B, const int depth, int alpha, int beta, bool st
     /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     ~~~~  0.1. Hash Read  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
     if (stable) {
-        PVRecord pvr = parent[depth][B->hash % PV_TABLE_SIZE];
-        if (pvr.hash == B->hash) {
-          if ((pvr.sm.score > pvr.alpha || pvr.alpha <= alpha) &&
-              (pvr.sm.score < pvr.beta  || beta <= pvr.beta)) {
-            return pvr.sm;
-          }
-        };
+        for (int i=0; i!=2; ++i) { /* NEW FEATURE: look up deepers ! */
+            PVRecord pvr = parent[depth+i][B->hash % PV_TABLE_SIZE];
+            if (pvr.hash == B->hash) {
+                if ((pvr.sm.score > pvr.alpha || pvr.alpha <= alpha) &&
+                    (pvr.sm.score < pvr.beta  || beta <= pvr.beta)) {
+                    return pvr.sm;
+                }
+                break;
+            } 
+        }
     }
 
     /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

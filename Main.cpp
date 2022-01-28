@@ -30,8 +30,8 @@ int main(int argc, char** argv)
 
     zero_table(pv_table);
     
-    //for (int t=0; t!=360; ++t) {
-    for (int t=0; t!=1; ++t) {
+    for (int t=0; t!=360; ++t) {
+    //for (int t=0; t!=1; ++t) {
         // DISPLAY
         print_board_fancy(&B);
         GO_UP(33);

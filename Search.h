@@ -52,7 +52,7 @@ typedef struct PVRecord {
     ScoredMove sm;
 } PVRecord;
 #define PV_TABLE_SIZE 10000
-typedef PVRecord PVTable[20][PV_TABLE_SIZE]; 
+typedef PVRecord PVTable[21][PV_TABLE_SIZE]; 
 
 void zero_table(PVTable table);
 ScoredMove get_best_move_multithreaded(Board* B, int depth, int alpha, int beta, int layers, PVTable parent);

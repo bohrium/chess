@@ -9,7 +9,7 @@
 ~~~~  0.0. Initiative  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 
 int const TURN_BONUS     = 13;
-int const MOBILITY       =  5;
+int const MOBILITY       = 13;
 /* UNIMPLEMENTED! */ int const LOOSE_PIECE    = 13; /* malus */
 /* UNIMPLEMENTED! */ int const ATTACKED_PIECE = 13; /* malus */
 
@@ -18,6 +18,7 @@ int const MOBILITY       =  5;
 
 /*------  0.1.0. linear material     ----------------------------------------*/
 
+int const PAWN_MALUS   = 34; /* malus */
 int const KNIGHT_BONUS = 13;
 int const BISHOP_BONUS = 34;
 int const ROOK_BONUS   = 89;
@@ -68,11 +69,11 @@ int const PROMOTE_4      =  5;
 int const FLANK_P        = 13; /* malus */
 
 int const CORNERED_N     = 89; /* malus */
-int const RIMMED_N       = 34; /* malus */
+int const RIMMED_N       = 13; /* malus */
 int const ADVANCED_N     = 34;
 
-int const RIMMED_B       = 34; /* malus */
-int const CORNERED_B     = 89; /* malus */
+int const RIMMED_B       = 13; /* malus */
+int const CORNERED_B     = 34; /* malus */
 int const B_SNIPER       = 34;
 
 int const R_PIG          = 13;
@@ -89,7 +90,7 @@ int const CENTERED_K2    =  5;
 
 const int KING_POINTS = 100000; /* exceeds twice the total remaining value */ 
 const int points[] = {
-    100,              /*  p  */
+    100-PAWN_MALUS,   /*  p  */
     300+KNIGHT_BONUS, /*  n  */
     300+BISHOP_BONUS, /*  b  */
     500+ROOK_BONUS,   /*  r  */
