@@ -55,8 +55,14 @@ typedef struct PVRecord {
 typedef PVRecord PVTable[22][PV_TABLE_SIZE]; 
 
 void zero_table(PVTable table);
-ScoredMove get_best_move_multithreaded(Board* B, int depth, int alpha, int beta, int layers, PVTable parent);
+void update_table(PVTable parent, PVTable update);
+void print_pv(Board* B, int depth, int verbose, PVTable parent);
+
+Move shallow_greedy_move(Board* B);
+void order_moves(Board* B, MoveList* ML, int depth, int k, PVTable table);
+int stable_eval(Board* B, int max_plies, int alpha, int beta);
+
 ScoredMove get_best_move(Board* B, int depth, int alpha, int beta, bool stable, bool null_move_okay, int verbose, PVTable parent);
-void print_pv(Board* B, int depth, int verbose, PVTable table); 
+ScoredMove get_best_move_multithreaded(Board* B, int depth, int alpha, int beta, int layers, PVTable parent);
 
 #endif//SEARCH_H

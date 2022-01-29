@@ -14,6 +14,7 @@ struct DisaggregatedScore {
     int pawn_structure;
     int cozy_squares;
 };
+DisaggregatedScore const all_zeros = {0,0,0,0,0};
 
 struct Board {
     Color next_to_move;
@@ -23,7 +24,7 @@ struct Board {
 
     std::vector<DisaggregatedScore> evaluation_stack;
 
-    int nb_xrayed_stones[2];
+    //int nb_xrayed_stones[2];
 
     // KING SAFETY TERMS
     /* We define four quintants (0123) representing black's queenside, black's
@@ -91,9 +92,9 @@ void print_board(Board const* B);
 void print_board_fancy(Board const* B);
 bool read_board(Board* B, char const* string);
 
-extern unsigned int const hash_by_piece[3][7];
-extern unsigned int const hash_by_square[8][8];
-extern int const quintant_by_coor[8][8];
+//extern unsigned int const hash_by_piece[3][7];
+//extern unsigned int const hash_by_square[8][8];
+//extern int const quintant_by_coor[8][8];
 int quintant_from(Coordinate rc);
 
 // A chess position can have at most 332 possible next moves:
@@ -122,5 +123,26 @@ void add_eval_diff(Board* B, Coordinate rc, Piece p, bool is_add);
 /* REQUIRES: assumes nb_pawns_by_file is correct! */
 void update_least_advanced(Board* B, Color side, int col);
 void update_weak_squares(Board* B, Color side, int col);
+
+
+
+
+int const quintant_by_coor[8][8] = {
+    {0,0,0,0,1,1,1,1},
+    {0,0,0,0,1,1,1,1},
+    {0,0,0,4,4,1,1,1},
+    {0,0,4,4,4,4,1,1},
+    {2,2,4,4,4,4,3,3},
+    {2,2,2,4,4,3,3,3},
+    {2,2,2,2,3,3,3,3},
+    {2,2,2,2,3,3,3,3},
+};
+
+inline int quintant_from(Coordinate rc)
+{
+    return quintant_by_coor[rc.row][rc.col];
+}
+
+
 
 #endif//BOARD_H

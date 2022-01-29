@@ -7,9 +7,9 @@
 #include <time.h>
 #include <thread>
 
-ply_t const WHITE_DEPTH      = 18; 
+ply_t const WHITE_DEPTH      = 10; 
 ply_t const BLACK_DEPTH      = 10;
-ply_t const COMMENTARY_DEPTH = 14;
+ply_t const COMMENTARY_DEPTH =  8;
 
 ply_t const LINE_REPORT_PLIES = 6;
 
@@ -26,7 +26,7 @@ int main(int argc, char** argv)
 {
     /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     ~~~~  0.0. Initialize Board  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
-    std::cout << COLORIZE(GRAY, "Welcome!") << std::endl; 
+    std::cout << COLORIZE(YELLOW, "Welcome!") << std::endl; 
 
     Board B;
     init_board(&B);
@@ -41,6 +41,7 @@ int main(int argc, char** argv)
         /*--------  0.1.0. display game state  ------------------------------*/
         print_board_fancy(&B);
         GO_UP(33);
+        char cc; std::cin >>cc;
 
         /*--------  0.1.1. compute best move  -------------------------------*/
         std::cout << std::endl;
@@ -59,8 +60,8 @@ int main(int argc, char** argv)
 
         /*--------  0.1.2. announce move (and predicted line)  --------------*/
         CLEAR_LINE(120);
-        std::cout << COLORIZE(t%2?CYAN:MAGENTA, (t%2?'B':'W')) << " plays";
-        std::cout << "(height " << COLORIZE(GREEN, FLUSH_RIGHT(2, sm.height)) << ")";
+        std::cout << COLORIZE(t%2?CYAN:MAGENTA, (t%2?'B':'W')) << " ";
+        std::cout << COLORIZE(GREEN, FLUSH_RIGHT(2, sm.height)) << ": ";
         if (sm.m.taken.species == Species::king) {
             std::cout << std::endl;
             std::cout << "\t" << COLORIZE(GRAY,  "CHECKMATE!") << std::endl;

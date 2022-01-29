@@ -2,23 +2,29 @@
 #define HELPERS_H
 
 #define GRAY    "\033[0;90m"
-#define YELLOW  "\033[0;33m"
-#define MAGENTA "\033[1;35m"
-#define CYAN    "\033[1;36m"
+
 #define BLUE    "\033[0;34m"
 #define RED     "\033[0;31m"
 #define GREEN   "\033[0;32m"
-#define DEFAULT_COLOR   YELLOW
 
-#define GO_DOWN(N)  {REPEAT(N,_, std::cout << "\n"     ); std::cout << std::flush;}
-#define GO_UP(N)    {REPEAT(N,_, std::cout << "\033[1A"); std::cout << std::flush;}
-#define GO_RIGHT(N) {REPEAT(N,_, std::cout << "\033[1C"); std::cout << std::flush;}
-#define GO_LEFT(N)  {REPEAT(N,_, std::cout << "\033[1D"); std::cout << std::flush;}
+#define YELLOW  "\033[0;33m"
+#define MAGENTA "\033[1;35m"
+#define CYAN    "\033[1;36m"
+
+#define DEFAULT_COLOR   GRAY
+
+#define REPEAT_SAY(N,S)     {REPEAT(N,_, std::cout<<S); std::cout<<std::flush;}
+
+#define GO_DOWN(N)     REPEAT_SAY(N,"\n"     )
+#define GO_UP(N)       REPEAT_SAY(N,"\033[1A")
+#define GO_RIGHT(N)    REPEAT_SAY(N,"\033[1C")
+#define GO_LEFT(N)     REPEAT_SAY(N,"\033[1D")
+#define WHITE_OUT(N)   REPEAT_SAY(N," "      )
 
 #define CLEAR_LINE(N)              \
 {                                  \
-    REPEAT(N,_, std::cout << " ")  \
-    GO_LEFT(240+N)                 \
+    WHITE_OUT(N);                  \
+    GO_LEFT(120+N);                \
 }
 
 #define SHOW_SIGN(X) (std::showpos)<<X<<(std::noshowpos)

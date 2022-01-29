@@ -167,8 +167,13 @@ void print_move(Board const* B, Move m)
         return;
     }
     char mover = species_names[get_piece(B, m.source).species];
-    std::cout << mover << (char)(m.dest.col+'a') << 8-m.dest.row;
-    std::cout << "(" << species_names[m.taken.species] << ")";
+    char taken = species_names[m.taken.species];
+    bool is_white = B->next_to_move==Color::white; 
+    std::cout << COLORIZE((is_white?MAGENTA:CYAN), mover <<
+                                (char)(m.dest.col+'a') << 8-m.dest.row); 
+    std::cout << COLORIZE((is_white?MAGENTA:CYAN), "("  );
+    std::cout << COLORIZE((is_white?CYAN:MAGENTA), taken);
+    std::cout << COLORIZE((is_white?MAGENTA:CYAN), ")"  );
 }
 void print_movelist(Board const* B, MoveList* ML)
 {
@@ -182,39 +187,47 @@ void print_movelist(Board const* B, MoveList* ML)
 ====  2. HASHING  =============================================================
 =============================================================================*/
 
-unsigned int const TO_MOVE_HASH = 271828;
+/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~  2.0. Non-Positional State  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 
-unsigned int const hash_by_piece[3][7] = {
-  {1234567, 2345671, 3456712, 45767123, 5671234, 6712345, 0},
-  {3456701, 4567101, 5671201, 76712301, 7123401, 1234501, 0},
-  {0, 0, 0, 0, 0, 0, 0},
+unsigned int const TO_MOVE_HASH     = 2718281828;
+unsigned int const PLY_COUNTER_HASH = 3141592653;
+
+/* decimal order of magnitude: 4.0 + 5.0 ~ 9.0, appropriate for 32 bits */
+inline unsigned int hash_from_ply(int old_ply, int new_ply)
+{ /* collapse positionally equal states if they are far from a draw */
+    return TO_MOVE_HASH ^ 
+        ((2*old_ply<NB_PLIES_TIL_DRAW ? 0 : old_ply) * PLY_COUNTER_HASH) ^
+        ((2*old_ply<NB_PLIES_TIL_DRAW ? 0 : new_ply) * PLY_COUNTER_HASH);
+}
+
+/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~  2.1. Positional State  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
+
+/* decimal order of magnitude: 1.5 + 2.5 ~ 4.0 */
+unsigned int const hash_by_piece[nb_colors][nb_species] = {
+  {47*111, 47*211, 47*311, 47*411, 47*511, 47*611, 0},
+  {27*111, 27*211, 27*311, 27*411, 27*511, 27*611, 0},
+  {     0,      0,      0,      0,      0,      0, 0},
 };
 
+/* decimal order of magnitude: 1.5 + 3.5 ~ 5.0 */
 unsigned int const hash_by_square[8][8] = {
-    {123*1301, 123*3501, 123*5701, 123*7901, 123*3101, 123*5301, 123*7501, 123*9701},
-    {345*1301, 345*3501, 345*5701, 345*7901, 345*3101, 345*5301, 345*7501, 345*9701},
-    {567*1301, 567*3501, 567*5701, 567*7901, 567*3101, 567*5301, 567*7501, 567*9701},
-    {789*1301, 789*3501, 789*5701, 789*7901, 789*3101, 789*5301, 789*7501, 789*9701},
-    {321*1301, 321*3501, 321*5701, 321*7901, 321*3101, 321*5301, 321*7501, 321*9701},
-    {543*1301, 543*3501, 543*5701, 543*7901, 543*3101, 543*5301, 543*7501, 543*9701},
-    {765*1301, 765*3501, 765*5701, 765*7901, 765*3101, 765*5301, 765*7501, 765*9701},
-    {987*1301, 987*3501, 987*5701, 987*7901, 987*3101, 987*5301, 987*7501, 987*9701},
+    {13*103, 13*305, 13*507, 13*709, 13*301, 13*503, 13*705, 13*907},
+    {35*103, 35*305, 35*507, 35*709, 35*301, 35*503, 35*705, 35*907},
+    {57*103, 57*305, 57*507, 57*709, 57*301, 57*503, 57*705, 57*907},
+    {79*103, 79*305, 79*507, 79*709, 79*301, 79*503, 79*705, 79*907},
+    {31*103, 31*305, 31*507, 31*709, 31*301, 31*503, 31*705, 31*907},
+    {53*103, 53*305, 53*507, 53*709, 53*301, 53*503, 53*705, 53*907},
+    {75*103, 75*305, 75*507, 75*709, 75*301, 75*503, 75*705, 75*907},
+    {97*103, 97*305, 97*507, 97*709, 97*301, 97*503, 97*705, 97*907},
 };
 
-int const quintant_by_coor[8][8] = {
-    {0,0,0,0,1,1,1,1},
-    {0,0,0,0,1,1,1,1},
-    {0,0,0,4,4,1,1,1},
-    {0,0,4,4,4,4,1,1},
-    {2,2,4,4,4,4,3,3},
-    {2,2,2,4,4,3,3,3},
-    {2,2,2,2,3,3,3,3},
-    {2,2,2,2,3,3,3,3},
-};
-
-inline int quintant_from(Coordinate rc)
+/* decimal order of magnitude: 4.0 + 5.0 ~ 9.0, appropriate for 32 bits */
+inline unsigned int hash_from_piece_square(Piece p, Coordinate rc)
 {
-    return quintant_by_coor[rc.row][rc.col];
+    return hash_by_piece[p.color][p.species] *
+           hash_by_square[rc.row][rc.col];
 }
 
 /*=============================================================================
@@ -243,12 +256,12 @@ void apply_move(Board* B, Move m)
     }
     Piece taken = m.taken;
 
-    B->plies_since_irreversible.push_back(
-        (is_irreversible(m, mover) &&
-        B->plies_since_irreversible.back() < NB_PLIES_TIL_DRAW) ?
-        0 : (B->plies_since_irreversible.back() + 1)
-    );
-    B->hash ^= TO_MOVE_HASH;
+    int old_ply = B->plies_since_irreversible.back();
+    int new_ply = (is_irreversible(m, mover) && old_ply < NB_PLIES_TIL_DRAW) ?
+        0 : (B->plies_since_irreversible.back() + 1);
+    B->plies_since_irreversible.push_back(new_ply);
+    B->hash ^= hash_from_ply(old_ply, new_ply);
+
     B->next_to_move = flip_color(B->next_to_move);
 
     CLONE_BACK(B->evaluation_stack);
@@ -278,8 +291,11 @@ void undo_move(Board* B, Move m)
     }
     Piece taken = m.taken;
 
+    int new_ply = B->plies_since_irreversible.back();
     B->plies_since_irreversible.pop_back();
-    B->hash ^= TO_MOVE_HASH;
+    int old_ply = B->plies_since_irreversible.back();
+    B->hash ^= hash_from_ply(old_ply, new_ply);
+
     B->next_to_move = flip_color(B->next_to_move);
 
     B->evaluation_stack.pop_back();
@@ -307,7 +323,7 @@ void change_piece(Board* B, Coordinate rc, Piece p, bool is_add)
     int const sign_d = is_add ? +1 : -1;
 
     /* hash (TODO: EXCEPT to-move-color, 50 move rule, etc: extra state) */
-    B->hash ^= hash_by_piece[self][p.species] * hash_by_square[r][c];
+    B->hash ^= hash_from_piece_square(p, rc);
 
     /* update grid */
     if (is_add) { B->grid[r][c] = p; }

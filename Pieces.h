@@ -12,27 +12,29 @@ typedef int ply_t;
 /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ~~~~  0.0. Color  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 
+int const nb_colors = 3;
 enum Color {
     black=0,
     white=1,
     empty_color=2
 };
 inline Color flip_color(Color c)
-{
+{ /* assumes white or black (rather than empty) */
     return c==Color::white ? Color::black : Color::white; 
 }
 
 /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ~~~~  0.1. Species  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 
+int const nb_species = 7;
 enum Species {
-    pawn=0,
-    knight=1,
-    bishop=2,
-    rook=3,
-    queen=4,
-    king=5,
-    empty_species=6
+    pawn            =0,
+    knight          =1,
+    bishop          =2,
+    rook            =3,
+    queen           =4,
+    king            =5,
+    empty_species   =6
 };
 char const species_names[] = "PNBRQK ";
 
@@ -46,7 +48,7 @@ struct Piece {
 Piece const empty_piece = {Color::empty_color, Species::empty_species};
 inline bool piece_equals(Piece p, Piece q)
 {
-    return p.color==q.color && p.species==q.species;
+    return p.species==q.species && p.color==q.color;
 }
 
 /*=============================================================================
@@ -77,7 +79,7 @@ enum MoveType {
     promote_to_queen=1,
     extra_legal=-1,
 };
-struct Move { // a standard move (no promotion, en passant, or castling)
+struct Move {
     Coordinate source, dest; 
     Piece taken;
     MoveType type; 
@@ -91,9 +93,6 @@ inline bool is_irreversible(Move m, Piece mover)
     return is_capture(m) || mover.species==Species::pawn;
 }
 Move const unk_move = {{-1,-1}, {-1,-1}, empty_piece, MoveType::extra_legal};
-
-
-
 
 int const nb_knight_dirs = 8; 
 int const knight_dirs[][2] = {
@@ -125,15 +124,14 @@ inline int minus_idx(int idx)
 } 
 
 inline int max_ray_len(int r, int c, int dr, int dc)
-{
-    //int R = dr ? ((0<dr) ? ((7-r)/dr) : (r/(-dr))) : 8;
-    //int C = dc ? ((0<dc) ? ((7-c)/dc) : (c/(-dc))) : 8;
-    //return MIN(R,C);
+{ /* slightly streamlined version of
+        int R = dr ? ((0<dr) ? ((7-r)/dr) : (r/(-dr))) : 8;
+        int C = dc ? ((0<dc) ? ((7-c)/dc) : (c/(-dc))) : 8;
+        return MIN(R,C);
+   */
     return !dr  ? (!dc ? -1 : 0<dc ? (7-c)/dc : c/(-dc)) :
            0<dr ? (!dc ? (7-r)/dr : 0<dc ? MIN((7-r)/dr,(7-c)/dc) : MIN((7-r)/dr,c/(-dc))):
                   (!dc ? r/(-dr)  : 0<dc ? MIN(r/(-dr),(7-c)/dc) : MIN(r/(-dr),c/(-dc)));
 }
-
-
 
 #endif//PIECES_H
