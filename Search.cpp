@@ -32,6 +32,8 @@ int stable_eval(Board* B, int max_plies, int alpha, int beta);
 
 ScoredMove get_best_move(Board* B, const int depth, int alpha, int beta, bool stable, bool null_move_okay, int verbose, PVTable parent)
 {
+    /* TODO: handle checkmate / draw leaf termination!! */
+
     /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     ~~~~  0.0. Base Case  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
     if (depth<=0) {
@@ -49,13 +51,12 @@ ScoredMove get_best_move(Board* B, const int depth, int alpha, int beta, bool st
     if (stable) {
         for (int i=0; i!=2; ++i) { /* NEW FEATURE: look up deepers ! */
             PVRecord pvr = parent[depth+i][B->hash % PV_TABLE_SIZE];
-            if (pvr.hash == B->hash) {
-                if ((pvr.sm.score > pvr.alpha || pvr.alpha <= alpha) &&
-                    (pvr.sm.score < pvr.beta  || beta <= pvr.beta)) {
-                    return pvr.sm;
-                }
-                break;
-            } 
+            if (pvr.hash != B->hash) { continue; }
+            if ((pvr.sm.score > pvr.alpha || pvr.alpha <= alpha) &&
+                (pvr.sm.score < pvr.beta  || beta <= pvr.beta)) {
+                return pvr.sm;
+            }
+            break;
         }
     }
 
@@ -65,21 +66,25 @@ ScoredMove get_best_move(Board* B, const int depth, int alpha, int beta, bool st
     generate_moves(B, &ML, false);
     int nb_candidates = ML.length; 
     if (2<=depth) {
-        BARK(verbose,std::cout<<COLORIZE(GRAY,"sortin"));
-        //BARK(verbose,std::cout << "\033[3D" << COLORIZE(GRAY, ".$."));
+        BARK(verbose,std::cout<<COLORIZE(GRAY,"sort'n"));
         order_moves(B, &ML, ordering_depths[depth], 6, parent);//branching_factors[depth]);
-        //BARK(verbose,std::cout << "\033[3D" << COLORIZE(GRAY, "   "));
         nb_candidates = MIN(ML.length, branching_factors[depth]);
     }
 
     const int worst_case = is_white ? -KING_POINTS : +KING_POINTS;
+    if (!nb_candidates) {
+        /* NEW! handle no pieces */
+        //std::cout << "\n\nNO MOVES\n\n" << std::flush;
+        return {unk_move, worst_case, 0};
+    }
     ScoredMove best, next_best;
+    best.m = ML.moves[0]; 
+    next_best.m = ML.moves[0]; 
     best.score = worst_case;
     next_best.score = worst_case;
 
     bool any_triumphant = false;  
     bool trigger_lmr = false;  
-    //bool trigger_csr = false;  
 
     /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     ~~~~  0.3. Null Move Reduction  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
@@ -114,7 +119,7 @@ ScoredMove get_best_move(Board* B, const int depth, int alpha, int beta, bool st
         /*--------  0.4.0. check for game termination  ----------------------*/
         Move m = ML.moves[l];
         if (m.taken.species == Species::king) { 
-            best = {m, is_white ? +KING_POINTS : -KING_POINTS, 0};
+            best = {m, (is_white ? +KING_POINTS : -KING_POINTS), 0};
             goto END;
         }
 
@@ -201,11 +206,9 @@ ScoredMove get_best_move(Board* B, const int depth, int alpha, int beta, bool st
         ( is_white && next_best.score + CSR_THRESH < best.score ||    
          !is_white && next_best.score - CSR_THRESH > best.score)) {
         BARK(verbose,std::cout<<COLORIZE(BLUE,"cosing");print_move(B,best.m));
-        //BARK(verbose-1,std::cout << "\033[3D" << COLORIZE(BLUE, "CSR"));
         apply_move(B, best.m);
         ScoredMove child = get_best_move(B, depth-1, alpha, beta, true, true, verbose-1, parent);
         undo_move(B, best.m);
-        //BARK(verbose-1,std::cout << "\033[3D" << COLORIZE(BLUE , "   "));
 
         if ( is_white && child.score>=next_best.score ||
             !is_white && child.score<=next_best.score) {
@@ -281,6 +284,8 @@ int stable_eval(Board* B, int max_plies, int alpha, int beta)
 // search with depth many plies, and that these elements are sorted. 
 void order_moves(Board* B, MoveList* ML, int depth, int k, PVTable parent)
 {
+    k = 100; /* NEW */
+
     int shallow_scores[MAX_NB_MOVES]; 
     int sorted_indices[MAX_NB_MOVES];
     bool stable = (STABLE_ORDER_DEPTH <= depth); 
@@ -351,7 +356,7 @@ void print_pv(Board* B, int depth, int verbose, PVTable parent)
         if (B->hash == pvr.hash) { break; } 
     }
     print_move(B, pvr.sm.m);
-    {
+    if (pvr.sm.m.type != MoveType::extra_legal) {
         apply_move(B, pvr.sm.m);
         print_pv(B, depth-dd, verbose-1, parent); 
         undo_move(B, pvr.sm.m);

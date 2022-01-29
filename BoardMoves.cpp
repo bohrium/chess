@@ -4,11 +4,15 @@
 
 ////
 
-void print_move(Board const* B, Move M)
+void print_move(Board const* B, Move m)
 {
-    char mover = species_names[get_piece(B, M.source).species];
-    std::cout << mover << (char)(M.dest.col+'a') << 8-M.dest.row;
-    std::cout << "(" << species_names[M.taken.species] << ")";
+    if (m.type == MoveType::extra_legal) {
+        std::cout << "######";
+        return;
+    }
+    char mover = species_names[get_piece(B, m.source).species];
+    std::cout << mover << (char)(m.dest.col+'a') << 8-m.dest.row;
+    std::cout << "(" << species_names[m.taken.species] << ")";
 }
 void print_movelist(Board const* B, MoveList* ML)
 {
@@ -562,7 +566,7 @@ void update_least_advanced(Board* B, Color side, int col) {
         B->least_advanced[side][col] = row;
         return;
     }
-    std::cout << "WOAH!  SHOULDN'T ARRIVE HERE!" << std::endl;
+    std::cout << "\033[120C" << "WOAH!  SHOULDN'T ARRIVE HERE!" << std::endl;
 } 
 
 void update_weak_squares(Board* B, Color side, int col) {

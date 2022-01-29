@@ -1,0 +1,329 @@
+thnkr chess make grind
+g++ -pthread -g --std=c++11 Main.cpp Pieces.cpp BoardBasic.cpp BoardMoves.cpp BoardEval.cpp Search.cpp -o main.o 
+valgrind --leak-check=yes ./main.o    /___\                            .      mat = -2185                     
+==179326== Memcheck, a memory error detector `        `        `              kng = -117                      
+==179326== Copyright (C) 2002-2017, and GNU GPL'd, by Julian Seward et al.    pwn = -150                      
+==179326== Using Valgrind-3.18.1 and LibVEX; rerun with -h for copyright info sqr =  -18                      
+==179326== Command: ./main.o           / \                             .      ini = -242                      
+==179326==        `        `        `        `        `        `              2. 2. 2. .. 2. 1. 4. 1.         
+Welcome!                                                           _          .. 1. .. 1. .. 1. 2. ..         
+W plays (height  4) Pe4( )Nf6( )Qf3( )Nc6( )  +12                                                                                                                        
+B plays (height  3)   +15                                                                                                                        
+W plays (height  4) Pe5( )Ne4( )Bd3( )Nc5( )  +38                                                                                                                        
+B plays (height  3)   +36                                                                                                                        
+W plays (height  4) Bd3( )Pd5( )Be4(N)Pe4(B)  +15                                                                                                                        
+B plays (height  2) Pd5( )Be4(N)Pe4(B)Pa4( )  +60                                                                                                                        
+W plays (height  4) Qh5( )Nc5( )  +41                                                                                                                        
+B plays (height  3) Bg4( )   +4                                                                                                                        
+W plays (height  4) Bb5( )Pc6( )Pd4( )Ne4( )  -20                                                                                                                        
+B plays (height  2) Pc6( )Pd4( )Ne4( )Nh3( )  -24                                                                                                                        
+W plays (height  4) Be2( )Ne4( )Nf3( )Nd7( )  -29                                                                                                                        
+B plays (height  2) Ne4( )Nf3( )Nd7( )Pd4( )  -26                                                                                                                        
+W plays (height  4) Nc3( )Pg6( )Qh4( )Nc3(N)   -7                                                                                                                        
+B plays (height  2) Nc3(N)Pc3(N)Nd7( )Pe6( )  -56                                                                                                                        
+W plays (height  4) Pc3(N)Pg6( )Qf3( )Bg7( )  -28                                                                                                                        
+B plays (height  2) Nd7( )Bg5( )Ne5(P) +276                                                                                                                        
+W plays (height  4) Pe6( )Pg6( )Pd7(N)Kd7(P)  -61                                                                                                                        
+B plays (height  2) Nf6( )Qf7(P)Be6(P)  -69                                                                                                                        
+W plays (height  4) Qh3( )Ne4( )Pf7(P)Kf7(P)  -86                                                                                                                        
+B plays (height  2) Be6(P)Qd3( ) -131                                                                                                                        
+W plays (height  4) Qh4( )Ne4( )Bg5( )Qb6( ) -119                                                                                                                        
+B plays (height  3) Rb8( ) -127                                                                                                                        
+W plays (height  4) Pf3( )Nf6( )Bg5( )Ne4( ) -116                                                                                                                        
+B plays (height  2) Nd6( )Qg5( )Qb6( ) -110                                                                                                                        
+W plays (height  4) Bf4( )Qb6( )Bd6(N)Pd6(B) -125                                                                                                                        
+B plays (height  3)  -119                                                                                                                        
+W plays (height  4) Rb1( )Rd8( )Qg5( )Ph6( ) -168                                                                                                                        
+B plays (height  2) Nf5( )Qg5( )Pf6( )Qg4( ) -165                                                                                                                        
+W plays (height  4) Qh5( )Qa5( )Rd1( )Qa2(P) -190                                                                                                                        
+B plays (height  2) Ne3( )Pg4( )Pa6( )Rd1( ) -172                                                                                                                        
+W plays (height  4) Be3(N)Qe3(B)Rd1( )Pd4( ) -198                                                                                                                        
+B plays (height  2) Qe3(B)Rd1( )Pg6( )Qh4( ) -207                                                                                                                        
+W plays (height  4) Ph4( )Pg6( )Qg5( )Qg5(Q) -953                                                                                                                        
+B plays (height  2) Pg6( )Qg5( )Qg5(Q) -1006                                                                                                                        
+W plays (height  4) Qg4( )Bg4(Q)Pg4(B)Bg7( ) -954                                                                                                                        
+B plays (height  2) Bg4(Q)Pg4(B)Bg7( )Rd1( ) -979                                                                                                                        
+W plays (height  4) Pg4(B)Bg7( )Rd1( )Ph5( ) -945                                                                                                                        
+B plays (height  2) Bg7( )Rd1( )Ph5( )Nf3( ) -964                                                                                                                        
+W plays (height  4) Nf3( )Qe4( )Rd1( )Qg4(P) -909                                                                                                                        
+B plays (height  3) Qe4( )Rd1( )Qg4(P)Ne5( ) -945                                                                                                                        
+W plays (height  4) Ng5( )Qg2(P)Kd2( )Qf2( ) -900                                                                                                                        
+B plays (height  2) Qg2(P)Kd2( )Qf2( )Rd1( ) -924                                                                                                                        
+W plays (height  4) Rf1( )Bf6( )Kd2( )Bg5(N) -887                                                                                                                        
+B plays (height  3) Bf6( )Kd2( )Bg5(N)Pg5(B) -957                                                                                                                        
+W plays (height  4) Bf3( )Qc2(P)Rd1( )Qb2(P) -1086                                                                                                                        
+B plays (height  3)  -1095                                                                                                                        
+W plays (height  4) Rd1( )Qb2(P)Pc4( )Qa2(P) -1122                                                                                                                        
+B plays (height  2) Qb2(P)Pc4( )Bc3( )Rd2( ) -1109                                                                                                                        
+W plays (height  4) Rf2( )Qc3(P)Rd2( )Bg5(N) -1114                                                                                                                        
+B plays (height  2) Bc3(P)Kf1( )Bd4( )Ne4( ) -1101                                                                                                                        
+W plays (height  4) Kf1( )Qb4( )Kg1( )Ph5( ) -1113                                                                                                                        
+B plays (height  2) Qa3( )Kg1( )Ph6( )Nh3( ) -1105                                                                                                                        
+W plays (height  4) Rb1( )Ph6( )Rb3( )Qc1( ) -1255                                                                                                                        
+B plays (height  2) Ph6( )Rb3( )Qc1( )Kg2( ) -1162                                                                                                                        
+W plays (height  4) Nh3( )Qa6( )Re2( )Pg5( ) -1165                                                                                                                        
+B plays (height  2) Bd4( )Rb3( )Bf6( )Pg5( ) -1314                                                                                                                        
+W plays (height  4) Bg2( )Bf2(R)Nf2(B)Pb6( ) -1435                                                                                                                        
+B plays (height  2) Bf2(R)Nf2(B)Qa6( ) -1331                                                                                                                        
+W plays (height  4) Nf2(B)Rb8( )Rb3( )Qa2(P) -1397                                                                                                                        
+B plays (height  2) Qa6( )Kg1( )Pf5( )Pg5( ) -1357                                                                                                                        
+W plays (height  4) Kg1( )Ph5( )Bf1( )Pb5( ) -1331                                                                                                                        
+B plays (height  3) Pg5( )Rb2( ) -1362                                                                                                                        
+W plays (height  4) Rb2( )Rg8( )Kh1( )Ph4(P) -1330                                                                                                                        
+B plays (height  3)  -1369                                                                                                                        
+W plays (height  4) Kh1( )Ph5( )Rd2( )Pg4(P) -1372                                                                                                                        
+B plays (height  2) Ph4(P)Rd2( )Pd4( )Ne4( ) -1475                                                                                                                        
+W plays (height  4) Rd2( )Ph5( )Nd3( )Pg4(P) -1412                                                                                                                        
+B plays (height  2) Pd4( )Rd4(P)Ph3( )Be4( ) -1380                                                                                                                        
+W plays (height  4) Rd4(P)Qe2( )Kg1( )Pa6( ) -1350                                                                                                                        
+B plays (height  2) Ph3( )Be4( )Qf1( )Kh2( ) -1399                                                                                                                        
+W plays (height  4) Nh3(P)Qe2( )Ng1( )Qa2(P) -1333                                                                                                                        
+B plays (height  2) Qa2(P)Rf4( )Qd2( )Be4( ) -1370                                                                                                                        
+W plays (height  4) Rf4( )Qe6( )Nf2( )Pc5( ) -1378                                                                                                                        
+B plays (height  2) Qd2( )Rf2( )Rd8( ) -1388                                                                                                                        
+W plays (height  4) Kh2( )Qd6( )Kg1( )Pa6( ) -1412                                                                                                                        
+B plays (height  3)  -1424                                                                                                                        
+W plays (height  4) Kg3( )Qd3( )Bf3( )Pa6( ) -1391                                                                                                                        
+B plays (height  3) Pa6( ) -1388                                                                                                                        
+W plays (height  4) Kh2( )Qd6( )Kh1( )Qd1( )Ng1( )Rg4(P) -1424                                                                                                                        
+B plays (height  2) Pa5( )Nf2( )Qd6( )Kg3( )Pa4( ) -1411                                                                                                                        
+W plays (height  4) Ng1( )Qd6( )Kg3( )Pa4( ) -1420                                                                                                                        
+B plays (height  3)  -1465                                                                                                                        
+W plays (height  4) Kg3( )Pf5( )Pg5( )Pg5(P) -1505                                                                                                                        
+B plays (height  3) Pf5( )Pg5( )Pg5(P)Bh1( ) -1478                                                                                                                        
+W plays (height  4) Bf3( )Qe5( )Pg5( )Pg5(P) -1439                                                                                                                        
+B plays (height  2) Pg4(P)Be4( )Qd4( )Rf2( ) -1541                                                                                                                        
+W plays (height  4) Be4( )Rf8( )Nh3( )Rf4(R) -1541                                                                                                                        
+B plays (height  2) Rf8( )Nh3( )Rf4(R)Nf4(R) -1861                                                                                                                        
+W plays (height  4) Bc6(P)Pc6(B)Nh3( )Rf4(R) -1861                                                                                                                        
+B plays (height  2) Qc6(B)Rg4(P)Qh1( )Ne2( ) -1863                                                                                                                        
+W plays (height  4) Rg4(P)Qh1( )Ne2( )Pb6( ) -2161                                                                                                                        
+B plays (height  2) Qh1( )Ne2( )Rf3( )Rg8( ) -2161                                                                                                                        
+W plays (height  4) Rc4( )Rg8( )Kf4( )Qg1(N) -2230                                                                                                                        
+B plays (height  2) Rg8( )Kf4( )Qh4( )Ke3( ) -2177                                                                                                                        
+W plays (height  4) Kf2( )Qg1(N)Ke2( )Pa4( ) -2114                                                                                                                        
+B plays (height  2) Pb5( )Rc1( )Qh2( )Ke3( ) -2092                                                                                                                        
+W plays (height  4) Rc1( )Qh2( )Ke3( ) -2085                                                                                                                        
+B plays (height  2) Qh2( )Ke3( )Qh4( )Kd3( ) -2087                                                                                                                        
+W plays (height  4) Ke3( )Rg1(N)Rc5( )Pb4( ) -2019                                                                                                                        
+B plays (height  2) Rg1(N)Rc5( )Pb4( ) -2099                                                                                                                        
+W plays (height  4) Rc5( )Qd6( )Rh5( )Pb4( ) -2027                                                                                                                        
+B plays (height  3) Pb4( ) -1993                                                                                                                        
+W plays (height  4) Rb5(P)Pa4( )Rb7( )Ph5( ) -1980                                                                                                                        
+B plays (height  2) Rd8( )Kf2( )Qg3( )Ke2( ) -2092                                                                                                                        
+W plays (height  4) Rb7( )Qd5( )Kf2( ) -2683                                                                                                                        
+B plays (height  2) Pa4( )Kf2( )Qg3( ) -2088                                                                                                                        
+W plays (height  4) Kf3( )Qd4( )Ke2( ) -2614                                                                                                                        
+B plays (height  2) Qc6( )Kf2( )Qb7(R)Kg1(R) -2639                                                                                                                        
+W plays (height  4) Kf4( )Qb7(R)Ke5( )Pe6( ) -2627                                                                                                                        
+B plays (height  2) Qb7(R)Ke5( )Pe6( )Kf4( ) -2712                                                                                                                        
+W plays (height  4) Ke3( )Qg2( )Kf4( )Ph5( ) -2614                                                                                                                        
+B plays (height  3) Qg2( )Kf4( )Qb7( )Ke5( )Pe6( )Kf4( ) -100000                                                                                                                        
+==179326== Conditional jump or move depends on uninitialised value(s)         turn = White                    
+==179326==    at 0x4D86402: std::ostreambuf_iterator<char, std::char_traits<char> > std::num_put<char, std::ostreambuf_iterator<char, std::char_traits<char> > >::_M_insert_int<long>(std::ostreambuf_iterator<char, std::char_traits<char> >, std::ios_base&, char, long) const (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.28)
+==179326==    by 0x4D94D5E: std::ostream& std::ostream::_M_insert<long>(long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.28)
+==179326==    by 0x10A7B6: main (Main.cpp:58)`        `        `              kng = -117                      
+==179326==                              _                                     pwn = -150                      
+==179326== Use of uninitialised value of size 8                               sqr =  -18                      
+==179326==    at 0x4D8610B: ??? (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.28)= -242                      
+==179326==    by 0x4D8642C: std::ostreambuf_iterator<char, std::char_traits<char> > std::num_put<char, std::ostreambuf_iterator<char, std::char_traits<char> > >::_M_insert_int<long>(std::ostreambuf_iterator<char, std::char_traits<char> >, std::ios_base&, char, long) const (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.28)
+==179326==    by 0x4D94D5E: std::ostream& std::ostream::_M_insert<long>(long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.28)
+==179326==    by 0x10A7B6: main (Main.cpp:58)                     / \  .      .. .. .. 2. .. .. 2. ..         
+==179326==        `        `        `        `        `        `              .. .. .. 1. 1. .. 2. ..         
+==179326== Conditional jump or move depends on uninitialised value(s)         .. .. .. 1. .. 1. 2. 1.         
+==179326==    at 0x4D8611D: ??? (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.28). 1. 2. 1. 11 1. 1.         
+==179326==    by 0x4D8642C: std::ostreambuf_iterator<char, std::char_traits<char> > std::num_put<char, std::ostreambuf_iterator<char, std::char_traits<char> > >::_M_insert_int<long>(std::ostreambuf_iterator<char, std::char_traits<char> >, std::ios_base&, char, long) const (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.28)
+==179326==    by 0x4D94D5E: std::ostream& std::ostream::_M_insert<long>(long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.28)
+==179326==    by 0x10A7B6: main (Main.cpp:58)                                 .. .. .. .. .. .. .. ..         
+==179326==                                                             .      .. .. .. 1. .. 1. .. ..         
+==179326== Conditional jump or move depends on uninitialised value(s)         .. .. .. .. .. .. 1. ..         
+==179326==    at 0x4D86462: std::ostreambuf_iterator<char, std::char_traits<char> > std::num_put<char, std::ostreambuf_iterator<char, std::char_traits<char> > >::_M_insert_int<long>(std::ostreambuf_iterator<char, std::char_traits<char> >, std::ios_base&, char, long) const (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.28)
+==179326==    by 0x4D94D5E: std::ostream& std::ostream::_M_insert<long>(long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.28)
+==179326==    by 0x10A7B6: main (Main.cpp:58)`        ` \_|_/  `              .. .. .. .. .. .. .. ..         
+==179326==                                               (_)                                                  
+==179326== Use of uninitialised value of size 8          / \                                                  
+==179326==    at 0x115B54: get_piece(Board const*, Coordinate) (Board.h:80)                                   
+==179326==    by 0x112645: print_move(Board const*, Move) (BoardMoves.cpp:9)                                  
+==179326==    by 0x11988E: print_pv(Board*, int, int, PVRecord (*) [10000]) (Search.cpp:356)                  
+==179326==    by 0x10A7F5: main (Main.cpp:59)            | |                                                  
+==179326==       .        .        .        .        .  |___| .        .                                      
+==179326== Conditional jump or move depends on uninitialised value(s)
+==179326==    at 0x4F1388F: _IO_new_file_xsputn (fileops.c:1219)
+==179326==    by 0x4F1388F: _IO_file_xsputn@@GLIBC_2.2.5 (fileops.c:1197)
+==179326==    by 0x4F07540: fwrite (iofwrite.c:39)
+==179326==    by 0x4D94823: std::basic_ostream<char, std::char_traits<char> >& std::__ostream_insert<char, std::char_traits<char> >(std::basic_ostream<char, std::char_traits<char> >&, char const*, long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.28)               
+==179326==    by 0x4D94AFB: std::basic_ostream<char, std::char_traits<char> >& std::operator<< <std::char_traits<char> >(std::basic_ostream<char, std::char_traits<char> >&, char) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.28)                                       
+==179326==    by 0x112681: print_move(Board const*, Move) (BoardMoves.cpp:10)
+==179326==    by 0x11988E: print_pv(Board*, int, int, PVRecord (*) [10000]) (Search.cpp:356)
+==179326==    by 0x10A7F5: main (Main.cpp:59)
+==179326== 
+==179326== Conditional jump or move depends on uninitialised value(s)
+==179326==    at 0x4D86402: std::ostreambuf_iterator<char, std::char_traits<char> > std::num_put<char, std::ostreambuf_iterator<char, std::char_traits<char> > >::_M_insert_int<long>(std::ostreambuf_iterator<char, std::char_traits<char> >, std::ios_base&, char, long) const (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.28)
+==179326==    by 0x4D94D5E: std::ostream& std::ostream::_M_insert<long>(long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.28)
+==179326==    by 0x11269A: print_move(Board const*, Move) (BoardMoves.cpp:10)
+==179326==    by 0x11988E: print_pv(Board*, int, int, PVRecord (*) [10000]) (Search.cpp:356)
+==179326==    by 0x10A7F5: main (Main.cpp:59)
+==179326== 
+==179326== Use of uninitialised value of size 8
+==179326==    at 0x4D8610B: ??? (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.28)
+==179326==    by 0x4D8642C: std::ostreambuf_iterator<char, std::char_traits<char> > std::num_put<char, std::ostreambuf_iterator<char, std::char_traits<char> > >::_M_insert_int<long>(std::ostreambuf_iterator<char, std::char_traits<char> >, std::ios_base&, char, long) const (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.28)
+==179326==    by 0x4D94D5E: std::ostream& std::ostream::_M_insert<long>(long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.28)
+==179326==    by 0x11269A: print_move(Board const*, Move) (BoardMoves.cpp:10)
+==179326==    by 0x11988E: print_pv(Board*, int, int, PVRecord (*) [10000]) (Search.cpp:356)
+==179326==    by 0x10A7F5: main (Main.cpp:59)
+==179326== 
+==179326== Conditional jump or move depends on uninitialised value(s)
+==179326==    at 0x4D8611D: ??? (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.28)
+==179326==    by 0x4D8642C: std::ostreambuf_iterator<char, std::char_traits<char> > std::num_put<char, std::ostreambuf_iterator<char, std::char_traits<char> > >::_M_insert_int<long>(std::ostreambuf_iterator<char, std::char_traits<char> >, std::ios_base&, char, long) const (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.28)
+==179326==    by 0x4D94D5E: std::ostream& std::ostream::_M_insert<long>(long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.28)
+==179326==    by 0x11269A: print_move(Board const*, Move) (BoardMoves.cpp:10)
+==179326==    by 0x11988E: print_pv(Board*, int, int, PVRecord (*) [10000]) (Search.cpp:356)
+==179326==    by 0x10A7F5: main (Main.cpp:59)
+==179326== 
+==179326== Conditional jump or move depends on uninitialised value(s)
+==179326==    at 0x4D86462: std::ostreambuf_iterator<char, std::char_traits<char> > std::num_put<char, std::ostreambuf_iterator<char, std::char_traits<char> > >::_M_insert_int<long>(std::ostreambuf_iterator<char, std::char_traits<char> >, std::ios_base&, char, long) const (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.28)
+==179326==    by 0x4D94D5E: std::ostream& std::ostream::_M_insert<long>(long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.28)
+==179326==    by 0x11269A: print_move(Board const*, Move) (BoardMoves.cpp:10)
+==179326==    by 0x11988E: print_pv(Board*, int, int, PVRecord (*) [10000]) (Search.cpp:356)
+==179326==    by 0x10A7F5: main (Main.cpp:59)
+==179326== 
+==179326== Use of uninitialised value of size 8
+==179326==    at 0x1126BD: print_move(Board const*, Move) (BoardMoves.cpp:11)
+==179326==    by 0x11988E: print_pv(Board*, int, int, PVRecord (*) [10000]) (Search.cpp:356)
+==179326==    by 0x10A7F5: main (Main.cpp:59)
+==179326== 
+==179326== Use of uninitialised value of size 8
+==179326==    at 0x115B54: get_piece(Board const*, Coordinate) (Board.h:80)
+==179326==    by 0x1135E9: apply_move(Board*, Move) (BoardMoves.cpp:220)
+==179326==    by 0x1198C2: print_pv(Board*, int, int, PVRecord (*) [10000]) (Search.cpp:358)
+==179326==    by 0x10A7F5: main (Main.cpp:59)
+==179326== 
+==179326== Conditional jump or move depends on uninitialised value(s)
+==179326==    at 0x1135FC: apply_move(Board*, Move) (BoardMoves.cpp:222)
+==179326==    by 0x1198C2: print_pv(Board*, int, int, PVRecord (*) [10000]) (Search.cpp:358)
+==179326==    by 0x10A7F5: main (Main.cpp:59)
+==179326== 
+==179326== Conditional jump or move depends on uninitialised value(s)
+==179326==    at 0x115B12: is_irreversible(Move, Piece) (Pieces.h:88)
+==179326==    by 0x113647: apply_move(Board*, Move) (BoardMoves.cpp:228)
+==179326==    by 0x1198C2: print_pv(Board*, int, int, PVRecord (*) [10000]) (Search.cpp:358)
+==179326==    by 0x10A7F5: main (Main.cpp:59)
+==179326== 
+==179326== Use of uninitialised value of size 8
+==179326==    at 0x115110: change_piece(Board*, Coordinate, Piece, bool) (BoardMoves.cpp:488)
+==179326==    by 0x113796: apply_move(Board*, Move) (BoardMoves.cpp:242)
+==179326==    by 0x1198C2: print_pv(Board*, int, int, PVRecord (*) [10000]) (Search.cpp:358)
+==179326==    by 0x10A7F5: main (Main.cpp:59)
+==179326== 
+==179326== Use of uninitialised value of size 8
+==179326==    at 0x115163: change_piece(Board*, Coordinate, Piece, bool) (BoardMoves.cpp:492)
+==179326==    by 0x113796: apply_move(Board*, Move) (BoardMoves.cpp:242)
+==179326==    by 0x1198C2: print_pv(Board*, int, int, PVRecord (*) [10000]) (Search.cpp:358)
+==179326==    by 0x10A7F5: main (Main.cpp:59)
+==179326== 
+==179326== Use of uninitialised value of size 8
+==179326==    at 0x115182: change_piece(Board*, Coordinate, Piece, bool) (BoardMoves.cpp:492)
+==179326==    by 0x113796: apply_move(Board*, Move) (BoardMoves.cpp:242)
+==179326==    by 0x1198C2: print_pv(Board*, int, int, PVRecord (*) [10000]) (Search.cpp:358)
+==179326==    by 0x10A7F5: main (Main.cpp:59)
+==179326== 
+==179326== Use of uninitialised value of size 8
+==179326==    at 0x115BDC: quintant_from(Coordinate) (BoardMoves.cpp:200)
+==179326==    by 0x1151AC: change_piece(Board*, Coordinate, Piece, bool) (BoardMoves.cpp:496)
+==179326==    by 0x113796: apply_move(Board*, Move) (BoardMoves.cpp:242)
+==179326==    by 0x1198C2: print_pv(Board*, int, int, PVRecord (*) [10000]) (Search.cpp:358)
+==179326==    by 0x10A7F5: main (Main.cpp:59)
+==179326== 
+==179326== Conditional jump or move depends on uninitialised value(s)
+==179326==    at 0x114764: update_xrays_by_piece(Board*, Coordinate, Piece, bool) (BoardMoves.cpp:410)
+==179326==    by 0x115249: change_piece(Board*, Coordinate, Piece, bool) (BoardMoves.cpp:500)
+==179326==    by 0x113796: apply_move(Board*, Move) (BoardMoves.cpp:242)
+==179326==    by 0x1198C2: print_pv(Board*, int, int, PVRecord (*) [10000]) (Search.cpp:358)
+==179326==    by 0x10A7F5: main (Main.cpp:59)
+==179326== 
+==179326== Conditional jump or move depends on uninitialised value(s)
+==179326==    at 0x115A71: is_valid(Coordinate) (Pieces.h:61)
+==179326==    by 0x1147B2: update_xrays_by_piece(Board*, Coordinate, Piece, bool) (BoardMoves.cpp:412)
+==179326==    by 0x115249: change_piece(Board*, Coordinate, Piece, bool) (BoardMoves.cpp:500)
+==179326==    by 0x113796: apply_move(Board*, Move) (BoardMoves.cpp:242)
+==179326==    by 0x1198C2: print_pv(Board*, int, int, PVRecord (*) [10000]) (Search.cpp:358)
+==179326==    by 0x10A7F5: main (Main.cpp:59)
+==179326== 
+==179326== Conditional jump or move depends on uninitialised value(s)
+==179326==    at 0x115A79: is_valid(Coordinate) (Pieces.h:61)
+==179326==    by 0x1147B2: update_xrays_by_piece(Board*, Coordinate, Piece, bool) (BoardMoves.cpp:412)
+==179326==    by 0x115249: change_piece(Board*, Coordinate, Piece, bool) (BoardMoves.cpp:500)
+==179326==    by 0x113796: apply_move(Board*, Move) (BoardMoves.cpp:242)
+==179326==    by 0x1198C2: print_pv(Board*, int, int, PVRecord (*) [10000]) (Search.cpp:358)
+==179326==    by 0x10A7F5: main (Main.cpp:59)
+==179326== 
+==179326== Conditional jump or move depends on uninitialised value(s)
+==179326==    at 0x115A80: is_valid(Coordinate) (Pieces.h:61)
+==179326==    by 0x1147B2: update_xrays_by_piece(Board*, Coordinate, Piece, bool) (BoardMoves.cpp:412)
+==179326==    by 0x115249: change_piece(Board*, Coordinate, Piece, bool) (BoardMoves.cpp:500)
+==179326==    by 0x113796: apply_move(Board*, Move) (BoardMoves.cpp:242)
+==179326==    by 0x1198C2: print_pv(Board*, int, int, PVRecord (*) [10000]) (Search.cpp:358)
+==179326==    by 0x10A7F5: main (Main.cpp:59)
+==179326== 
+==179326== Conditional jump or move depends on uninitialised value(s)
+==179326==    at 0x115A88: is_valid(Coordinate) (Pieces.h:62)
+==179326==    by 0x1147B2: update_xrays_by_piece(Board*, Coordinate, Piece, bool) (BoardMoves.cpp:412)
+==179326==    by 0x115249: change_piece(Board*, Coordinate, Piece, bool) (BoardMoves.cpp:500)
+==179326==    by 0x113796: apply_move(Board*, Move) (BoardMoves.cpp:242)
+==179326==    by 0x1198C2: print_pv(Board*, int, int, PVRecord (*) [10000]) (Search.cpp:358)
+==179326==    by 0x10A7F5: main (Main.cpp:59)
+==179326== 
+==179326== Use of uninitialised value of size 8
+==179326==    at 0x1147E9: update_xrays_by_piece(Board*, Coordinate, Piece, bool) (BoardMoves.cpp:413)
+==179326==    by 0x115249: change_piece(Board*, Coordinate, Piece, bool) (BoardMoves.cpp:500)
+==179326==    by 0x113796: apply_move(Board*, Move) (BoardMoves.cpp:242)
+==179326==    by 0x1198C2: print_pv(Board*, int, int, PVRecord (*) [10000]) (Search.cpp:358)
+==179326==    by 0x10A7F5: main (Main.cpp:59)
+==179326== 
+==179326== Use of uninitialised value of size 8
+==179326==    at 0x11481D: update_xrays_by_piece(Board*, Coordinate, Piece, bool) (BoardMoves.cpp:413)
+==179326==    by 0x115249: change_piece(Board*, Coordinate, Piece, bool) (BoardMoves.cpp:500)
+==179326==    by 0x113796: apply_move(Board*, Move) (BoardMoves.cpp:242)
+==179326==    by 0x1198C2: print_pv(Board*, int, int, PVRecord (*) [10000]) (Search.cpp:358)
+==179326==    by 0x10A7F5: main (Main.cpp:59)
+==179326== 
+==179326== Invalid read of size 4
+==179326==    at 0x114781: update_xrays_by_piece(Board*, Coordinate, Piece, bool) (BoardMoves.cpp:411)
+==179326==    by 0x115249: change_piece(Board*, Coordinate, Piece, bool) (BoardMoves.cpp:500)
+==179326==    by 0x113796: apply_move(Board*, Move) (BoardMoves.cpp:242)
+==179326==    by 0x1198C2: print_pv(Board*, int, int, PVRecord (*) [10000]) (Search.cpp:358)
+==179326==    by 0x10A7F5: main (Main.cpp:59)
+==179326==  Address 0xac9000 is not stack'd, malloc'd or (recently) free'd
+==179326== 
+==179326== 
+==179326== Process terminating with default action of signal 11 (SIGSEGV)
+==179326==  Access not within mapped region at address 0xAC9000
+==179326==    at 0x114781: update_xrays_by_piece(Board*, Coordinate, Piece, bool) (BoardMoves.cpp:411)
+==179326==    by 0x115249: change_piece(Board*, Coordinate, Piece, bool) (BoardMoves.cpp:500)
+==179326==    by 0x113796: apply_move(Board*, Move) (BoardMoves.cpp:242)
+==179326==    by 0x1198C2: print_pv(Board*, int, int, PVRecord (*) [10000]) (Search.cpp:358)
+==179326==    by 0x10A7F5: main (Main.cpp:59)
+==179326==  If you believe this happened as a result of a stack
+==179326==  overflow in your program's main thread (unlikely but
+==179326==  possible), you can try to increase the size of the
+==179326==  main thread stack using the --main-stacksize= flag.
+==179326==  The main thread stack size used in this run was 8388608.
+==179326== 
+==179326== HEAP SUMMARY:
+==179326==     in use at exit: 78,848 bytes in 6 blocks
+==179326==   total heap usage: 34 allocs, 28 frees, 83,928 bytes allocated
+==179326== 
+==179326== LEAK SUMMARY:
+==179326==    definitely lost: 0 bytes in 0 blocks
+==179326==    indirectly lost: 0 bytes in 0 blocks
+==179326==      possibly lost: 0 bytes in 0 blocks
+==179326==    still reachable: 78,848 bytes in 6 blocks
+==179326==         suppressed: 0 bytes in 0 blocks
+==179326== Reachable blocks (those to which a pointer was found) are not shown.
+==179326== To see them, rerun with: --leak-check=full --show-leak-kinds=all
+==179326== 
+==179326== Use --track-origins=yes to see where uninitialised values come from
+==179326== For lists of detected and suppressed errors, rerun with: -s
+==179326== ERROR SUMMARY: 8026551 errors from 26 contexts (suppressed: 0 from 0)
+make: *** [Makefile:13: grind] Segmentation fault (core dumped)
+

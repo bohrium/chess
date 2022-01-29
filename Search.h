@@ -35,7 +35,7 @@ const int ordering_depths[]   = { -1, -1,  0,  1,  1,  1,  2,  2,  2,  3,  3,  3
 #define LMR_AMOUNT 0.8 // fracplies 
 
 #define CSR_THRESH 50 // centipawns
-#define CSR_AMOUNT 0.7 // fracplies
+#define CSR_AMOUNT 0.8 // fracplies
 
 /* SEARCH METHODS */
 

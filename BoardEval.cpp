@@ -3,6 +3,7 @@
 #include <iostream>
 #include "EvalParams.h"
 
+
 int score_total(DisaggregatedScore ds) {
     return ds.material
          + ds.king_safety
@@ -12,11 +13,12 @@ int score_total(DisaggregatedScore ds) {
 
 int evaluate(Board* B) /* todo: constify type signature */
 {
-    if (B->plies_since_irreversible.back() >= NB_PLIES_TIL_DRAW ) { /* the 20 ply rule */
+    if (B->plies_since_irreversible.back() >= NB_PLIES_TIL_DRAW ) { /* the 50 move rule */
         return -KING_POINTS/2; /* black wins*/
     }
 
-    return score_total(B->evaluation_stack.back()) 
+    /* TODO: incorporate king attacks etc into difference eval */
+    int score = score_total(B->evaluation_stack.back()) 
        + TURN_BONUS  * (B->next_to_move==Color::white ? +1 : -1)
        + KING_XRAY   * ( B->nb_king_attacks_near[0] 
                         -B->nb_king_attacks_near[1]) 
@@ -24,7 +26,9 @@ int evaluate(Board* B) /* todo: constify type signature */
                         -B->nb_weak_squares[1]) 
        + MOBILITY    * (-B->nb_xrays_by_side[0] 
                         +B->nb_xrays_by_side[1]);
-    /* TODO: incorporate king attacks etc into difference eval */
+
+    float fraction_to_exhaustion = B->plies_since_irreversible.back()/((float)NB_PLIES_TIL_DRAW); 
+    return (fraction_to_exhaustion*(-CONTEMPT) + (1.0-fraction_to_exhaustion)*score); 
 }
 
 

@@ -13,14 +13,16 @@
 #define GO_DOWN(N) {for (int k=0; k!=N; ++k) { std::cout << std::endl; }}
 #define GO_UP(N) {for (int k=0; k!=N; ++k) { std::cout << "\033[1A" << std::flush; }}
 
-#define CLEAR_REST_OF_LINE                              \
-{                                                       \
-    for (int k=0; k!=120; ++k) { std::cout << " "; }    \
-    std::cout << "\33[120D";                            \
+#define CLEAR_REST_OF_LINE           \
+{                                    \
+    REPEAT(120,_, std::cout << " ")  \
+    std::cout << "\33[120D";         \
 }
+
 #define SHOW_SIGN(X) (std::showpos)<<X<<(std::noshowpos)
 #define FLUSH_RIGHT(N,X) (std::setw(N))<<(std::right)<<X
-#define COLORIZE(C,X) C<<X<<DEFAULT_COLOR
+#define FLUSH_RIGHT_POS(N,X) (std::setw(N))<<(std::right)<<(std::showpos)<<X<<(std::noshowpos)
+#define COLORIZE(C,X) (C)<<X<<DEFAULT_COLOR
 
 #define MIN(X,Y) (((X)<(Y))?(X):(Y))
 #define MAX(X,Y) (((X)>(Y))?(X):(Y))

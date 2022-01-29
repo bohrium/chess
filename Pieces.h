@@ -40,7 +40,7 @@ struct Piece {
     Color color;
     Species species;
 };
-const Piece empty_piece = {Color::empty_color, Species::empty_species};
+Piece const empty_piece = {Color::empty_color, Species::empty_species};
 inline bool piece_equals(Piece p, Piece q)
 {
     return p.color==q.color && p.species==q.species;
@@ -87,7 +87,6 @@ inline bool is_irreversible(Move m, Piece mover)
 {
     return is_capture(m) || mover.species==Species::pawn;
 }
-
-const Move unk_move = {{0,0}, {0,0}, empty_piece, MoveType::extra_legal};
+Move const unk_move = {{-1,-1}, {-1,-1}, empty_piece, MoveType::extra_legal};
 
 #endif//PIECES_H

@@ -5,7 +5,7 @@
 #include "Helpers.h"
 #include <vector>
 
-#define NB_PLIES_TIL_DRAW 100
+#define NB_PLIES_TIL_DRAW (2*20) /* 20 move rule */
 
 struct DisaggregatedScore {
     int initiative;

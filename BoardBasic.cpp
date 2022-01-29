@@ -126,15 +126,12 @@ void print_board_fancy(Board const* B)
         std::cout << "\33[110D";
         for (int c=0; c!=8; ++c) {
             Piece p = B->grid[rr/height][c];
-            //std::cout << ((rr%height==0) ? "` " : "  ");
             if (rr%height==0) {
                 std::cout << (rr==0 ? "abcdefgh"[c] : '`');
                 std::cout << (c==0  ? "87654321"[rr/height] : ' ');
             } else {
                 std::cout << "  ";
             }
-            //if (rr%height==0) { std::cout << "abcdefgh"[c] << (8-rr/height); } 
-            //else              { std::cout << "  ";                           } 
             std::cout << ((p.color==Color::white) ? MAGENTA : CYAN); 
             for (int x=0; x!=width; ++x) {
                 char c = icons[rr%height][p.species][x];
@@ -142,15 +139,14 @@ void print_board_fancy(Board const* B)
             }
             std::cout << YELLOW;
             std::cout << (((c==7||(rr/height)==7) && rr%height==height-1) ? " ." : "  ");
-            //std::cout << "  ";
         }
         auto hued_digit = [](char const* ansi_hue, int nb) {
-            if (!nb) { std::cout << ansi_hue << "."; }
-            else     { std::cout << ansi_hue << nb; }
+            if (!nb) { std::cout << COLORIZE(ansi_hue, "."); }
+            else     { std::cout << COLORIZE(ansi_hue, nb ); }
         };
         auto hued_bool  = [](char const* ansi_hue, bool nb) {
-            if (!nb) { std::cout << ansi_hue << "."; }
-            else     { std::cout << ansi_hue << "1"; }
+            if (!nb) { std::cout << COLORIZE(ansi_hue, "."); }
+            else     { std::cout << COLORIZE(ansi_hue, "1"); }
         };
 
         auto comp_sq_counts = [hued_digit](int const arr[2][8][8], int row) {
@@ -172,15 +168,14 @@ void print_board_fancy(Board const* B)
 
         std::cout << "      ";
         switch (rr) {
-        break; case  0: std::cout << "turn = " << (is_white?MAGENTA:CYAN) << (is_white?"White":"Black");
-        break; case  1: std::cout << "plies = " << BLUE << B->plies_since_irreversible.back();
-        break; case  2: std::cout << "hash = " << BLUE << B->hash;
-        break; case  3: std::cout << "mat = " << RED << std::setw(4) << std::right << std::showpos << ds.material;
-        break; case  4: std::cout << "kng = " << RED << std::setw(4) << std::right << std::showpos << ds.king_safety + 13 * ( B->nb_king_attacks_near[0]-B->nb_king_attacks_near[1]);
-        break; case  5: std::cout << "pwn = " << RED << std::setw(4) << std::right << std::showpos << ds.pawn_structure + 5 * ( B->nb_weak_squares[0]-B->nb_weak_squares[1]);
-        break; case  6: std::cout << "sqr = " << RED << std::setw(4) << std::right << std::showpos << ds.cozy_squares;
-        break; case  7: std::cout << "ini = " << RED << std::setw(4) << std::right << std::showpos << MOBILITY * (-B->nb_xrays_by_side[0] + B->nb_xrays_by_side[1])
-                                                                                                    + TURN_BONUS * (B->next_to_move==Color::white ? +1 : -1);
+        break; case  0: std::cout << "turn = " << COLORIZE((is_white?MAGENTA:CYAN), (is_white?"White":"Black"));
+        break; case  1: std::cout << "plies = " << COLORIZE(BLUE, B->plies_since_irreversible.back());
+        break; case  2: std::cout << "hash = " <<  COLORIZE(BLUE, B->hash);
+        break; case  3: std::cout << "mat = " <<   COLORIZE(RED , FLUSH_RIGHT_POS(4, ds.material));
+        break; case  4: std::cout << "kng = " <<   COLORIZE(RED , FLUSH_RIGHT_POS(4, ds.king_safety + 13 * ( B->nb_king_attacks_near[0]-B->nb_king_attacks_near[1])));
+        break; case  5: std::cout << "pwn = " <<   COLORIZE(RED , FLUSH_RIGHT_POS(4, ds.pawn_structure + 5 * ( B->nb_weak_squares[0]-B->nb_weak_squares[1])));
+        break; case  6: std::cout << "sqr = " <<   COLORIZE(RED , FLUSH_RIGHT_POS(4, ds.cozy_squares));
+        break; case  7: std::cout << "ini = " <<   COLORIZE(RED , FLUSH_RIGHT_POS(4, MOBILITY * (-B->nb_xrays_by_side[0] + B->nb_xrays_by_side[1]) + TURN_BONUS * (B->next_to_move==Color::white ? +1 : -1)));
 ;
         break; case  8: comp_sq_counts(B->nb_xrays, 0);
         break; case  9: comp_sq_counts(B->nb_xrays, 1);
@@ -200,56 +195,71 @@ void print_board_fancy(Board const* B)
         break; case 23: comp_sq_counts(B->attacks_by_pawn, 6);  //comp_sq_flags(B->is_weak_square, 6);
         break; case 24: comp_sq_counts(B->attacks_by_pawn, 7);  //comp_sq_flags(B->is_weak_square, 7); std::cout << B->nb_weak_squares[0] <<"." << B->nb_weak_squares[1]; 
         }
-        std::cout << std::noshowpos << YELLOW << std::endl;
+        std::cout << std::endl;
     }
 } 
 
 
 void print_board(Board const* B)
 {
-    auto new_line = [](){
-        std::cout << "                              " << std::endl << "\t";
+    auto new_tabbed_line = []() {
+        REPEAT(30, _, std::cout << " ");
+        std::cout << std::endl << "\t";
     };
 
-    new_line();
+    new_tabbed_line();
     std::cout << "   a b c d e f g h ";
-    new_line();
+    new_tabbed_line();
     for (int r=0; r!=8; ++r) {
         std::cout << 8-r << " |";
         for (int c=0; c!=8; ++c) {
+            bool is_black = B->grid[r][c].color==Color::black ;
             char l = species_names[B->grid[r][c].species];
-            if (B->grid[r][c].color==Color::black) {
-                l += 'a'-'A'; // lowercase
-                std::cout << CYAN; /* black pieces are cyan*/
-            } else {
-                std::cout << MAGENTA; /* white pieces are magenta */
-            }
-            std::cout << l;
-            std::cout << YELLOW; /* yellow */
+            if (is_black) { l += 'a'-'A'; }
+            std::cout << COLORIZE(is_black ? CYAN : MAGENTA, l);
             std::cout << "|";
         }
-        new_line();
+        new_tabbed_line();
     }
     std::cout << "   ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾ ";
-    new_line();
-
-    if (B->next_to_move == Color::white) {
-        std::cout << MAGENTA << "White" << YELLOW << " to move";
-    } else {                                                
-        std::cout << CYAN << "Black" << YELLOW << " to move";
-    }
-    std::cout << "; ";
-    std::cout << BLUE << B->plies_since_irreversible.back() << YELLOW << " plies";
-    new_line();
-    std::cout << BLUE << B->hash << YELLOW;
-    new_line();
+    
+    bool is_white = B->next_to_move==Color::white;
     DisaggregatedScore ds = B->evaluation_stack.back(); 
-    std::cout << YELLOW <<  "mtr" << RED << ds.material
-              << YELLOW << " kng" << RED << ds.king_safety 
-              << YELLOW << " pwn" << RED << ds.pawn_structure
-              << YELLOW << " sqr" << RED << ds.cozy_squares
-              << YELLOW;
-    new_line();
+    int mat = ds.material;
+    int kng = ds.king_safety + 13 * ( B->nb_king_attacks_near[0]-B->nb_king_attacks_near[1]);
+    int pwn = ds.pawn_structure + 5 * ( B->nb_weak_squares[0]-B->nb_weak_squares[1]);
+    int sqr = ds.cozy_squares;
+    int ini = MOBILITY * (-B->nb_xrays_by_side[0] + B->nb_xrays_by_side[1]) + TURN_BONUS * (B->next_to_move==Color::white ? +1 : -1);
+
+    new_tabbed_line(); std::cout << "turn = " << COLORIZE((is_white?MAGENTA:CYAN), (is_white?"White":"Black"));
+    new_tabbed_line(); std::cout << "plies = " << COLORIZE(BLUE, B->plies_since_irreversible.back());
+    new_tabbed_line(); std::cout << "hash = " << COLORIZE(BLUE, B->hash);
+    new_tabbed_line(); std::cout << "mat = " << COLORIZE(RED, FLUSH_RIGHT_POS(4, mat)); 
+    new_tabbed_line(); std::cout << "kng = " << COLORIZE(RED, FLUSH_RIGHT_POS(4, kng)); 
+    new_tabbed_line(); std::cout << "pwn = " << COLORIZE(RED, FLUSH_RIGHT_POS(4, pwn)); 
+    new_tabbed_line(); std::cout << "sqr = " << COLORIZE(RED, FLUSH_RIGHT_POS(4, sqr)); 
+    new_tabbed_line(); std::cout << "ini = " << COLORIZE(RED, FLUSH_RIGHT_POS(4, ini)); 
+    new_tabbed_line();
+;
+
+
+    //if (B->next_to_move == Color::white) {
+    //    std::cout << MAGENTA << "White" << YELLOW << " to move";
+    //} else {                                                
+    //    std::cout << CYAN << "Black" << YELLOW << " to move";
+    //}
+    //std::cout << "; ";
+    //std::cout << BLUE << B->plies_since_irreversible.back() << YELLOW << " plies";
+    //new_line();
+    //std::cout << BLUE << B->hash << YELLOW;
+    //new_line();
+    //DisaggregatedScore ds = B->evaluation_stack.back(); 
+    //std::cout << YELLOW <<  "mtr" << RED << ds.material
+    //          << YELLOW << " kng" << RED << ds.king_safety 
+    //          << YELLOW << " pwn" << RED << ds.pawn_structure
+    //          << YELLOW << " sqr" << RED << ds.cozy_squares
+    //          << YELLOW;
+    //new_line();
 } 
 /*
         White to move

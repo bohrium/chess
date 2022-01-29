@@ -2,14 +2,16 @@
 #define EVAL_PARAMS_H
 
 /*=============================================================================
-====  0. SEARCH FUNCTION  =====================================================
+====  0. NUMERIC PARAMS  ======================================================
 =============================================================================*/
+
+#define CONTEMPT (+100) 
 
 /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ~~~~  0.0. Initiative  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 
 int const TURN_BONUS     = 13;
-int const MOBILITY       = 13;
+int const MOBILITY       =  5;
 /* UNIMPLEMENTED! */ int const LOOSE_PIECE    = 13; /* malus */
 /* UNIMPLEMENTED! */ int const ATTACKED_PIECE = 13; /* malus */
 
@@ -73,7 +75,7 @@ int const RIMMED_N       = 13; /* malus */
 int const ADVANCED_N     = 34;
 
 int const RIMMED_B       = 13; /* malus */
-int const CORNERED_B     = 34; /* malus */
+int const CORNERED_B     = 89; /* malus */
 int const B_SNIPER       = 34;
 
 int const R_PIG          = 13;
