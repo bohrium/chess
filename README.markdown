@@ -1,5 +1,7 @@
 # chess
 
+TODO: track nb-plies-since-irreversible in hash 
+
 ## overview 
 This project has two aims: to practice tree search and to use learning
 techniques to infer and visualize interpretable chess heuristics.

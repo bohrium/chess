@@ -7,9 +7,9 @@
 #include <time.h>
 #include <thread>
 
-ply_t const WHITE_DEPTH      = 16; 
+ply_t const WHITE_DEPTH      = 18; 
 ply_t const BLACK_DEPTH      = 10;
-ply_t const COMMENTARY_DEPTH = 13;
+ply_t const COMMENTARY_DEPTH = 14;
 
 ply_t const LINE_REPORT_PLIES = 6;
 
@@ -40,7 +40,7 @@ int main(int argc, char** argv)
     for (int t=0; t!=MAX_NB_PLIES; ++t) {
         /*--------  0.1.0. display game state  ------------------------------*/
         print_board_fancy(&B);
-        GO_UP(34);
+        GO_UP(33);
 
         /*--------  0.1.1. compute best move  -------------------------------*/
         std::cout << std::endl;
