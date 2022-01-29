@@ -2,25 +2,15 @@
 #include "Helpers.h"
 #include <iostream>
 
-////
+void update_xrays_by_pawn(Board* B, Coordinate rc, Piece p, bool is_add); 
+void update_king_attacks(Board* B, Coordinate rc, Color king_color, bool is_add);
+void update_xrays_by_piece(Board* B, Coordinate rc, Piece p, bool is_add);
+void update_weak_squares(Board* B, Color side, int c);
+void update_least_advanced(Board* B, Color side, int c);
 
-void print_move(Board const* B, Move m)
-{
-    if (m.type == MoveType::extra_legal) {
-        std::cout << "######";
-        return;
-    }
-    char mover = species_names[get_piece(B, m.source).species];
-    std::cout << mover << (char)(m.dest.col+'a') << 8-m.dest.row;
-    std::cout << "(" << species_names[m.taken.species] << ")";
-}
-void print_movelist(Board const* B, MoveList* ML)
-{
-    for (int i=0; i!=ML->length; ++i) {
-        print_move(B, ML->moves[i]);
-        std::cout << std::endl;
-    }
-}
+/*=============================================================================
+====  0. MOVE GENERATION  =====================================================
+=============================================================================*/
 
 void generate_pawn_moves  (Board const* B, MoveList* ML, Coordinate source, bool captures_only);
 void generate_knight_moves(Board const* B, MoveList* ML, Coordinate source, bool captures_only);
@@ -49,7 +39,6 @@ void generate_moves(Board const* B, MoveList* ML, bool captures_only)
         for (int c=0; c!=8; ++c) {
             Piece mover = get_piece(B, {r, c});
             if (mover.color != B->next_to_move) { continue; }
-            //generate_moves_for_piece(B, ML, mover, {r, c}, false/*captures_only*/);
             generate_moves_for_piece(B, ML, mover, {r, c}, captures_only);
         }
     }
@@ -167,7 +156,31 @@ void generate_king_moves (Board const* B, MoveList* ML, Coordinate source, bool 
     }
 }
 
-////
+/*=============================================================================
+====  1. MOVE DISPLAY  ========================================================
+=============================================================================*/
+
+void print_move(Board const* B, Move m)
+{
+    if (m.type == MoveType::extra_legal) {
+        std::cout << "######";
+        return;
+    }
+    char mover = species_names[get_piece(B, m.source).species];
+    std::cout << mover << (char)(m.dest.col+'a') << 8-m.dest.row;
+    std::cout << "(" << species_names[m.taken.species] << ")";
+}
+void print_movelist(Board const* B, MoveList* ML)
+{
+    for (int i=0; i!=ML->length; ++i) {
+        print_move(B, ML->moves[i]);
+        std::cout << std::endl;
+    }
+}
+
+/*=============================================================================
+====  2. HASHING  =============================================================
+=============================================================================*/
 
 unsigned int const TO_MOVE_HASH = 271828;
 
@@ -204,19 +217,21 @@ inline int quintant_from(Coordinate rc)
     return quintant_by_coor[rc.row][rc.col];
 }
 
-////
+/*=============================================================================
+====  3. APPLY / UNDO MOVE  ===================================================
+=============================================================================*/
 
 void apply_null(Board* B)
 {
     B->next_to_move = flip_color(B->next_to_move);
     B->hash ^= TO_MOVE_HASH;
 }
+
 void undo_null(Board* B)
 {
     B->next_to_move = flip_color(B->next_to_move);
     B->hash ^= TO_MOVE_HASH;
 }
-////
 
 void apply_move(Board* B, Move m)
 {
@@ -281,120 +296,120 @@ void undo_move(Board* B, Move m)
 ////
 
 /* TODO: codify GRAND CONVENTION: alternate signs of direction!! */
-
-int const nb_knight_dirs = 8; 
-int const knight_dirs[][2] = {
-    {+2, +1},    {-2, -1},    
-    {+2, -1},    {-2, +1},    
-    {+1, +2},    {-1, -2},
-    {+1, -2},    {-1, +2},
-};
-int const nb_bishop_dirs = 4; 
-int const bishop_dirs[][2] = {
-    {+1, +1},    {-1, -1},
-    {+1, -1},    {-1, +1},
-};
-int const nb_rook_dirs = 4; 
-int const rook_dirs[][2] = {
-    {+1,  0},    {-1,  0},
-    { 0, +1},    { 0, -1},
-};
-int const nb_queen_dirs = 8; 
-int const queen_dirs[][2] = {
-    {+1, +1},    {-1, -1},
-    {+1, -1},    {-1, +1},
-    {+1,  0},    {-1,  0},
-    { 0, +1},    { 0, -1},
-};
-
-inline int max_ray_len(int r, int c, int dr, int dc)
+void change_piece(Board* B, Coordinate rc, Piece p, bool is_add)
 {
-    //int R = dr ? ((0<dr) ? ((7-r)/dr) : (r/(-dr))) : 8;
-    //int C = dc ? ((0<dc) ? ((7-c)/dc) : (c/(-dc))) : 8;
-    //return MIN(R,C);
-    return !dr  ? (!dc ? -1 : 0<dc ? (7-c)/dc : c/(-dc)) :
-           0<dr ? (!dc ? (7-r)/dr : 0<dc ? MIN((7-r)/dr,(7-c)/dc) : MIN((7-r)/dr,c/(-dc))):
-                  (!dc ? r/(-dr)  : 0<dc ? MIN(r/(-dr),(7-c)/dc) : MIN(r/(-dr),c/(-dc)));
-}
+    int const sign = p.color==Color::white ? +1 : -1;
+    Color const self = p.color; 
+    Color const them = flip_color(p.color);
+    int const r=rc.row;
+    int const c=rc.col;
 
-void update_xrays_by_pawn(Board* B, Coordinate rc, Piece p, bool is_add) 
-{
     int const sign_d = is_add ? +1 : -1;
-    Color const self = p.color;
-    //Color const them = flip_color(self);
 
-    // removing an un-xrayed pawn changes nothing
-    if (!is_add && !B->nb_xrays[self][rc.row][rc.col]) { return; }
+    /* hash (TODO: EXCEPT to-move-color, 50 move rule, etc: extra state) */
+    B->hash ^= hash_by_piece[self][p.species] * hash_by_square[r][c];
 
-    int nb_sources_by_dir[nb_queen_dirs] = {0,0,0,0,0,0,0,0};
-    int ranges_by_dir    [nb_queen_dirs] = {0,0,0,0,0,0,0,0};
+    /* update grid */
+    if (is_add) { B->grid[r][c] = p; }
+    else        { B->grid[r][c] = empty_piece; }
 
-    for (int k=0; k!=nb_queen_dirs; ++k) {
-        int dr = queen_dirs[k][0]; int dc = queen_dirs[k][1];
-        Species goal_a = Species::queen;
-        Species goal_b = (dr*dr+dc*dc==2) ? Species::bishop
-                                          : Species::rook;
 
-        Coordinate src_rc = rc;
-        int T = max_ray_len(rc.row, rc.col, dr, dc);
-        int t=0;
-        Piece p;
-        #define LOOP_BODY                                                                   \
-            src_rc.row += dr; src_rc.col += dc;                                             \
-            p = B->grid[src_rc.row][src_rc.col];                                            \
-            if (p.color == self) { /*continue;*/                                            \
-            if (p.species==Species::pawn) { t+=1; break; } /* can't see through own pawn */ \
-            if (p.species==goal_a || p.species==goal_b) { nb_sources_by_dir[k] += 1; }      \
-            }                                                                               \
-            ++t; /* manual loop iter */                                                          
-
-        switch (T) { /*waterfall*/
-            case 7: LOOP_BODY 
-            case 6: LOOP_BODY
-            case 5: LOOP_BODY
-            case 4: LOOP_BODY
-            case 3: LOOP_BODY
-            case 2: LOOP_BODY
-            case 1: LOOP_BODY
-            case 0: break;
-        }
-
-        #undef LOOP_BODY
-
-        ranges_by_dir[k] = t; /* already incremented, mind you! */
+    if (p.species != Species::pawn && p.species != Species::king) {
+        int pq = quintant_from(rc);
+        int kq = quintant_from(B->king_locs[them].back());
+        B->nb_pieces_by_quintant[self][pq] += sign_d; 
+        
+        update_xrays_by_piece(B, rc, p, is_add);
+        update_king_attacks(B, B->king_locs[them].back(), them, is_add);
+        //{ /* king-xrays */
+        //    /* TODO */
+        //}
+        //{ /* loose pieces */
+        //}
     }
+    //nb_xrayed_stones[self] += sign_d * (nb_xrays[them][r][c] ? 1 : 0);
+    //nb_loose_stones [self] += sign_d * (nb_xrays[them][r][c] ? 1 : 0);
 
-    for (int k=0; k!=nb_queen_dirs; ++k) {/* go in opposite direction */
-        int minus_k = k + ((k%2) ? -1 : +1); /* GRAND CONVENTION */
-        int nb_sources = nb_sources_by_dir[minus_k]; 
-        if (!nb_sources || !ranges_by_dir[k]) { continue; }
-        int dr = queen_dirs[k][0]; int dc = queen_dirs[k][1];
+    /* update piece-square counts and pawn structure terms */
+    switch (p.species) {
+    break; case Species::pawn:
+        B->nb_pawns[self] += sign_d;
+        B->nb_pawns_by_parity[self][parity(rc)] += sign_d;
+        B->nb_pawns_by_file[self][c] += sign_d;
+        update_least_advanced(B, self, c);
+        { /* weak-squares, posted-knight */
+            if (c != 0) { B->attacks_by_pawn[self][r-sign][c-1] += sign_d; }
+            if (c != 7) { B->attacks_by_pawn[self][r-sign][c+1] += sign_d; }
+            /* TODO; note that order of operations might depend on is_add */
 
-        Coordinate dst_rc = rc;
-        int T = ranges_by_dir[k];
-        int t=0;
-        #define LOOP_BODY                                                       \
-            dst_rc.row += dr; dst_rc.col += dc;                                 \
-            B->nb_xrays[self][dst_rc.row][dst_rc.col] -= sign_d * nb_sources;   \
-            B->nb_xrays_by_side[self] -= sign_d * nb_sources;                   
-
-        switch (T) { /*waterfall*/
-            case 7: LOOP_BODY 
-            case 6: LOOP_BODY
-            case 5: LOOP_BODY
-            case 4: LOOP_BODY
-            case 3: LOOP_BODY
-            case 2: LOOP_BODY
-            case 1: LOOP_BODY
-            case 0: break;
+            if (true) { update_weak_squares(B, self, c  ); }
+            if (1<=c) { update_weak_squares(B, self, c-1); }
+            if (c<7 ) { update_weak_squares(B, self, c+1); }
         }
-
-        #undef LOOP_BODY
+        update_xrays_by_pawn(B, rc, p, is_add); 
+        //{ /* king x-rays */
+        //}
+        //{ /* loose pieces */
+        //}
+    break; case Species::knight:
+        B->nb_knights[self] += sign_d; 
+    break; case Species::bishop:
+        B->nb_pawns_by_parity[self][parity(rc)] += sign_d;
+    break; case Species::rook:
+        B->nb_rooks[self] += sign_d;
+        B->nb_rooks_by_file[self][c] += sign_d;
+        B->nb_majors[self] += sign_d;
+    break; case Species::queen:
+        B->nb_majors[self] += sign_d;
+    break; case Species::king: 
+        update_king_attacks(B, rc, self, is_add);
     }
 }
 
+/*=============================================================================
+====  4. AUX BOARD STATE UPDATERS  ============================================
+=============================================================================*/
 
+/* REQUIRES: assumes nb_pawns_by_file is correct! */
+void update_least_advanced(Board* B, Color side, int c) {
+    int start = (side == Color::white ?  6 :  1);
+    int step  = (side == Color::white ? -1 : +1);
+    int end   = (side == Color::white ?  0 :  7);
 
+    if ( ! B->nb_pawns_by_file[side][c] ) {
+        B->least_advanced[side][c] = end+step; /* sentinel value */
+        return;
+    }
+    for (int r=start; r!=end; r+=step) {
+        if (!kronecker_piece(B, {r,c}, {side,Species::pawn})) { continue; }
+        B->least_advanced[side][c] = r;
+        return;
+    }
+    std::cout << "\033[120C" << "WOAH!  SHOULDN'T ARRIVE HERE!" << std::endl;
+} 
+
+void update_weak_squares(Board* B, Color side, int c) {
+    int start = (side == Color::white ?  7 :  0); /* white's home base is row 7 */
+    int step  = (side == Color::white ? -1 : +1);
+    int end   = (side == Color::white ? -1 :  8);
+
+    auto atx = B->attacks_by_pawn[side];
+    int is_attackable = false;
+    for (int r=start; r!=end; r+=step) {
+        if (!is_attackable &&
+            ((1<=c&& atx[r][c-1]) ||
+             (c <7 && atx[r][c+1]))) {
+            is_attackable = true;
+        }
+        Piece p = B->grid[r][c]; 
+        bool is_weak = !is_attackable && (p.species!=Species::pawn || p.color!=side);
+        bool* old = &B->is_weak_square[side][r][c];  
+        if (*old != is_weak) {
+            *old = is_weak;
+            B->nb_weak_squares[side] += (is_weak ? +1 : -1); 
+        }
+    }
+} 
 void update_xrays_by_piece(Board* B, Coordinate rc, Piece p, bool is_add) 
 {
     int const sign_d = is_add ? +1 : -1;
@@ -478,166 +493,78 @@ void update_king_attacks(Board* B, Coordinate rc, Color king_color, bool is_add)
     }
 }
 
-void change_piece(Board* B, Coordinate rc, Piece p, bool is_add)
+void update_xrays_by_pawn(Board* B, Coordinate rc, Piece p, bool is_add) 
 {
-    int const sign = p.color==Color::white ? +1 : -1;
-    Color const self = p.color; 
-    Color const them = flip_color(p.color);
-    int const r=rc.row;
-    int const c=rc.col;
-
     int const sign_d = is_add ? +1 : -1;
+    Color const self = p.color;
+    //Color const them = flip_color(self);
 
-    /* hash (TODO: EXCEPT to-move-color, 50 move rule, etc: extra state) */
-    B->hash ^= hash_by_piece[self][p.species] * hash_by_square[r][c];
+    // removing an un-xrayed pawn changes nothing
+    if (!is_add && !B->nb_xrays[self][rc.row][rc.col]) { return; }
 
-    /* update grid */
-    if (is_add) { B->grid[r][c] = p; }
-    else        { B->grid[r][c] = empty_piece; }
+    int nb_sources_by_dir[nb_queen_dirs] = {0,0,0,0,0,0,0,0};
+    int ranges_by_dir    [nb_queen_dirs] = {0,0,0,0,0,0,0,0};
 
+    for (int k=0; k!=nb_queen_dirs; ++k) {
+        int dr = queen_dirs[k][0]; int dc = queen_dirs[k][1];
+        Species goal_a = Species::queen;
+        Species goal_b = (dr*dr+dc*dc==2) ? Species::bishop
+                                          : Species::rook;
 
-    if (p.species != Species::pawn && p.species != Species::king) {
-        int pq = quintant_from(rc);
-        int kq = quintant_from(B->king_locs[them].back());
-        B->nb_pieces_by_quintant[self][pq] += sign_d; 
-        
-        update_xrays_by_piece(B, rc, p, is_add);
-        update_king_attacks(B, B->king_locs[them].back(), them, is_add);
-        //{ /* king-xrays */
-        //    /* TODO */
-        //}
-        //{ /* loose pieces */
-        //}
-    }
-    //nb_xrayed_stones[self] += sign_d * (nb_xrays[them][r][c] ? 1 : 0);
-    //nb_loose_stones [self] += sign_d * (nb_xrays[them][r][c] ? 1 : 0);
+        Coordinate src_rc = rc;
+        int T = max_ray_len(rc.row, rc.col, dr, dc);
+        int t=0;
+        Piece p;
+        #define LOOP_BODY                                                                   \
+            src_rc.row += dr; src_rc.col += dc;                                             \
+            p = B->grid[src_rc.row][src_rc.col];                                            \
+            if (p.color == self) { /*continue;*/                                            \
+            if (p.species==Species::pawn) { t+=1; break; } /* can't see through own pawn */ \
+            if (p.species==goal_a || p.species==goal_b) { nb_sources_by_dir[k] += 1; }      \
+            }                                                                               \
+            ++t; /* manual loop iter */                                                          
 
-    /* update piece-square counts and pawn structure terms */
-    switch (p.species) {
-    break; case Species::pawn:
-        B->nb_pawns[self] += sign_d;
-        B->nb_pawns_by_parity[self][parity(rc)] += sign_d;
-        B->nb_pawns_by_file[self][c] += sign_d;
-        update_least_advanced(B, self, c);
-        { /* weak-squares, posted-knight */
-            if (c != 0) { B->attacks_by_pawn[self][r-sign][c-1] += sign_d; }
-            if (c != 7) { B->attacks_by_pawn[self][r-sign][c+1] += sign_d; }
-            /* TODO; note that order of operations might depend on is_add */
-
-            if (true) { update_weak_squares(B, self, c  ); }
-            if (1<=c) { update_weak_squares(B, self, c-1); }
-            if (c<7 ) { update_weak_squares(B, self, c+1); }
+        switch (T) { /*waterfall*/
+            case 7: LOOP_BODY 
+            case 6: LOOP_BODY
+            case 5: LOOP_BODY
+            case 4: LOOP_BODY
+            case 3: LOOP_BODY
+            case 2: LOOP_BODY
+            case 1: LOOP_BODY
+            case 0: break;
         }
-        update_xrays_by_pawn(B, rc, p, is_add); 
-        //{ /* king x-rays */
-        //}
-        //{ /* loose pieces */
-        //}
-    break; case Species::knight:
-        B->nb_knights[self] += sign_d; 
-    break; case Species::bishop:
-        B->nb_pawns_by_parity[self][parity(rc)] += sign_d;
-    break; case Species::rook:
-        B->nb_rooks[self] += sign_d;
-        B->nb_rooks_by_file[self][c] += sign_d;
-        B->nb_majors[self] += sign_d;
-    break; case Species::queen:
-        B->nb_majors[self] += sign_d;
-    break; case Species::king: 
-        update_king_attacks(B, rc, self, is_add);
+
+        #undef LOOP_BODY
+
+        ranges_by_dir[k] = t; /* already incremented, mind you! */
+    }
+
+    for (int k=0; k!=nb_queen_dirs; ++k) {/* go in opposite direction */
+        int minus_k = minus_idx(k);
+        int nb_sources = nb_sources_by_dir[minus_k]; 
+        if (!nb_sources || !ranges_by_dir[k]) { continue; }
+        int dr = queen_dirs[k][0]; int dc = queen_dirs[k][1];
+
+        Coordinate dst_rc = rc;
+        int T = ranges_by_dir[k];
+        int t=0;
+        #define LOOP_BODY                                                       \
+            dst_rc.row += dr; dst_rc.col += dc;                                 \
+            B->nb_xrays[self][dst_rc.row][dst_rc.col] -= sign_d * nb_sources;   \
+            B->nb_xrays_by_side[self] -= sign_d * nb_sources;                   
+
+        switch (T) { /*waterfall*/
+            case 7: LOOP_BODY 
+            case 6: LOOP_BODY
+            case 5: LOOP_BODY
+            case 4: LOOP_BODY
+            case 3: LOOP_BODY
+            case 2: LOOP_BODY
+            case 1: LOOP_BODY
+            case 0: break;
+        }
+
+        #undef LOOP_BODY
     }
 }
-
-////
-
-
-/* REQUIRES: assumes nb_pawns_by_file is correct! */
-void update_least_advanced(Board* B, Color side, int col) {
-    int start = (side == Color::white ?  6 :  1);
-    int step  = (side == Color::white ? -1 : +1);
-    int end   = (side == Color::white ?  0 :  7);
-
-    if ( ! B->nb_pawns_by_file[side][col] ) {
-        B->least_advanced[side][col] = end+step; /* sentinel value */
-        return;
-    }
-    for (int row=start; row!=end; row+=step) {
-        if (!kronecker_piece(B, {row,col}, {side,Species::pawn})) { continue; }
-        B->least_advanced[side][col] = row;
-        return;
-    }
-    std::cout << "\033[120C" << "WOAH!  SHOULDN'T ARRIVE HERE!" << std::endl;
-} 
-
-void update_weak_squares(Board* B, Color side, int col) {
-    int start = (side == Color::white ?  7 :  0); /* white's home base is row 7 */
-    int step  = (side == Color::white ? -1 : +1);
-    int end   = (side == Color::white ? -1 :  8);
-
-    auto atx = B->attacks_by_pawn[side];
-    int is_attackable = false;
-    for (int row=start; row!=end; row+=step) {
-        if (!is_attackable &&
-            ((1<=col && atx[row][col-1]) ||
-             (col <7 && atx[row][col+1]))) {
-            is_attackable = true;
-        }
-        Piece p = B->grid[row][col]; 
-        bool is_weak = !is_attackable && (p.species!=Species::pawn || p.color!=side);
-        bool* old = &B->is_weak_square[side][row][col];  
-        if (*old != is_weak) {
-            *old = is_weak;
-            B->nb_weak_squares[side] += (is_weak ? +1 : -1); 
-        }
-    }
-} 
-
-
-//unsigned int hash_of(Move m, Piece mover)
-//{
-//    /* mode is whether for updating forward or backward*/
-//    int sr = m.source.row;
-//    int sc = m.source.col;
-//    int dr = m.dest.row;
-//    int dc = m.dest.col;
-//    Piece taken = m.taken;
-//    return (
-//         (hash_by_piece[mover.color][mover.species] * hash_by_square[sr][sc]) ^
-//         (hash_by_piece[mover.color][mover.species] * hash_by_square[dr][dc]) ^
-//        (is_capture(m) ?
-//         (hash_by_piece[taken.color][taken.species] * hash_by_square[dr][dc]) : 0)
-//    );
-//} 
-
-
-
-
-
-    //break; case Species::rook  : 
-    //    for (int k=0; k!=nb_rook_dirs; ++k) {
-    //        int dr = rook_dirs[k][0]; int dc = rook_dirs[k][1];
-    //        int T = max_ray_len(rc.row, rc.col, dr, dc); 
-    //        Coordinate new_rc = rc;
-    //        for (int t=0; t!=T; ++t) {
-    //            new_rc.row += dr; new_rc.col += dc;
-    //            B->nb_xrays[self][new_rc.row][new_rc.col] += sign_d;
-    //            B->nb_xrays_by_side[self] += sign_d;
-    //            Piece p = B->grid[new_rc.row][new_rc.col];
-    //            if (p.species==Species::pawn && p.color==self) { break; } /* can't see through own pawn */
-    //        }
-    //    }
-    //break; case Species::queen : 
-    //    for (int k=0; k!=nb_queen_dirs; ++k) {
-    //        int dr = queen_dirs[k][0]; int dc = queen_dirs[k][1];
-    //        int T = max_ray_len(rc.row, rc.col, dr, dc); 
-    //        Coordinate new_rc = rc;
-    //        for (int t=0; t!=T; ++t) {
-    //            new_rc.row += dr; new_rc.col += dc;
-    //            B->nb_xrays[self][new_rc.row][new_rc.col] += sign_d;
-    //            B->nb_xrays_by_side[self] += sign_d;
-    //            Piece p = B->grid[new_rc.row][new_rc.col];
-    //            if (p.species==Species::pawn && p.color==self) { break; } /* can't see through own pawn */
-    //        }
-    //    }
-    //}
-

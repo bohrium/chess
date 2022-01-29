@@ -203,7 +203,7 @@ void print_board_fancy(Board const* B)
 void print_board(Board const* B)
 {
     auto new_tabbed_line = []() {
-        REPEAT(30, _, std::cout << " ");
+        CLEAR_LINE(30);
         std::cout << std::endl << "\t";
     };
 

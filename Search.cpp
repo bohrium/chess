@@ -13,7 +13,6 @@ Move shallow_greedy_move(Board* B);
 void order_moves(Board* B, MoveList* ML, int depth, int k, PVTable table);
 int stable_eval(Board* B, int max_plies, int alpha, int beta);
 
-
 /*=============================================================================
 ====  0. SEARCH FUNCTION  =====================================================
 =============================================================================*/
@@ -21,16 +20,12 @@ int stable_eval(Board* B, int max_plies, int alpha, int beta);
 /* important to parenthesize macro args!  one hour bug traced to this */
 #define BARK(VERBOSE,STMNT)                             \
     if (0<(VERBOSE)) {                                  \
-        for (int t=0; t!=MAX_VERBOSE-(VERBOSE); ++t) {  \
-            std::cout << "\033[15C";                    \
-        }                                               \
+        GO_RIGHT(15 * (MAX_VERBOSE-(VERBOSE)));         \
         {STMNT;}                                        \
-        REPEAT(30,_,std::cout << " ");                  \
-        std::cout << "\033[120D" << std::flush;         \
+        CLEAR_LINE(30);                                 \
     }                                                    
 
-
-ScoredMove get_best_move(Board* B, const int depth, int alpha, int beta, bool stable, bool null_move_okay, int verbose, PVTable parent)
+ScoredMove get_best_move(Board* B, int const depth, int alpha, int beta, bool stable, bool null_move_okay, int verbose, PVTable parent)
 {
     /* TODO: handle checkmate / draw leaf termination!! */
 
@@ -74,7 +69,6 @@ ScoredMove get_best_move(Board* B, const int depth, int alpha, int beta, bool st
     const int worst_case = is_white ? -KING_POINTS : +KING_POINTS;
     if (!nb_candidates) {
         /* NEW! handle no pieces */
-        //std::cout << "\n\nNO MOVES\n\n" << std::flush;
         return {unk_move, worst_case, 0};
     }
     ScoredMove best, next_best;
@@ -367,12 +361,15 @@ void print_pv(Board* B, int depth, int verbose, PVTable parent)
 ====  2. MULTITHREADING  ======================================================
 =============================================================================*/
 
-#define THREADS_WIDTH 9 /* TODO: alpha beta prune after bundle of threads (DONE but UNTUNED) */
-#define ELDERS 1
-#define COYOUTHS AR_THRESH 
-ScoredMove get_best_move_multithreaded(Board* B, const int depth, int alpha, int beta, int layers, PVTable parent)
+int const THREADS_WIDTH = 4; /* TODO: alpha beta prune after bundle of threads (DONE but UNTUNED) */
+int const ELDERS = 1;
+int const MAX_MULTI_MOVES = 36;
+
+ScoredMove get_best_move_multithreaded(Board* B, int const depth, int alpha, int beta, int layers, PVTable parent)
 {
-    if (layers<=0) { return get_best_move(B, depth, alpha, beta, true, true, 0, parent); };
+    if (layers<=0 || depth<=RED_DEPTH_SOFT_FLOOR) {
+        return get_best_move(B, depth, alpha, beta, true, true, 0, parent);
+    }
 
     const int orig_alpha = alpha;
     const int orig_beta = beta;
@@ -380,49 +377,52 @@ ScoredMove get_best_move_multithreaded(Board* B, const int depth, int alpha, int
 
     bool stable = true;
     if (stable) {
-        PVRecord pvr = parent[depth][B->hash % PV_TABLE_SIZE];
-        if (pvr.hash == B->hash) {
+        for (int i=0; i!=2; ++i) { /* NEW FEATURE: look up deepers ! */
+            PVRecord pvr = parent[depth+i][B->hash % PV_TABLE_SIZE];
+            if (pvr.hash != B->hash) { continue; }
             if ((pvr.sm.score > pvr.alpha || pvr.alpha <= alpha) &&
                 (pvr.sm.score < pvr.beta  || beta <= pvr.beta)) {
-              return pvr.sm;
+                return pvr.sm;
             }
-        };
+            break;
+        }
     }
 
     MoveList ML; 
     generate_moves(B, &ML, false);
-    ML.length = MIN(ML.length, 36);
+    ML.length = MIN(ML.length, MAX_MULTI_MOVES);
     order_moves(B, &ML, ordering_depths[depth], 6, parent);
+
     ScoredMove sms[MAX_NB_MOVES];
-
-    ScoredMove best = {unk_move, is_white ? -KING_POINTS : +KING_POINTS, -1};
-    for (int l=0; l!=ELDERS; ++l) {
-        int reduced_depth = depth-1;
-
-        Move m = ML.moves[l];
-
-        std::cout << "\033[100D" << std::flush;
-        for (int i=0; i!=5-layers; ++i) { std::cout << "\033[8C"; }
-        print_move(B, m);
-        std::cout << "\033[100D" << std::flush;
-
-        apply_move(B, m);
-        ScoredMove sm = get_best_move_multithreaded(B, reduced_depth, alpha, beta, layers-1, parent);
-        sms[l] = {m, sm.score, sm.height+1};
-        undo_move(B, m);
-
-        if ( is_white && best.score < sms[l].score ||
-            !is_white && sms[l].score < best.score) {
-            best = sms[l];
-        }
-
-        if (is_white) { if (sms[l].score >= beta ) goto END; alpha = MAX(alpha, sms[l].score); } 
-        else          { if (sms[l].score <= alpha) goto END; beta  = MIN(beta , sms[l].score); } 
+    const int worst_case = is_white ? -KING_POINTS : +KING_POINTS;
+    if (!ML.length) {
+        /* NEW! handle no pieces */
+        return {unk_move, worst_case, 0};
     }
 
-    PVTable* my_pv_tables[36];
-    int new_alphas[36];
-    int new_betas [36];
+    for (int l=0; l!=ELDERS; ++l) {
+        Move m = ML.moves[l];
+        int reduced_depth = 0.9*(depth-RED_DEPTH_HARD_FLOOR)+RED_DEPTH_HARD_FLOOR-1;
+
+        GO_LEFT(120); GO_RIGHT((5-layers) * 8);
+        print_move(B, m);
+        GO_LEFT(120);
+
+        {
+            apply_move(B, m);
+            ScoredMove sm = get_best_move_multithreaded(B, reduced_depth, alpha, beta, layers-1, parent);
+            sms[l] = {m, sm.score, sm.height+1};
+            undo_move(B, m);
+        }
+
+        if (is_white) { alpha = MAX(alpha, sms[l].score); } 
+        else          { beta  = MIN(beta , sms[l].score); } 
+        if ( beta <= alpha ) { ML.length = l+1; goto END; }
+    }
+
+    PVTable* my_pv_tables[MAX_MULTI_MOVES];
+    int new_alphas[MAX_MULTI_MOVES];
+    int new_betas [MAX_MULTI_MOVES];
     for (int t=0; t!=ML.length; ++t) {
         my_pv_tables[t] = (PVTable*)malloc(2*20*PV_TABLE_SIZE * sizeof(PVRecord));
         update_table(*(my_pv_tables[t]), parent);
@@ -430,53 +430,86 @@ ScoredMove get_best_move_multithreaded(Board* B, const int depth, int alpha, int
 
     for (int L=ELDERS; L<ML.length; L+=THREADS_WIDTH) {
         std::vector<std::thread> threads;
-        for (int l=L; l<ML.length && l<L+THREADS_WIDTH; ++l) {
+        int l;
+        for (l=L; l<ML.length && l<L+THREADS_WIDTH; ++l) {
             new_alphas[l] = alpha;
             new_betas[l] = beta;
 
             Board by_val = copy_board(*B);
-            threads.push_back(
-                std::thread([&best, is_white, &ML,&sms,l,alpha,beta,depth,layers, &my_pv_tables, &new_alphas, &new_betas](Board by_val){
-                  Move m = ML.moves[l];
-                  apply_move(&by_val, m);
-
-                  int reduced_depth = 0.8*(depth-RED_DEPTH_HARD_FLOOR)+RED_DEPTH_HARD_FLOOR-1;
-                  ScoredMove sm = get_best_move_multithreaded(&by_val, reduced_depth, alpha, beta, layers-2, *(my_pv_tables[l]));
-                  sms[l] = {m, sm.score, sm.height+1};
-                  undo_move(&by_val, m);
-                  if ( is_white && best.score < sms[l].score ||
-                      !is_white && sms[l].score < best.score) {
-                      best = sms[l];
-                  }
-                  if (is_white) { new_alphas[l] = MAX(new_alphas[l], sms[l].score); } 
-                  else          { new_betas[l]  = MIN(new_betas[l] , sms[l].score); } 
-                }, copy_board(*B)));
+            threads.push_back(std::thread(
+                [is_white, &ML,&sms,l,alpha,beta,depth,layers, &my_pv_tables, &new_alphas, &new_betas](Board by_val){
+                    Move m = ML.moves[l];
+                    int reduced_depth = 0.8*(depth-RED_DEPTH_HARD_FLOOR)+RED_DEPTH_HARD_FLOOR-1;
+                    {
+                        apply_move(&by_val, m);
+                        ScoredMove sm = get_best_move_multithreaded(&by_val, reduced_depth, alpha, beta, layers-2, *(my_pv_tables[l]));
+                        sms[l] = {m, sm.score, sm.height+1};
+                        undo_move(&by_val, m);
+                    }
+                    if (is_white) { new_alphas[l] = MAX(new_alphas[l], sms[l].score); } 
+                    else          { new_betas[l]  = MIN(new_betas[l] , sms[l].score); } 
+                }, copy_board(*B))
+            );
         }
-        //for (int l=ML.length-1; l>=ELDERS; --l) {
-        for (int l=L; l<ML.length && l<L+THREADS_WIDTH; ++l) {
+        for (l=L; l<ML.length && l<L+THREADS_WIDTH; ++l) {
+            /* TODO: for smoother printing: iterate backward ? */
 
-            std::cout << "\033[100D" << std::flush;
-            REPEAT(5-layers, _, std::cout << "\033[8C");
+            GO_LEFT(120); GO_RIGHT((5-layers) * 8);
             std::cout << COLORIZE(GREEN, "$"); print_move(B, ML.moves[l]);
-            std::cout << "\033[100D" << std::flush;
-
-            threads[l-L].join();
-
-            std::cout << "\033[100D" << std::flush;
-            REPEAT(5-layers, _, std::cout << "\033[8C");
-            REPEAT(30, _, std::cout << " ");
-            std::cout << "\033[100D" << std::flush;
+            GO_LEFT(120); 
+            {
+                threads[l-L].join();
+            }
+            GO_LEFT(120); GO_RIGHT((5-layers) * 8);
+            CLEAR_LINE(30);
 
             update_table(parent, *(my_pv_tables[l]));
             free(my_pv_tables[l]);
 
             alpha = MAX(alpha, new_alphas[l]);
             beta  = MIN(beta , new_betas [l]);
+            if (is_white) { alpha = MAX(alpha, new_alphas[l]); } 
+            else          { beta  = MIN(beta , new_betas[l] ); } 
         }
+        if ( beta <= alpha ) { ML.length = l+1; goto END; }
     }
 
 END:
 
+    ScoredMove best = {ML.moves[0], worst_case, -1};
+    ScoredMove next_best = {ML.moves[0], worst_case, -1};
+    for (int l=0; l!=ML.length; ++l) {
+        if ( is_white && best.score < sms[l].score ||
+            !is_white && sms[l].score < best.score) {
+            next_best = best;
+            best = sms[l];
+        } else if ( is_white && next_best.score < sms[l].score ||
+                   !is_white && sms[l].score < next_best.score) {
+            next_best = sms[l];
+        }
+    }
+
+    #if ALLOW_CSR
+    if (RED_DEPTH_SOFT_FLOOR<=depth && 2<=ML.length &&
+        ( is_white && next_best.score + CSR_THRESH < best.score ||    
+         !is_white && next_best.score - CSR_THRESH > best.score)) {
+        int reduced_depth = depth-1;
+        ScoredMove child;
+        {
+            apply_move(B, best.m);
+            child = get_best_move_multithreaded(B, reduced_depth, alpha, beta, layers-1, parent);
+            undo_move(B, best.m);
+        }
+
+        if ( is_white && child.score>=next_best.score ||
+            !is_white && child.score<=next_best.score) {
+            best = {best.m, child.score, child.height+1}; 
+        } else {
+            best = next_best;
+        }
+    }
+    #endif//ALLOW_CSR
+ 
     if (stable) {
         parent[depth][(B->hash)%PV_TABLE_SIZE] = {B->hash, orig_alpha, orig_beta, best};
     }

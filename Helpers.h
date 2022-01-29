@@ -10,13 +10,15 @@
 #define GREEN   "\033[0;32m"
 #define DEFAULT_COLOR   YELLOW
 
-#define GO_DOWN(N) {for (int k=0; k!=N; ++k) { std::cout << std::endl; }}
-#define GO_UP(N) {for (int k=0; k!=N; ++k) { std::cout << "\033[1A" << std::flush; }}
+#define GO_DOWN(N)  {REPEAT(N,_, std::cout << "\n"     ); std::cout << std::flush;}
+#define GO_UP(N)    {REPEAT(N,_, std::cout << "\033[1A"); std::cout << std::flush;}
+#define GO_RIGHT(N) {REPEAT(N,_, std::cout << "\033[1C"); std::cout << std::flush;}
+#define GO_LEFT(N)  {REPEAT(N,_, std::cout << "\033[1D"); std::cout << std::flush;}
 
-#define CLEAR_REST_OF_LINE           \
-{                                    \
-    REPEAT(120,_, std::cout << " ")  \
-    std::cout << "\33[120D";         \
+#define CLEAR_LINE(N)              \
+{                                  \
+    REPEAT(N,_, std::cout << " ")  \
+    GO_LEFT(240+N)                 \
 }
 
 #define SHOW_SIGN(X) (std::showpos)<<X<<(std::noshowpos)

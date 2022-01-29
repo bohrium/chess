@@ -3,17 +3,17 @@ ab:
 	evince alpha-beta.pdf
 
 all:
-	g++ -pthread --std=c++11 Main.cpp Pieces.cpp BoardBasic.cpp BoardMoves.cpp BoardEval.cpp Search.cpp -o main.o 
+	g++ -pthread --std=c++11 Main.cpp BoardBasic.cpp BoardMoves.cpp BoardEval.cpp Search.cpp -o main.o 
 
 prof:
-	g++ -pthread -pg --std=c++11 Main.cpp Pieces.cpp BoardBasic.cpp BoardMoves.cpp BoardEval.cpp Search.cpp -o main.o 
+	g++ -pthread -pg --std=c++11 Main.cpp BoardBasic.cpp BoardMoves.cpp BoardEval.cpp Search.cpp -o main.o 
 
 grind:
-	g++ -pthread -g --std=c++11 Main.cpp Pieces.cpp BoardBasic.cpp BoardMoves.cpp BoardEval.cpp Search.cpp -o main.o 
+	g++ -pthread -g --std=c++11 Main.cpp BoardBasic.cpp BoardMoves.cpp BoardEval.cpp Search.cpp -o main.o 
 	valgrind --leak-check=yes ./main.o
 
 profile:
-	g++ --std=c++11 TestSearch.cpp Pieces.cpp BoardBasic.cpp BoardMoves.cpp BoardEval.cpp Search.cpp -o testsearch.o -pg 
+	g++ --std=c++11 TestSearch.cpp BoardBasic.cpp BoardMoves.cpp BoardEval.cpp Search.cpp -o testsearch.o -pg 
 	./testsearch.o 
 
 preptest:
