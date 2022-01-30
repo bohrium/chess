@@ -228,3 +228,67 @@ pegasus  scylla charybd phoenix  argo    trojan  dragon
  pawn    king  
 
 
+------------
+
+'P' pawn       
+'K' king      
+
+'W' wazir      W    soil               
+'F' ferz       F    air                
+'N' knight     N    horse              
+'R' rook       W*   tower      (composed of soil/rocks)
+'B' bishop     F*   heaven             
+'U' unicorn    N*   myth               
+
+'V' veggie     W F = soil air
+'T' tapir      W N = soil horse
+'C' cardinal   W B = heaven's soil (rock on which to build the church)
+'L' golem      W N*= soil myth          
+'G' giraffe    F N = air horse          
+'S' spire      F W*= air tower          
+'X' phoenix    F N*= air myth           
+'J' trojan     N W*= horse building     
+'D' death      N F*= heaven horse       
+'Q' queen      W*F*= tower to heaven (ruler by divine mandate)
+'A' akupara    W*N*= tower myth         
+'Z' zeus       F*N*= heaven myth        
+
+                   _^      | | |      o      \_^    
+ [ ]      < >     [* \      | |      (_)     [* \      
+[ + ]    < X >     / |      | |     `) (`     / \      
+ [ ]      / \     |  \_    |_ _|    _/ \_    |   \_    
+                                                       
+W        F        N        W*       F*       N*        
+wazir    ferz     knight   rook     bishop   unicorn   
+
+          _+       \o/     ?????    <`        |X|             
+  @      /* \      (_)     ?????      \       |X|     \   /   
+./ \.     / |     `)+(`    ?????      ||      |X|      \?/    
+ / \      [ ]     _/ \_    ?????     //\\    |_ _|      LL    
+                                                              
+WF       WN       WF*      WN*      FN       FW*      FN*     
+veggie   tapir    cardinal golem    giraffe  spire    phoenix 
+
+ _|       _o      \_|_/    ?????    ?????    
+[* \     [x_)      (_)     ?????    ?????    
+ | |      / (`     / \     ?????    ?????    
+|_ _|    |  \_    /_ _\    ?????    ?????    
+                                       
+NF*      NF*      W*F*     W*N*     F*N*     
+trojan   death    queen    akupara  zeus      
+
+|........|........|........|........|........|........|........|........
+ 
+         \_+_/     
+  o      _) (_     
+ ( )      / \      
+ / \     /___\     
+                   
+ P       K         
+ pawn    king  
+
+
+   `>
+  /  
+ ||  
+//\\ 

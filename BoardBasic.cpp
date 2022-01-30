@@ -28,22 +28,23 @@ Species init_row[] = {
 };
 
 void zero_board(Board* B);
+void add_piece_to_board(Board* B, Coordinate rc, Piece p)
+{
+    if (p.species == Species::king) {
+        B->king_locs[p.color].back() = rc;
+    }
+    change_piece(B, rc, p, true);
+    add_eval_diff(B, rc, p, true);
+}
 
 void init_board(Board* B)
 {
     zero_board(B);
     for (int c=0; c!=8; ++c) {
-        Coordinate rcs[] = {{0,c},{1,c},{6,c},{7,c}};
-        Piece      ps [] = {{Color::black,init_row[c]},{Color::black,Species::pawn},{Color::white,Species::pawn},{Color::white,init_row[c]}};
-        for (int i=0; i!=4; ++i) {
-            Coordinate rc = rcs[i];
-            Piece p = ps[i];
-            if (p.species == Species::king) {
-                B->king_locs[p.color].back() = rc;
-            }
-            change_piece(B, rc, p, true);
-            add_eval_diff(B, rc, p, true);
-        }
+        add_piece_to_board(B, {0,c}, {Color::black,init_row[c]  });
+        add_piece_to_board(B, {1,c}, {Color::black,Species::pawn});
+        add_piece_to_board(B, {6,c}, {Color::white,Species::pawn});
+        add_piece_to_board(B, {7,c}, {Color::white,init_row[c]  });
     }
 }
 
@@ -92,89 +93,6 @@ void zero_board(Board* B)
     }
 }
 
-//void init_board(Board* B)
-//{
-//    B->next_to_move = Color::white;
-//    B->plies_since_irreversible.push_back(0);
-//
-//    B->nb_knights[0]=2;
-//    B->nb_knights[1]=2;
-//    B->nb_rooks[0]=2;
-//    B->nb_rooks[1]=2;
-//    B->nb_pawns[0]=8;
-//    B->nb_pawns[1]=8;
-//
-//    B->nb_majors[0] = 3;
-//    B->nb_majors[1] = 3;
-//
-//    B->nb_weak_squares[0] = 8;
-//    B->nb_weak_squares[1] = 8;
-//
-//    for (int r=0; r!=8; ++r) {
-//        for (int c=0; c!=8; ++c) {
-//            B->grid[r][c] = empty_piece;
-//            B->attacks_by_pawn[Color::black][r][c] = 0;
-//            B->attacks_by_pawn[Color::white][r][c] = 0;
-//            B->is_weak_square[Color::black][r][c] = (r==0);
-//            B->is_weak_square[Color::white][r][c] = (r==7);
-//        }
-//    }
-//    for (int c=0; c!=8; ++c) {
-//        B->grid[0][c] = {Color::black, init_row[c]};
-//        B->grid[1][c] = {Color::black, Species::pawn};
-//        B->attacks_by_pawn[Color::black][2][c] = c==0||c==7 ? 1 : 2;
-//        B->attacks_by_pawn[Color::white][5][c] = c==0||c==7 ? 1 : 2;
-//        B->grid[6][c] = {Color::white, Species::pawn};
-//        B->grid[7][c] = {Color::white, init_row[c]};
-//    }
-//
-//    B->evaluation_stack.push_back({0,0,0,0}); /* initial evaluation */ 
-//    B->hash = 0;
-//
-//    B->king_locs[0].push_back({0, 4});
-//    B->king_locs[1].push_back({7, 4});
-//
-//    for (int side=0; side!=2; ++side) {
-//        for (int c=0; c!=8; ++c) {
-//            B->nb_pawns_by_file[side][c] = 1;
-//            B->nb_rooks_by_file[side][c] = 0;
-//            B->least_advanced[side][c] = side==Color::white ? 6 : 1;
-//        }
-//        B->nb_rooks_by_file[side][0] = 1;
-//        B->nb_rooks_by_file[side][7] = 1;
-//        for (int p=0; p!=2; ++p) {
-//            B->nb_pawns_by_parity[side][p] = 4;
-//            B->nb_bishops_by_parity[side][p] = 1;
-//        }
-//    }
-//    int const quint_counts[2][5] = {{4,3,0,0,0}, {0,0,4,3,0}};
-//    for (int side=0; side!=2; ++side) {
-//        for (int q=0; q!=5; ++q) {
-//            B->nb_pieces_by_quintant[side][q] = quint_counts[side][q];
-//        }
-//    }
-//
-//    B->nb_xrays_by_side[0] = 0;
-//    B->nb_xrays_by_side[1] = 0;
-//    int const xrays[3][8] = {{ 2, 4, 4, 2, 4, 3, 4, 2}, /* king doesn't count as attacker; xrays through self pieces but not self pawns*/
-//                             { 1, 1, 1, 3, 3, 1, 1, 1},
-//                             { 1, 0, 1, 0, 0, 1, 0, 1}};
-//    for (int c=0; c!=8; ++c) {
-//        for (int r=0; r!=8; ++r) {
-//            for (int side=0; side!=2; ++side) {
-//                B->nb_xrays[side][r][c] = 0;
-//            }
-//        }
-//        B->nb_xrays[0][0][c] = xrays[0][c];  B->nb_xrays_by_side[0] += xrays[0][c];
-//        B->nb_xrays[0][1][c] = xrays[1][c];  B->nb_xrays_by_side[0] += xrays[1][c];
-//        B->nb_xrays[0][2][c] = xrays[2][c];  B->nb_xrays_by_side[0] += xrays[2][c];
-//        B->nb_xrays[1][5][c] = xrays[2][c];  B->nb_xrays_by_side[1] += xrays[2][c];
-//        B->nb_xrays[1][6][c] = xrays[1][c];  B->nb_xrays_by_side[1] += xrays[1][c];
-//        B->nb_xrays[1][7][c] = xrays[0][c];  B->nb_xrays_by_side[1] += xrays[0][c];
-//    }
-//    B->nb_king_attacks_near[0] = 0;
-//    B->nb_king_attacks_near[1] = 0;
-//}
 void skip_white(char const** str) {
     while (**str==' ' || **str=='\t' || **str=='\n') { ++*str; } 
 }
@@ -184,6 +102,8 @@ void to_next_line(char const** str) {
 }
 bool read_board(Board* B, char const* str) /* returns TRUE if error */
 {
+    zero_board(B);
+
     skip_white(&str);
     if (*str=='W') { B->next_to_move = Color::white; }
     else if (*str=='B') { B->next_to_move = Color::black; }
@@ -202,14 +122,28 @@ bool read_board(Board* B, char const* str) /* returns TRUE if error */
             Color color = (*str<'a') ? Color::white : Color::black;
             Species species;
             switch ((char)(*str + ((*str<'a') ? 0 : 'A'-'a'))) {
-            break; case 'P': species = Species::pawn;
-            break; case 'N': species = Species::knight;
-            break; case 'B': species = Species::bishop;
-            break; case 'R': species = Species::rook;
-            break; case 'Q': species = Species::queen;
-            break; case 'K': species = Species::king;
+              break; case 'P': species = Species::pawn;
+              break; case 'K': species = Species::king;
+            //break; case 'W': species = Species::wazir  ; /*      soil               */
+            //break; case 'F': species = Species::ferz   ; /*      air                */
+              break; case 'N': species = Species::knight ; /*      horse              */
+              break; case 'R': species = Species::rook   ; /*      tower              */
+              break; case 'B': species = Species::bishop ; /*      heaven             */
+            //break; case 'U': species = Species::unicorn; /*      myth               */
+            //break; case 'V': species = Species::veggie ; /* WF = soil air           */
+            //break; case 'T': species = Species::tapir  ; /* WN = soil horse         */
+            //break; case 'O': species = Species::pope   ; /* WB = heavenly soil(rock)*/
+            //break; case 'L': species = Species::golem  ; /* WZ = soil myth          */
+            //break; case 'G': species = Species::giraffe; /* FN = air horse          */
+            //break; case 'S': species = Species::spire  ; /* FR = airy tower         */
+            //break; case 'X': species = Species::phoenix; /* FZ = air myth           */
+            //break; case 'C': species = Species::chariot; /* NR = horse building     */
+            //break; case 'D': species = Species::death  ; /* NB = heaven horse       */
+              break; case 'Q': species = Species::queen  ; /* RB = divine mandate     */
+            //break; case 'A': species = Species::akupara; /* RZ = tower myth         */
+            //break; case 'Z': species = Species::zeus   ; /* BZ = heaven myth        */
             }
-            B->grid[r][c] = {color, species}; 
+            add_piece_to_board(B, {r,c}, {color,species});
         }
     } 
     /* TODO: compute hash, plies_since_irreversible!! (and other associated precomputed vals!)  */
