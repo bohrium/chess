@@ -82,7 +82,7 @@ inline Piece get_piece(Board const* B, Coordinate rc)
 } 
 inline bool kronecker_piece(Board const* B, Coordinate rc, Piece p)
 {
-    return KRON(piece_equals(get_piece(B, rc), p));
+    return KRON(same_piece(get_piece(B, rc), p));
 }
 
 //extern Species init_row[];

@@ -143,7 +143,7 @@ void add_eval_diff(Board* B, Coordinate rc, Piece p, bool is_add)
         { /* king-shelter */
             auto has_pawn = [self, B](int row, int col){
                 if (!(0<=col && col<8)) { return 0; }
-                return KRON(piece_equals(get_piece(B, {row,col}), {self,Species::pawn}));
+                return KRON(same_piece(get_piece(B, {row,col}), {self,Species::pawn}));
             };
             d_king_safety += sign * KING_SHELTER * (
                -has_pawn(old_r-sign, old_c-1) /* old */

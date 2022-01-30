@@ -21,17 +21,17 @@ int const MOBILITY       =  5;
 /*------  0.1.0. linear material     ----------------------------------------*/
 
 int const PAWN_MALUS   = 34; /* malus */
-int const KNIGHT_BONUS = 13;
+int const KNIGHT_MALUS = 13; /* malus */
 int const BISHOP_BONUS = 34;
 int const ROOK_BONUS   = 89;
 int const QUEEN_BONUS  = 89;
 
 /*------  0.1.1. bilinear material   ----------------------------------------*/
 
+int const KNIGHT_PAWN  =  5;
+int const ROOK_PAWN    = 13; /* malus */
 int const BISHOP_PAIR  = 34;
 int const MAJOR_PAIR   = 34; /* malus */
-int const ROOK_PAWN    = 13; /* malus */
-int const KNIGHT_PAWN  =  5;
 
 /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ~~~~  0.2. King Safety  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
@@ -93,7 +93,7 @@ int const CENTERED_K2    =  5;
 const int KING_POINTS = 100000; /* exceeds twice the total remaining value */ 
 const int points[] = {
     100-PAWN_MALUS,   /*  p  */
-    300+KNIGHT_BONUS, /*  n  */
+    300-KNIGHT_MALUS, /*  n  */
     300+BISHOP_BONUS, /*  b  */
     500+ROOK_BONUS,   /*  r  */
     900+QUEEN_BONUS,  /*  q  */

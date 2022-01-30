@@ -46,9 +46,13 @@ struct Piece {
     Species species;
 };
 Piece const empty_piece = {Color::empty_color, Species::empty_species};
-inline bool piece_equals(Piece p, Piece q)
+inline bool same_piece(Piece p, Piece q)
 {
     return p.species==q.species && p.color==q.color;
+}
+inline char piece_name(Piece p)
+{
+    return species_names[p.species] + (p.color==Color::white? 'A'-'A' : 'a'-'A');
 }
 
 /*=============================================================================
@@ -61,6 +65,10 @@ inline bool piece_equals(Piece p, Piece q)
 struct Coordinate {
     int row, col; 
 };
+inline bool same_coor(Coordinate rc0, Coordinate rc1)
+{
+    return rc0.row==rc1.row && rc0.col==rc1.col;
+}
 inline bool is_valid(Coordinate coor)
 {
     return (0<=coor.row && coor.row<8) &&
@@ -84,6 +92,13 @@ struct Move {
     Piece taken;
     MoveType type; 
 };
+inline bool same_move(Move m, Move n)
+{
+    return m.type == n.type               &&
+           same_coor (m.source, n.source) &&
+           same_coor (m.dest  , n.dest  ) &&
+           same_piece(m.taken , n.taken )   ;
+}
 inline bool is_capture(Move m)
 {
     return m.taken.species != Species::empty_species;
